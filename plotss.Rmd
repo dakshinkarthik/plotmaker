@@ -1,0 +1,797 @@
+---
+title: "Plots"
+author: "Dakshin Karthik"
+date: "10/15/2021"
+output: word_document
+---
+<!-- RMd Setup -->
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.width = 85, fig.height = 10)
+library(knitr)
+library(ggplot2)
+library(ggthemes)
+library(ggpubr)
+library(tidyverse)
+library(extrafont)
+library(pander)
+library(excelR)
+```
+<!-- Libraries -->
+```{R echo=FALSE}
+addline_format <- function(x,...){
+  gsub('\\s',' ',x)
+}
+
+flip <- function(data) {
+    new <- data[rev(rownames(data)), ]
+    rownames(new) <- NULL
+    new
+}
+```
+<!-- Reads and formats -->
+```{R echo=FALSE}
+col <- rev(c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF"))
+col1 <- rev(c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF"))
+col3 <- rev(c("#002145", "#0055B7", "#00A7E1", "#EBC796"))
+# col2 <- rev(c("#002145", "#0055B7", "#00A7E1","#78D8F9", "#EBC796", "#EB9C30", "#965A07"))
+col2 <- rev(c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF","#B8EDFF","#CEF3FF"))
+col_5 <- rev(c("#002145", "#0055B7", "#00A7E1", "#26C7FF"))
+
+
+col3 <- rev(c("#002145", "#0055B7", "#00A7E1", "#47C7F4", "#A9F2B9", "#7BE191", "#53EA73", "#3CE25F",
+              "#2CD850", "#17EE44", "#B9EE17", "#E1F736", "#F5FF93", "#EBC796", "#EB9C30", "#965A07"))
+
+tex.col <- rev(c("white","white","black","black","black","black","black"))
+tex.col1 <- rev(c("white","white","black","black","black","black"))
+# tex.col1 <- rev(c("black","black","black","black"))
+# tex.col2 <- rev(c("black","black","black","black","black","black","black"))
+tex.col2 <- rev(c("black","black","black","black","black","black","black","black","black"))
+tex.col_5 <- rev(c("black","black","black","black","black"))
+
+
+ubc.theme.ld <-  theme(legend.position = "bottom",
+                       legend.direction = "horizontal",
+                       legend.title = element_blank(),
+                       legend.key.height = unit(2, 'mm'),
+                       legend.key.width = unit(6, 'mm'),
+                       plot.background = element_rect(colour = "grey", fill = NA, size = 2),
+                       plot.title = element_text(hjust = 0.1, color = "#2B73C2", size = 85),
+                       plot.subtitle = element_text(hjust = 0.1, color = "grey", size = 60),
+                       axis.line = element_blank(),
+                       axis.text.x = element_blank(),
+                       axis.text.y = element_text(family = "serif", size = 70),
+                       axis.ticks = element_blank(),
+                       axis.title.x = element_blank(),
+                       axis.title.y = element_blank())
+
+nubc21 <- read.csv(file = 'nubc2021.csv')
+nubc21.q <- read.csv(file = 'question.csv')
+nubc21.o <- read.csv(file = 'rspOptions.csv')
+nubc21.coh <- read.csv(file = 'nubc2021Tableaucohort.csv')
+nubc21 <- merge(x = nubc21.coh, y = nubc21, by.x = "externalDataReference", by.y = "ExternalReference")
+nubc21.o <- nubc21.o[order(nubc21.o$responseNum),]
+nubc2021joined <- read.csv(file = 'nubc2021joined.csv')
+nubc2021joined <- nubc2021joined[order(nubc2021joined$responseNum),]
+```
+
+<!-- QN98 -->
+```{R echo=FALSE}
+resp <- as.integer(na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qSubid == "rk-QN98_1"])))
+ld.title <- na.omit(unique(nubc2021joined$qSublabel[nubc2021joined$qID == "QN98"]))
+# str(resp)
+q.data.tb1 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "rk-QN98_1"])
+q.data.df1 <- data.frame(q.data.tb1, Ques = c(0))
+q.data.tb2 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "rk-QN98_2"])
+q.data.df2 <- data.frame(q.data.tb2, Ques = c(0))
+q.data.tb3 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "rk-QN98_3"])
+q.data.df3 <- data.frame(q.data.tb3, Ques = c(0))
+q.data.tb4 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "rk-QN98_4"])
+q.data.df4 <- data.frame(q.data.tb4, Ques = c(0))
+q.data.tb5 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "rk-QN98_5"])
+q.data.df5 <- data.frame(q.data.tb5, Ques = c(0))
+q.data.tb6 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "rk-QN98_6"])
+q.data.df6 <- data.frame(q.data.tb6, Ques = c(0))
+q.data.tb7 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "rk-QN98_7"])
+q.data.df7 <- data.frame(q.data.tb7, Ques = c(0))
+
+levels(q.data.df1$Var1) <- resp
+levels(q.data.df2$Var1) <- resp
+levels(q.data.df3$Var1) <- resp
+levels(q.data.df4$Var1) <- resp
+levels(q.data.df5$Var1) <- resp
+levels(q.data.df6$Var1) <- resp
+levels(q.data.df7$Var1) <- resp
+
+q.data.df1$Ques <- 1
+q.data.df2$Ques <- 2
+q.data.df3$Ques <- 3
+q.data.df4$Ques <- 4
+q.data.df5$Ques <- 5
+q.data.df6$Ques <- 6
+q.data.df7$Ques <- 7
+
+
+prop1 <- as.integer(100*q.data.df1$Freq/sum(q.data.df1$Freq))
+for(i in 1:length(prop1)){
+  if(as.integer(prop1[i])<5)
+    prop1[i] = ''
+  else
+    prop1[i] = paste0(prop1[i], "%")
+}
+
+prop2 <- as.integer(100*q.data.df2$Freq/sum(q.data.df2$Freq))
+for(i in 1:length(prop1)){
+  if(as.integer(prop2[i])<5)
+    prop2[i] = ''
+  else
+    prop2[i] = paste0(prop2[i], "%")
+}
+
+prop3 <- as.integer(100*q.data.df3$Freq/sum(q.data.df3$Freq))
+for(i in 1:length(prop3)){
+  if(as.integer(prop3[i])<5)
+    prop3[i] = ''
+  else
+    prop3[i] = paste0(prop3[i], "%")
+}
+
+prop4 <- as.integer(100*q.data.df4$Freq/sum(q.data.df4$Freq))
+for(i in 1:length(prop4)){
+  if(as.integer(prop4[i])<5)
+    prop4[i] = ''
+  else
+    prop4[i] = paste0(prop4[i], "%")
+}
+
+prop5 <- as.integer(100*q.data.df5$Freq/sum(q.data.df5$Freq))
+for(i in 1:length(prop4)){
+  if(as.integer(prop5[i])<5)
+    prop5[i] = ''
+  else
+    prop5[i] = paste0(prop5[i], "%")
+}
+
+prop6 <- as.integer(100*q.data.df6$Freq/sum(q.data.df6$Freq))
+for(i in 1:length(prop6)){
+  if(as.integer(prop6[i])<5)
+    prop6[i] = ''
+  else
+    prop6[i] = paste0(prop6[i], "%")
+}
+
+prop7 <- as.integer(100*q.data.df7$Freq/sum(q.data.df7$Freq))
+for(i in 1:length(prop7)){
+  if(as.integer(prop7[i])<5)
+    prop7[i] = ''
+  else
+    prop7[i] = paste0(prop7[i], "%")
+}
+
+
+prop17 <- c(prop1,prop2,prop3,prop4,prop5,prop6,prop7)
+
+q.data.df1$Ques <- as.factor(q.data.df1$Ques)
+q.data.df2$Ques <- as.factor(q.data.df2$Ques)
+q.data.df3$Ques <- as.factor(q.data.df3$Ques)
+q.data.df4$Ques <- as.factor(q.data.df4$Ques)
+q.data.df5$Ques <- as.factor(q.data.df5$Ques)
+q.data.df6$Ques <- as.factor(q.data.df6$Ques)
+q.data.df7$Ques <- as.factor(q.data.df7$Ques)
+
+q.data.df17 <- rbind(q.data.df1,q.data.df2,q.data.df3,q.data.df4,q.data.df5,q.data.df6,q.data.df7)
+
+```
+
+```{R echo = FALSE, fig.height = 55}
+ggplot(data = q.data.df17, aes(x=Ques, y=Freq, fill = Var1)) +
+  geom_bar(stat = "identity", position = "fill", width = 0.4) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE), 
+                    labels = c("First Choice","Second Choice","Third Choice","Fourth Choice",
+                               "Fifth Choice","Sixth Choice","Seventh Choice")) +
+  geom_text(data = q.data.df17, aes(Ques, Freq, group = Var1), label = prop17,
+            position = position_fill(vjust=0.5), color = rep(tex.col, 7), size = 30) +
+  labs(title = "98", subtitle = "Subtitle") +
+  scale_x_discrete(breaks = unique(q.data.df17$Ques),
+                   labels = addline_format(ld.title)) +
+  ubc.theme.ld +
+  coord_flip()
+```
+<!-- QN105 -->
+```{R echo=FALSE}
+resp <- na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qID == "QN105"]))
+ld.title <- na.omit(unique(nubc2021joined$qSublabel[nubc2021joined$qID == "QN105"]))
+
+# str(resp)
+# q.data.tb <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN105_2"])
+q.data.tb1 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN105_2"])
+q.data.df1 <- data.frame(q.data.tb1, Ques = c(0))
+q.data.tb2 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN105_3"])
+q.data.df2 <- data.frame(q.data.tb2, Ques = c(0))
+q.data.tb3 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN105_4"])
+q.data.df3 <- data.frame(q.data.tb3, Ques = c(0))
+q.data.tb4 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN105_5"])
+q.data.df4 <- data.frame(q.data.tb4, Ques = c(0))
+q.data.tb5 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN105_6"])
+q.data.df5 <- data.frame(q.data.tb5, Ques = c(0))
+q.data.tb6 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN105_7"])
+q.data.df6 <- data.frame(q.data.tb6, Ques = c(0))
+q.data.tb7 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN105_8"])
+q.data.df7 <- data.frame(q.data.tb7, Ques = c(0))
+q.data.tb8 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN105_9"])
+q.data.df8 <- data.frame(q.data.tb8, Ques = c(0))
+q.data.tb9 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN105_10"])
+q.data.df9 <- data.frame(q.data.tb9, Ques = c(0))
+
+levels(q.data.df1$Var1) <- resp
+levels(q.data.df2$Var1) <- resp
+levels(q.data.df3$Var1) <- resp
+levels(q.data.df4$Var1) <- resp
+levels(q.data.df5$Var1) <- resp
+levels(q.data.df6$Var1) <- resp
+levels(q.data.df7$Var1) <- resp
+levels(q.data.df8$Var1) <- resp
+levels(q.data.df9$Var1) <- resp
+
+q.data.df1$Ques <- 1
+q.data.df2$Ques <- 2
+q.data.df3$Ques <- 3
+q.data.df4$Ques <- 4
+q.data.df5$Ques <- 5
+q.data.df6$Ques <- 6
+q.data.df7$Ques <- 7
+q.data.df8$Ques <- 8
+q.data.df9$Ques <- 9
+
+prop1 <- as.integer(100*q.data.df1$Freq/sum(q.data.df1$Freq))
+for(i in 1:length(prop1)){
+  if(as.integer(prop1[i])<5)
+    prop1[i] = ''
+  else
+    prop1[i] = paste0(prop1[i], "%")
+}
+
+prop2 <- as.integer(100*q.data.df2$Freq/sum(q.data.df2$Freq))
+for(i in 1:length(prop1)){
+  if(as.integer(prop2[i])<5)
+    prop2[i] = ''
+  else
+    prop2[i] = paste0(prop2[i], "%")
+}
+
+prop3 <- as.integer(100*q.data.df3$Freq/sum(q.data.df3$Freq))
+for(i in 1:length(prop3)){
+  if(as.integer(prop3[i])<5)
+    prop3[i] = ''
+  else
+    prop3[i] = paste0(prop3[i], "%")
+}
+
+prop4 <- as.integer(100*q.data.df4$Freq/sum(q.data.df4$Freq))
+for(i in 1:length(prop4)){
+  if(as.integer(prop4[i])<5)
+    prop4[i] = ''
+  else
+    prop4[i] = paste0(prop4[i], "%")
+}
+
+prop5 <- as.integer(100*q.data.df5$Freq/sum(q.data.df5$Freq))
+for(i in 1:length(prop4)){
+  if(as.integer(prop5[i])<5)
+    prop5[i] = ''
+  else
+    prop5[i] = paste0(prop5[i], "%")
+}
+
+prop6 <- as.integer(100*q.data.df6$Freq/sum(q.data.df6$Freq))
+for(i in 1:length(prop6)){
+  if(as.integer(prop6[i])<5)
+    prop6[i] = ''
+  else
+    prop6[i] = paste0(prop6[i], "%")
+}
+
+prop7 <- as.integer(100*q.data.df7$Freq/sum(q.data.df7$Freq))
+for(i in 1:length(prop7)){
+  if(as.integer(prop7[i])<5)
+    prop7[i] = ''
+  else
+    prop7[i] = paste0(prop7[i], "%")
+}
+
+prop8 <- as.integer(100*q.data.df8$Freq/sum(q.data.df8$Freq))
+for(i in 1:length(prop8)){
+  if(as.integer(prop8[i])<5)
+    prop8[i] = ''
+  else
+    prop8[i] = paste0(prop8[i], "%")
+}
+
+prop9 <- as.integer(100*q.data.df9$Freq/sum(q.data.df9$Freq))
+for(i in 1:length(prop9)){
+  if(as.integer(prop9[i])<5)
+    prop9[i] = ''
+  else
+    prop9[i] = paste0(prop9[i], "%")
+}
+
+prop19 <- c(prop1,prop2,prop3,prop4,prop5,prop6,prop7,prop8,prop9)
+
+q.data.df1$Ques <- as.factor(q.data.df1$Ques)
+q.data.df2$Ques <- as.factor(q.data.df2$Ques)
+q.data.df3$Ques <- as.factor(q.data.df3$Ques)
+q.data.df4$Ques <- as.factor(q.data.df4$Ques)
+q.data.df5$Ques <- as.factor(q.data.df5$Ques)
+q.data.df6$Ques <- as.factor(q.data.df6$Ques)
+q.data.df7$Ques <- as.factor(q.data.df7$Ques)
+q.data.df8$Ques <- as.factor(q.data.df8$Ques)
+q.data.df9$Ques <- as.factor(q.data.df9$Ques)
+
+q.data.df19 <- rbind(q.data.df1,q.data.df2,q.data.df3,q.data.df4,q.data.df5,q.data.df6,q.data.df7,q.data.df8,q.data.df9)
+
+```
+
+```{R echo = FALSE, fig.height = 55}
+ggplot(data = q.data.df19, aes(x=Ques, y=Freq, fill = Var1)) +
+  geom_bar(stat = "identity", position = "fill", width = 0.4) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE)) +
+  geom_text(data = q.data.df19, aes(Ques, Freq, group = Var1), label = prop19,
+            position = position_fill(vjust=0.5), color = rep(tex.col1, 9), size = 30) +
+  labs(title = "105", subtitle = "Subtitle") +
+  scale_x_discrete(breaks = unique(q.data.df19$Ques),
+                   labels = addline_format(ld.title)) +
+  ubc.theme.ld +
+  coord_flip()
+```
+<!-- QN104 -->
+```{R echo=FALSE}
+resp <- na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qID == "QN104"]))
+ld.title <- na.omit(unique(nubc2021joined$qSublabel[nubc2021joined$qID == "QN104"]))
+
+# str(resp)
+# q.data.tb <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN105_2"])
+q.data.tb1 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN104_1"])
+q.data.df1 <- data.frame(q.data.tb1, Ques = c(0))
+q.data.tb2 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN104_2"])
+q.data.df2 <- data.frame(q.data.tb2, Ques = c(0))
+q.data.tb3 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN104_3"])
+q.data.df3 <- data.frame(q.data.tb3, Ques = c(0))
+q.data.tb4 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN104_4"])
+q.data.df4 <- data.frame(q.data.tb4, Ques = c(0))
+q.data.tb5 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN104_5"])
+q.data.df5 <- data.frame(q.data.tb5, Ques = c(0))
+q.data.tb6 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN104_7"])
+q.data.df6 <- data.frame(q.data.tb6, Ques = c(0))
+q.data.tb7 <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mx-QN104_8"])
+q.data.df7 <- data.frame(q.data.tb7, Ques = c(0))
+
+levels(q.data.df1$Var1) <- resp
+levels(q.data.df2$Var1) <- resp
+levels(q.data.df3$Var1) <- resp
+levels(q.data.df4$Var1) <- resp
+levels(q.data.df5$Var1) <- resp
+levels(q.data.df6$Var1) <- resp
+levels(q.data.df7$Var1) <- resp
+
+
+q.data.df1$Ques <- 1
+q.data.df2$Ques <- 2
+q.data.df3$Ques <- 3
+q.data.df4$Ques <- 4
+q.data.df5$Ques <- 5
+q.data.df6$Ques <- 6
+q.data.df7$Ques <- 7
+
+prop1 <- as.integer(100*q.data.df1$Freq/sum(q.data.df1$Freq))
+for(i in 1:length(prop1)){
+  if(as.integer(prop1[i])<5)
+    prop1[i] = ''
+  else
+    prop1[i] = paste0(prop1[i], "%")
+}
+
+prop2 <- as.integer(100*q.data.df2$Freq/sum(q.data.df2$Freq))
+for(i in 1:length(prop1)){
+  if(as.integer(prop2[i])<5)
+    prop2[i] = ''
+  else
+    prop2[i] = paste0(prop2[i], "%")
+}
+
+prop3 <- as.integer(100*q.data.df3$Freq/sum(q.data.df3$Freq))
+for(i in 1:length(prop3)){
+  if(as.integer(prop3[i])<5)
+    prop3[i] = ''
+  else
+    prop3[i] = paste0(prop3[i], "%")
+}
+
+prop4 <- as.integer(100*q.data.df4$Freq/sum(q.data.df4$Freq))
+for(i in 1:length(prop4)){
+  if(as.integer(prop4[i])<5)
+    prop4[i] = ''
+  else
+    prop4[i] = paste0(prop4[i], "%")
+}
+
+prop5 <- as.integer(100*q.data.df5$Freq/sum(q.data.df5$Freq))
+for(i in 1:length(prop4)){
+  if(as.integer(prop5[i])<5)
+    prop5[i] = ''
+  else
+    prop5[i] = paste0(prop5[i], "%")
+}
+
+prop6 <- as.integer(100*q.data.df6$Freq/sum(q.data.df6$Freq))
+for(i in 1:length(prop6)){
+  if(as.integer(prop6[i])<5)
+    prop6[i] = ''
+  else
+    prop6[i] = paste0(prop6[i], "%")
+}
+
+prop7 <- as.integer(100*q.data.df7$Freq/sum(q.data.df7$Freq))
+for(i in 1:length(prop7)){
+  if(as.integer(prop7[i])<5)
+    prop7[i] = ''
+  else
+    prop7[i] = paste0(prop7[i], "%")
+}
+
+prop17 <- c(prop1,prop2,prop3,prop4,prop5,prop6,prop7)
+
+q.data.df1$Ques <- as.factor(q.data.df1$Ques)
+q.data.df2$Ques <- as.factor(q.data.df2$Ques)
+q.data.df3$Ques <- as.factor(q.data.df3$Ques)
+q.data.df4$Ques <- as.factor(q.data.df4$Ques)
+q.data.df5$Ques <- as.factor(q.data.df5$Ques)
+q.data.df6$Ques <- as.factor(q.data.df6$Ques)
+q.data.df7$Ques <- as.factor(q.data.df7$Ques)
+
+
+q.data.df17 <- rbind(q.data.df1,q.data.df2,q.data.df3,q.data.df4,q.data.df5,q.data.df6,q.data.df7)
+
+```
+
+```{R echo = FALSE, fig.height = 55}
+ggplot(data = q.data.df17, aes(x=Ques, y=Freq, fill = Var1)) +
+  geom_bar(stat = "identity", position = "fill", width = 0.4) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE), 
+                    labels = c("First Choice","Second Choice","Third Choice","Fourth Choice",
+                               "Fifth Choice","Sixth Choice","Seventh Choice")) +
+  geom_text(data = q.data.df17, aes(Ques, Freq, group = Var1), label = prop17,
+            position = position_fill(vjust=0.5), color = rep(tex.col1, 7), size = 30) +
+  labs(title = "104", subtitle = "Subtitle") +
+  scale_x_discrete(breaks = unique(q.data.df17$Ques),
+                   labels = addline_format(ld.title)) +
+  ubc.theme.ld +
+  coord_flip()
+```
+<!-- QN66 -->
+```{R echo=FALSE}
+resp <- na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qID == "QN66"]))
+q.data.tb <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mc-QN66"])
+q.data.df <- data.frame(rev(q.data.tb), Ques = c(0))
+
+levels(q.data.df$Var1) <- rev(resp)
+
+prop <- as.integer(100*q.data.df$Freq/sum(q.data.df$Freq))
+for(i in 1:length(prop)){
+  if(as.integer(prop[i])<=0)
+    prop[i] = ''
+  else
+    prop[i] = paste0(prop[i], "%")
+}
+
+prop <- c(prop)
+
+q.data.df$Ques <- as.factor(q.data.df$Ques)
+
+q.data.df <- rbind(q.data.df)
+```
+
+```{R echo=FALSE, fig.height = 55}
+ggplot(data = q.data.df, aes(x=Var1, y=Freq, fill=Var1)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = rep("#002145",8), guide = guide_legend(reverse = TRUE)) +
+  geom_text(data = q.data.df,aes(label = prop), vjust=0.65, hjust=-0.1, color = rev(rep("black", 1)), size = 25) +
+  labs(title = "QN66")  +
+  # scale_x_discrete(breaks = unique(q.data.df$Ques),
+  #                  labels = addline_format(nubc21.q$qSublabel[nubc21.q$qID == "reside"])) +
+  ubc.theme.ld + theme(legend.position = "none") +
+  coord_flip()
+
+```
+<!-- QN67 -->
+```{R echo=FALSE}
+resp <- na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qID == "QN67"]))
+q.data.tb <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mc-QN67"])
+q.data.df <- data.frame(rev(q.data.tb), Ques = c(0))
+
+levels(q.data.df$Var1) <- rev(resp)
+
+prop <- as.integer(100*q.data.df$Freq/sum(q.data.df$Freq))
+for(i in 1:length(prop)){
+  if(as.integer(prop[i])<=0)
+    prop[i] = ''
+  else
+    prop[i] = paste0(prop[i], "%")
+}
+
+prop <- c(prop)
+
+q.data.df$Ques <- as.factor(q.data.df$Ques)
+
+q.data.df <- rbind(q.data.df)
+```
+
+```{R echo=FALSE, fig.height = 55}
+ggplot(data = q.data.df, aes(x=Var1, y=Freq, fill=Var1)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = rep("#002145",8), guide = guide_legend(reverse = TRUE)) +
+  geom_text(data = q.data.df,aes(label = prop), vjust=0.65, hjust=-0.1, color = rev(rep("black", 1)), size = 25) +
+  labs(title = "QN67")  +
+  # scale_x_discrete(breaks = unique(q.data.df$Ques),
+  #                  labels = addline_format(nubc21.q$qSublabel[nubc21.q$qID == "reside"])) +
+  ubc.theme.ld + theme(legend.position = "none") +
+  coord_flip()
+
+```
+<!-- housing -->
+```{R echo=FALSE}
+resp <- na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qID == "housing"]))
+q.data.tb <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mc-housing"])
+q.data.df <- data.frame(rev(q.data.tb), Ques = c(0))
+
+levels(q.data.df$Var1) <- (resp)
+prop <- as.integer(100*q.data.df$Freq/sum(q.data.df$Freq))
+
+for(i in 1:length(prop)){
+  if(as.integer(prop[i])<=0)
+    prop[i] = ''
+  else
+    prop[i] = paste0(prop[i], "%")
+}
+
+prop <- c(prop)
+
+q.data.df$Ques <- as.factor(q.data.df$Ques)
+
+q.data.df <- rbind(q.data.df)
+```
+
+```{R echo=FALSE, fig.height = 55}
+ggplot(data = q.data.df, aes(x=Var1, y=Freq, fill=Var1)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = rep("#002145",9), guide = guide_legend(reverse = TRUE)) +
+  geom_text(aes(label = prop), vjust=0.65, hjust=-0.1, color = rev(rep(tex.col2, 1)), size = 25) +
+  labs(title = "housing") +
+  # scale_x_discrete(breaks = unique(q.data.df$Ques),
+  #                  labels = addline_format(nubc21.q$qSublabel[nubc21.q$qID == "reside"])) +
+  ubc.theme.ld + theme(legend.position = "none") +
+  coord_flip()
+
+```
+<!-- QN35 -->
+```{R echo=FALSE}
+resp <- na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qID == "QN35"]))
+q.data.tb <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mc-QN35"])
+q.data.df <- data.frame(rev(q.data.tb), Ques = c(0))
+
+levels(q.data.df$Var1) <- (resp)
+prop <- as.integer(100*q.data.df$Freq/sum(q.data.df$Freq))
+
+for(i in 1:length(prop)){
+  if(as.integer(prop[i])<=0)
+    prop[i] = ''
+  else
+    prop[i] = paste0(prop[i], "%")
+}
+
+prop <- c(prop)
+
+q.data.df$Ques <- as.factor(q.data.df$Ques)
+
+q.data.df <- rbind(q.data.df)
+```
+
+```{R echo=FALSE, fig.height = 55}
+ggplot(data = q.data.df, aes(x=Var1, y=Freq, fill=Var1)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = rep("#002145",5), guide = guide_legend(reverse = TRUE)) +
+  geom_text(aes(label = prop), vjust=0.65, hjust=-0.1, color = rev(rep(tex.col_5, 1)), size = 25) +
+  labs(title = "QN35") +
+  # scale_x_discrete(breaks = unique(q.data.df$Ques),
+  #                  labels = addline_format(nubc21.q$qSublabel[nubc21.q$qID == "reside"])) +
+  ubc.theme.ld + theme(legend.position = "none") +
+  coord_flip()
+
+```
+<!-- QN36 -->
+```{R echo=FALSE}
+resp <- na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qID == "QN36"]))
+q.data.tb <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mc-QN36"])
+q.data.df <- data.frame(rev(q.data.tb), Ques = c(0))
+
+levels(q.data.df$Var1) <- (resp)
+prop <- as.integer(100*q.data.df$Freq/sum(q.data.df$Freq))
+
+for(i in 1:length(prop)){
+  if(as.integer(prop[i])<=0)
+    prop[i] = ''
+  else
+    prop[i] = paste0(prop[i], "%")
+}
+
+prop <- c(prop)
+
+q.data.df$Ques <- as.factor(q.data.df$Ques)
+
+q.data.df <- rbind(q.data.df)
+```
+
+```{R echo=FALSE, fig.height = 55}
+ggplot(data = q.data.df, aes(x=Var1, y=Freq, fill=Var1)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = rep("#002145",5), guide = guide_legend(reverse = TRUE)) +
+  geom_text(aes(label = prop), vjust=0.65, hjust=-0.1, color = rev(rep(tex.col_5, 1)), size = 25) +
+  labs(title = "QN36") +
+  # scale_x_discrete(breaks = unique(q.data.df$Ques),
+  #                  labels = addline_format(nubc21.q$qSublabel[nubc21.q$qID == "reside"])) +
+  ubc.theme.ld + theme(legend.position = "none") +
+  coord_flip()
+
+```
+<!-- QN59 -->
+
+<!-- wbFamDoc -->
+```{R echo=FALSE}
+resp <- na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qID == "wbFamdoc"]))
+q.data.tb <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mc-wbFamdoc"])
+q.data.df <- data.frame(rev(q.data.tb), Ques = c(0))
+
+levels(q.data.df$Var1) <- (resp)
+prop <- as.integer(100*q.data.df$Freq/sum(q.data.df$Freq))
+
+for(i in 1:length(prop)){
+  if(as.integer(prop[i])<=0)
+    prop[i] = ''
+  else
+    prop[i] = paste0(prop[i], "%")
+}
+
+prop <- c(prop)
+
+q.data.df$Ques <- as.factor(q.data.df$Ques)
+
+q.data.df <- rbind(q.data.df)
+```
+
+```{R echo=FALSE, fig.height = 55}
+ggplot(data = q.data.df, aes(x=Var1, y=Freq, fill=Var1)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = rep("#002145",2), guide = guide_legend(reverse = TRUE)) +
+  geom_text(aes(label = prop), vjust=0.65, hjust=-0.1, color = rev(rep("black", 2)), size = 25) +
+  labs(title = "wbFamdoc") +
+  # scale_x_discrete(breaks = unique(q.data.df$Ques),
+  #                  labels = addline_format(nubc21.q$qSublabel[nubc21.q$qID == "reside"])) +
+  ubc.theme.ld + theme(legend.position = "none") +
+  coord_flip()
+
+```
+<!-- wbNavigate -->
+```{R echo=FALSE}
+resp <- na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qID == "wbNavigate"]))
+q.data.tb <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mc-wbNavigate"])
+q.data.df <- data.frame(rev(q.data.tb), Ques = c(0))
+
+levels(q.data.df$Var1) <- (resp)
+prop <- as.integer(100*q.data.df$Freq/sum(q.data.df$Freq))
+
+for(i in 1:length(prop)){
+  if(as.integer(prop[i])<=0)
+    prop[i] = ''
+  else
+    prop[i] = paste0(prop[i], "%")
+}
+
+prop <- c(prop)
+
+q.data.df$Ques <- as.factor(q.data.df$Ques)
+
+q.data.df <- rbind(q.data.df)
+```
+
+```{R echo=FALSE, fig.height = 55}
+ggplot(data = q.data.df, aes(x=Var1, y=Freq, fill=Var1)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = rep("#002145",2), guide = guide_legend(reverse = TRUE)) +
+  geom_text(aes(label = prop), vjust=0.65, hjust=-0.1, color = rev(rep("black", 2)), size = 25) +
+  labs(title = "wbNavigate") +
+  # scale_x_discrete(breaks = unique(q.data.df$Ques),
+  #                  labels = addline_format(nubc21.q$qSublabel[nubc21.q$qID == "reside"])) +
+  ubc.theme.ld + theme(legend.position = "none") +
+  coord_flip()
+
+```
+<!-- QN30 -->
+```{R echo=FALSE}
+resp <- na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qID == "QN30"]))
+q.data.tb <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mc-QN30"])
+q.data.df <- data.frame(rev(q.data.tb), Ques = c(0))
+
+levels(q.data.df$Var1) <- rev(resp)
+prop <- as.integer(100*q.data.df$Freq/sum(q.data.df$Freq))
+
+for(i in 1:length(prop)){
+  if(as.integer(prop[i])<=0)
+    prop[i] = ''
+  else
+    prop[i] = paste0(prop[i], "%")
+}
+
+prop <- c(prop)
+
+q.data.df$Ques <- as.factor(q.data.df$Ques)
+
+q.data.df <- rbind(q.data.df)
+```
+
+```{R echo=FALSE, fig.height = 55}
+ggplot(data = q.data.df, aes(x=Var1, y=Freq, fill=Var1)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = rep("#002145",2), guide = guide_legend(reverse = TRUE)) +
+  geom_text(aes(label = prop), vjust=0.65, hjust=-0.1, color = rev(rep("black", 2)), size = 25) +
+  labs(title = "QN30") +
+  # scale_x_discrete(breaks = unique(q.data.df$Ques),
+  #                  labels = addline_format(nubc21.q$qSublabel[nubc21.q$qID == "reside"])) +
+  ubc.theme.ld + theme(legend.position = "none") +
+  coord_flip()
+
+```
+<!-- QN94 -->
+```{R echo=FALSE}
+resp <- na.omit(unique(nubc2021joined$responseTxt[nubc2021joined$qID == "QN94"]))
+q.data.tb <- table(nubc2021joined$responseTxt[nubc2021joined$qSubid == "mc-QN94" & nubc2021joined$campusName.x == "Okanagan"])
+q.data.df <- data.frame(rev(q.data.tb), Ques = c(0))
+
+levels(q.data.df$Var1) <- rev(resp)
+prop <- as.integer(100*q.data.df$Freq/sum(q.data.df$Freq))
+
+for(i in 1:length(prop)){
+  if(as.integer(prop[i])<=0)
+    prop[i] = ''
+  else
+    prop[i] = paste0(prop[i], "%")
+}
+
+prop <- c(prop)
+
+q.data.df$Ques <- as.factor(q.data.df$Ques)
+
+q.data.df <- rbind(q.data.df)
+```
+
+```{R echo=FALSE, fig.height = 55}
+ggplot(data = q.data.df, aes(x=Var1, y=Freq, fill=Var1)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = rep("#002145",4), guide = guide_legend(reverse = TRUE)) +
+  geom_text(aes(label = prop), vjust=0.65, hjust=-0.1, color = rev(rep("black", 4)), size = 25) +
+  labs(title = "QN94") +
+  # scale_x_discrete(breaks = unique(q.data.df$Ques),
+  #                  labels = addline_format(nubc21.q$qSublabel[nubc21.q$qID == "reside"])) +
+  ubc.theme.ld + theme(legend.position = "none") +
+  coord_flip()
+
+```

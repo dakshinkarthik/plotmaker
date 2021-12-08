@@ -1,0 +1,223 @@
+---
+title: "Sample Report"
+output: word_document
+author: "Dakshin Karthik Sridhar"
+header-includes:
+    - \usepackage{sectsty}
+    - \allsectionsfont{\color{blue}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.width = 22, fig.height = 10)
+```
+
+## R Markdown
+
+This is a finding I'd want to show.
+
+```{R echo=FALSE}
+library(knitr)
+library(ggplot2)
+library(ggthemes)
+library(ggpubr)
+library(tidyverse)
+library(extrafont)
+# library(kableExtra)
+```
+
+  
+# Stacked ggplot
+```{R echo=FALSE}
+addline_format <- function(x,...){
+  gsub('\\s',' ',x)
+}
+
+
+
+resp1 <- c("Strongly disagree","Disagree",
+           "Somewhat disagree","Somewhat agree",
+           "Agree","Strongly Agree")
+
+col1 <- rev(c("#002145", "#0055B7", "#00A7E1", "#EBC796", "#EB9C30", "#965A07"))
+tex.col1 <- rev(c("white","white","black","black","black","black"))
+ubc.theme.ld <-  theme(legend.position = "bottom",
+                    legend.title = element_blank(),
+                    legend.text = element_text(size = 18),
+                    legend.key.height = unit(2, 'mm'),
+                    legend.key.width = unit(6, 'mm'),
+                    plot.background = element_rect(colour = "grey", fill = NA, size = 2),
+                    plot.title = element_text(hjust = 0.1, color = "#2B73C2", size = 30),
+                    plot.subtitle = element_text(hjust = 0.1, color = "grey", size = 28),
+                    axis.line = element_blank(),
+                    axis.text.x = element_blank(),
+                    axis.text.y = element_text(family = "serif", size = 30),
+                    axis.ticks = element_blank(),
+                    axis.title.x = element_blank(),
+                    axis.title.y = element_blank())
+
+
+nubc21 <- read.csv(file = 'nubc2021.csv')
+nubc21.q <- read.csv(file = 'question.csv')
+nubc21.o <- read.csv(file = 'rspOptions.csv')
+nubc21.coh <- read.csv(file = 'nubc2021Tableaucohort.csv')
+nubc21 <- merge(x = nubc21.coh, y = nubc21, by.x = "externalDataReference", by.y = "ExternalReference")
+
+qn100_1.tb <- table(nubc21$mx.QN100_1[nubc21$mx.QN100_1 != 999]) 
+qn100_2.tb <- table(nubc21$mx.QN100_2[nubc21$mx.QN100_2 != 999])
+qn100_3.tb <- table(nubc21$mx.QN100_3[nubc21$mx.QN100_3 != 999])
+qn.mindset_1.tb <- table(nubc21$mx.mindset_1[nubc21$mx.mindset_1 < 999])
+
+
+qn100_1.df <- data.frame(qn100_1.tb, Ques = c(0))
+qn100_2.df <- data.frame(qn100_2.tb, Ques = c(0))
+qn100_3.df <- data.frame(qn100_3.tb, Ques = c(0))
+qn.mindset_1.df <- data.frame(qn.mindset_1.tb, Ques = c(0))
+
+
+
+levels(qn100_1.df$Var1) <- resp1
+levels(qn100_2.df$Var1) <- resp1
+levels(qn100_3.df$Var1) <- resp1
+levels(qn.mindset_1.df$Var1) <- resp1
+
+prop1 <- as.integer(100*qn100_1.df$Freq/sum(qn100_1.df$Freq))
+for(i in 1:length(prop1)){
+  if(as.integer(prop1[i])<5)
+    prop1[i] = ''
+  else
+    prop1[i] = paste0(prop1[i], "%")
+}
+
+prop3 <- as.integer(100*qn100_3.df$Freq/sum(qn100_3.df$Freq))
+for(i in 1:length(prop3)){
+  if(as.integer(prop3[i])<5)
+    prop3[i] = ''
+  else
+    prop3[i] = paste0(prop3[i], "%")
+}
+
+prop2 <- as.integer(100*qn100_2.df$Freq/sum(qn100_2.df$Freq))
+for(i in 1:length(prop2)){
+  if(as.integer(prop2[i])<5)
+    prop2[i] = ''
+  else
+    prop2[i] = paste0(prop2[i], "%")
+}
+
+prop4 <- as.integer(100*qn.mindset_1.df$Freq/sum(qn.mindset_1.df$Freq))
+for(i in 1:length(prop4)){
+  if(as.integer(prop4[i])<5)
+    prop4[i] = ''
+  else
+    prop4[i] = paste0(prop4[i], "%")
+}
+
+prop12 <- c(prop1, prop2)
+prop123 <- c(prop1, prop2, prop3)
+prop1234 <- c(prop1, prop2, prop3, prop4)
+
+qn100_1.df$Ques <- 1
+qn100_2.df$Ques <- 2
+qn100_3.df$Ques <- 3
+qn.mindset_1.df$Ques <- 4
+
+qn100_1.df$Ques <- as.factor(qn100_1.df$Ques)
+qn100_2.df$Ques <- as.factor(qn100_2.df$Ques)
+qn100_3.df$Ques <- as.factor(qn100_3.df$Ques)
+qn.mindset_1.df$Ques <- as.factor(qn.mindset_1.df$Ques)
+
+qn100_12.df <- rbind(qn100_1.df, qn100_2.df)
+
+qn100_123.df <- rbind(qn100_1.df, qn100_2.df, qn100_3.df)
+
+qn100_1234.df <- rbind(qn100_1.df, qn100_2.df, qn100_3.df, qn.mindset_1.df)
+```
+
+```{R echo = FALSE, fig.width = 22, fig.height = 3}
+ggplot(data = qn100_1.df, aes(x=Ques, y=Freq, fill = Var1)) +
+  geom_bar(stat = "identity", position = "fill", width = 0.8) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = col1, guide = guide_legend(reverse = TRUE)) +
+  geom_text(data = qn100_1.df, aes(Ques, Freq, group = Var1), label = prop1,
+            position = position_fill(vjust=0.5), color = rep(tex.col1, 1), size = 10) +
+  labs(title = "Title", subtitle = "Subtitle")  +
+  scale_x_discrete(breaks = unique(qn100_1.df$Ques),
+                   labels = addline_format(c("I am proud to be attending UBC"))) +
+  ubc.theme.ld +
+  coord_flip()
+```
+
+```{R echo = FALSE, results = 'asis'}
+# tb1 <-  data.frame(c((rev(qn100_1.df$Freq)[1]+rev(qn100_1.df$Freq)[2])/sum(qn100_1.df$Freq)*100),
+#                    c((rev(qn100_1.df$Freq)[1]+rev(qn100_1.df$Freq)[2])/sum(qn100_1.df$Freq)*100))
+# tb1
+# names(tb1) <- c(paste0(rev(resp1)[1],"/",rev(resp1)[2]),paste("Incl",rev(resp1)[3]),rev(resp1))
+# kable(tb1, format = "pipe", results = "asis")
+# (rev(qn100_1.df$Freq)[1]+rev(qn100_1.df$Freq)[2])/sum(qn100_1.df$Freq)*100
+```
+
+```{R echo=FALSE, fig.width = 22, fig.height = 5}
+ggplot(data = qn100_12.df, aes(x=Ques, y=Freq, fill = Var1)) +
+  geom_bar(stat = "identity", position = "fill", width = 0.5) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = col1, guide = guide_legend(reverse = TRUE)) +
+  geom_text(data = qn100_12.df, aes(Ques, Freq, group = Var1), label = prop12,
+            position = position_fill(vjust=0.5), color = rep(tex.col1, 2), size = 10) +
+  labs(title = "Title", subtitle = "Subtitle")  +
+  scale_x_discrete(breaks = unique(qn100_12.df$Ques),
+                   labels = addline_format(c("I am proud to be attending UBC",
+                                             "I feel I made the right choice to come"))) +
+  ubc.theme.ld +
+  coord_flip()
+```
+
+```{R echo=FALSE, fig.width = 22, fig.height = 7.5}
+ggplot(data = qn100_123.df, aes(x=Ques, y=Freq, fill = Var1)) +
+  geom_bar(stat = "identity", position = "fill", width = 0.45) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = col1, guide = guide_legend(reverse = TRUE)) +
+  geom_text(data = qn100_123.df, aes(Ques, Freq, group = Var1), label = prop123,
+            position = position_fill(vjust=0.5), color = rep(tex.col1, 3), size = 10) +
+  labs(title = "Title", subtitle = "Subtitle")  +
+  scale_x_discrete(breaks = unique(qn100_123.df$Ques),
+                   labels = addline_format(c("I am proud to be attending UBC",
+                                             "I feel I made the right choice to come","I feel welcome at UBC"))) +
+  ubc.theme.ld +
+  coord_flip()
+```
+
+```{R echo=FALSE}
+ggplot(data = qn100_1234.df, aes(x=Ques, y=Freq, fill = Var1)) +
+  geom_bar(stat = "identity", position = "fill", width = 0.4) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = col1, guide = guide_legend(reverse = TRUE)) +
+  geom_text(data = qn100_1234.df, aes(Ques, Freq, group = Var1), label = prop1234,
+            position = position_fill(vjust=0.5), color = rep(tex.col1, 4), size = 10) +
+  labs(title = "Title", subtitle = "Subtitle")  +
+  scale_x_discrete(breaks = unique(qn100_1234.df$Ques),
+                   labels = addline_format(c("I am proud to be attending UBC",
+                                             "I feel I made the right choice to come","I feel welcome at UBC",
+                                             "I am inspired and ready to learn within my program"))) +
+  ubc.theme.ld +
+  coord_flip()
+```
+
+```{R echo=FALSE}
+ggplot(data = q.data.df, aes(x=Ques, y=Freq, fill = Var1)) +
+  geom_bar(stat = "identity", position = "fill", width = 0.2) +
+  theme_economist(base_size = 14) +
+  scale_fill_manual(values = col3, guide = guide_legend(reverse = TRUE)) +
+  geom_text(data = q.data.df, aes(Ques, Freq, group = Var1), label = prop,
+            position = position_fill(vjust=0.5), color = rep(tex.col3, 1), size = 25) +
+  labs(title = "Title", subtitle = "Subtitle")  +
+  scale_x_discrete(breaks = unique(q.data.df$Ques),
+                   labels = addline_format("Student residence countries")) +
+  ubc.theme.ld + theme(legend.text = element_text(size = 50), legend.direction = "horizontal",
+                       legend.position = c(0,0.2)) +
+  coord_flip()
+```
+
+
+
+
+

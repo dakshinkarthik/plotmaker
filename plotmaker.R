@@ -8,19 +8,19 @@ flip <- function(data) {
   new
 }
 
-ubc.theme.ld <-  theme(legend.position = c(0.2,0.02),
+ubc.theme.ld <-  theme(legend.position = c(0.1,0.02),
                        legend.direction = "horizontal",
                        legend.title = element_blank(),
-                       legend.key.height = unit(1, 'cm'),
-                       legend.key.width = unit(2, 'cm'),
-                       legend.text = element_text(size = 80),
+                       legend.key.height = unit(2, 'cm'),
+                       legend.key.width = unit(4, 'cm'),
+                       legend.text = element_text(size = 175),
                        legend.spacing.x = unit(2, "cm"),
                        plot.background = element_rect(colour = "grey", fill = NA, size = 2),
                        plot.title = element_text(hjust = 0.1, color = "#2B73C2", size = 85),
                        plot.subtitle = element_blank(),
                        axis.line = element_blank(),
                        axis.text.x = element_blank(),
-                       axis.text.y = element_text(family = "serif", size = 120),
+                       axis.text.y = element_text(family = "serif", size = 200, hjust = 1),
                        axis.ticks = element_blank(),
                        axis.title.x = element_blank(),
                        axis.title.y = element_blank())
@@ -91,11 +91,11 @@ mc <- function(qval, new.dat){
   
   
   plot.bar <- ggplot(data = main.df, aes(x=Ques, y=Freq, fill = Var1)) +
-    geom_bar(stat = "identity", position = "fill", width = 0.4) +
+    geom_bar(stat = "identity", position = "fill", width = 0.5) +
     theme_economist(base_size = 14) +
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
     geom_text(data = main.df, aes(Ques, Freq, group = Var1), label = main.prop,
-              position = position_fill(vjust=0.5), color = tex.col, size = 35) +
+              position = position_fill(vjust=0.5), color = tex.col, size = 75) +
     # labs(title = qval) +
     scale_x_discrete(breaks = unique(main.df$Ques),
                      labels = ld.title) +

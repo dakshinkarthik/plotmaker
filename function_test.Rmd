@@ -23,7 +23,7 @@ source("plotmaker.R")
 
 <!-- Reads and formats -->
 ```{R echo=FALSE}
-nubc2021joined <- read_sav("nubc2021_new.sav")
+nubc2021joined <- read_sav("data/nubc2021_new.sav")
 data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Okanagan"),]
 ```
 

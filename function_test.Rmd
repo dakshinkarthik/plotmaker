@@ -32,5 +32,9 @@ mc("QN105", data.ok)
 ```
 
 ```{R echo = FALSE, fig.height = 75}
-mc("QN104", data.ok)
+mc("mindset", data.ok)
+```
+
+```{R echo = FALSE, fig.height = 75}
+mc("QN111", data.ok)
 ```

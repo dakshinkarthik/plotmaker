@@ -16,7 +16,7 @@ data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY"
 
 str(data.ok)
 
-qval <- "QN104"
+qval <- "QN111"
 
 cnames <- colnames(data.ok)
 rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
@@ -104,13 +104,13 @@ mc("QN105", data.ok)
 
 mc("QN105", new.dat)
 
-names(get(rc_list[9], data.ok) %>% attr('labels'))
+names(get(rc_list[1], data.ok) %>% attr('labels'))
 get(rc_list[4], data.ok) %>% attr('label')
 
 
-sampst <- substr(get(rc_list[4], data.ok) %>% attr('label'),
-                 unlist(gregexpr(pattern =' - ', get(rc_list[4], data.ok) %>% attr('label')))+3,
-                 nchar(get(rc_list[4], data.ok) %>% attr('label')))
+sampst <- substr(get(rc_list[1], data.ok) %>% attr('label'),
+                 unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('label')))+3,
+                 nchar(get(rc_list[1], data.ok) %>% attr('label')))
 
 substr(sampst,1,nchar(sampst)/2)
 nchar(sampst)
@@ -119,3 +119,42 @@ if (nchar(sampst)>=77) {
   paste0(substr(sampst,1,sapply(gregexpr(pattern = " ", substr(sampst,1,77)),max)), "\n ",
          substr(sampst,sapply(gregexpr(pattern = " ", substr(sampst,1,77)),max)+1,nchar(sampst)))
 }
+
+
+get(rc_list[1], data.ok) %>% attr('label')
+get("mx.QN105_2", data.ok) %>% attr('label')
+get(rc_list[1], data.ok) %>% attr('label')
+unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label')))
+
+substr(get(rc_list[1], data.ok) %>% attr('label'),
+       unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label'))),
+       unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('label')))-1)
+
+substr(get(rc_list[1], data.ok) %>% attr('label'),1,
+       unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('label')))-1)
+
+substr(get(rc_list[1], data.ok) %>% attr('label'),
+       unlist(gregexpr(pattern ='\\.', get(rc_list[1], data.ok) %>% attr('label')))+2,
+       unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+
+substr(get(rc_list[1], data.ok) %>% attr('label'),
+       unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label'))),
+       unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+
+unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))
+
+sidestep <- NULL
+if(length(rc_list) <= 3){
+  sidestep <- -1
+} else if (length(rc_list) <= 6){
+  sidestep <- -1.2
+} else {
+  sidestep <- -1.5
+}
+
+
+
+nchar(substr(get(rc_list[1], data.ok) %>% attr('label'),
+             unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label'))),
+             unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label')))))
+nchar("To what extent do you agree or disagree with the following statements?")

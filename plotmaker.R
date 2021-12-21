@@ -8,16 +8,19 @@ flip <- function(data) {
   new
 }
 
-ubc.theme.ld <-  theme(legend.position = c(0.1,0.02),
+# Plot theme formatting
+ubc.theme.ld <-  theme(legend.position = c(0.05,0.02),
                        legend.direction = "horizontal",
                        legend.title = element_blank(),
                        legend.key.height = unit(2, 'cm'),
                        legend.key.width = unit(4, 'cm'),
                        legend.text = element_text(size = 175),
                        legend.spacing.x = unit(2, "cm"),
+                       legend.spacing.y = unit(1, "cm"),
+                       legend.box.spacing = unit(2, "cm"),
                        plot.background = element_rect(colour = "grey", fill = NA, size = 2),
-                       plot.title = element_text(hjust = 0.1, color = "#2B73C2", size = 85),
-                       plot.subtitle = element_blank(),
+                       plot.title = element_text(color = "#2B73C2", size = 175, hjust = -0.7),
+                       plot.subtitle = element_text(size = 150, hjust = -1.5),
                        axis.line = element_blank(),
                        axis.text.x = element_blank(),
                        axis.text.y = element_text(family = "serif", size = 200, hjust = 1),
@@ -28,17 +31,15 @@ ubc.theme.ld <-  theme(legend.position = c(0.1,0.02),
 
 
 
-#For options
-# nubc2021 <- read.csv('R code/nubc2021joined.csv')
-# new.dat <- nubc2021[which(nubc2021$directtransfer ==
-#                                   "DIRECT-ENTRY" & nubc2021$campusName == "Okanagan"),]
-# qval <- "QN105"
+
 
 mc <- function(qval, new.dat){
-  # qval <- "QN105"
-  # new.dat <- data.ok
+  # Column names to read data
   cnames <- colnames(new.dat)
   rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  
+  # Variable initialization
   df.list <- list()
   prop <- list()
   main.prop <- NULL
@@ -49,8 +50,8 @@ mc <- function(qval, new.dat){
   label_count <- length(tex.col)
   ld.title <- c()
   i <- 0
-  resp <- names(get(rc_list[1], data.ok) %>% attr('labels'))
   
+  # Axis question building and formatting
   for (qn in rc_list) {
     label_count_var <- 0
     i <- i + 1
@@ -64,9 +65,13 @@ mc <- function(qval, new.dat){
     }
     
     ld.title <- c(ld.title, ld)
+    
+    # Datafram building
     df.list[[i]] <- data.frame(table(get(qn, data.ok)), Ques = c(i))
     levels(df.list[[i]]) <- factor(resp)
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
+    
+    # Geometry text prep
     prop[[i]] <- ceiling(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
     
     for(j in 1:length(prop[[i]])){
@@ -77,6 +82,7 @@ mc <- function(qval, new.dat){
         prop[[i]][j] = paste0(prop[[i]][j], "%")
     }
     
+    # Color for geom text
     if (label_count_var == label_count) {
       tex.col <- c(tex.col, tex.col.base)
     }
@@ -84,89 +90,70 @@ mc <- function(qval, new.dat){
       tex.col <- c(tex.col, tex.col.base[1:label_count_var])
     }
     
+    # Main dataframe and geom text for plotting
     main.prop <- c(main.prop, prop[[i]])
     main.df <- rbind(main.df, df.list[[i]])
   }
-  # print(ld.title)
   
+  # Subtitle building
+  subt <- "Subtitle"
+  subt_index <- unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label')))
   
+  if(unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label'))) == -1 ||
+     unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))){
+    subt <-  substr(get(rc_list[1], data.ok) %>% attr('label'),1,
+                    unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('label')))-1)
+  }
+  
+  else if (unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label')))){
+    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),
+           unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label'))),
+           unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+  }
+  else if (unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))){
+    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),
+                   unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label'))),
+                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+  }
+  else {
+    subt <- "Unidentified subtitle format"
+  }
+  
+  # Subtitle positioning and geom text size
+  sidestep <- NULL
+  geom_text_size <- NULL
+  if(length(rc_list) <= 3) {
+    geom_text_size <- 90
+    sidestep <- -1
+  } else if (length(rc_list) <= 6) {
+    geom_text_size <- 75
+    sidestep <- -1.2
+  } else {
+    geom_text_size <- 50
+    sidestep <- -1.5
+  }
+  
+
+  
+
+  
+  # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=Ques, y=Freq, fill = Var1)) +
     geom_bar(stat = "identity", position = "fill", width = 0.5) +
     theme_economist(base_size = 14) +
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
     geom_text(data = main.df, aes(Ques, Freq, group = Var1), label = main.prop,
-              position = position_fill(vjust=0.5), color = tex.col, size = 75) +
-    # labs(title = qval) +
+              position = position_fill(vjust=0.5), color = tex.col, size = geom_text_size) +
+    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+         subtitle = subt) +
     scale_x_discrete(breaks = unique(main.df$Ques),
                      labels = ld.title) +
-    ubc.theme.ld +
+    ubc.theme.ld + 
+    theme(plot.subtitle = element_text(hjust = sidestep)) +
     coord_flip()
   
+  # Printing plot
   print(plot.bar)
 }
-
-
-
-# mc <- function(qval, new.dat){
-#   x <- na.omit(unique(new.dat$qSubid[new.dat$qID == qval]))
-#   resp <- na.omit(unique(new.dat$responseTxt[new.dat$qID == qval]))
-#   i <- 0
-#   df.list <- list()
-#   prop <- list()
-#   main.prop <- NULL
-#   main.df<- data.frame()
-#   col <- rev(c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF"))
-#   tex.col.base <- rev(c("white","white","black","black","black","black"))
-#   tex.col <- c()
-#   label_count <- length(tex.col)
-#   ld.title <- na.omit(unique(nubc2021$qSublabel[nubc2021$qID == qval]))
-# 
-#   for (qn in x) {
-#     label_count_var <- 0
-#     i <- i+1
-#     df.list[[i]] <- data.frame(table(new.dat$responseTxt[new.dat$qSubid == qn]), Ques = c(i))
-#     levels(df.list[[i]]) <- resp
-#     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
-#     prop[[i]] <- ceiling(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
-# 
-#     for(j in 1:length(prop[[i]])){
-#       label_count_var <- label_count_var + 1
-#       if(as.integer(prop[[i]][j])<5)
-#         prop[[i]][j] = ''
-#       else
-#         prop[[i]][j] = paste0(prop[[i]][j], "%")
-#     }
-# 
-#     if (label_count_var == label_count) {
-#       tex.col <- c(tex.col, tex.col.base)
-#     }
-#     else {
-#       tex.col <- c(tex.col, tex.col.base[1:label_count_var])
-#     }
-# 
-#     main.prop <- c(main.prop, prop[[i]])
-#     main.df <- rbind(main.df, df.list[[i]])
-#   }
-# 
-#   print(resp)
-# 
-#   plot.bar <- ggplot(data = main.df, aes(x=Ques, y=Freq, fill = Var1)) +
-#     geom_bar(stat = "identity", position = "fill", width = 0.4) +
-#     theme_economist(base_size = 14) +
-#     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE)) +
-#     geom_text(data = main.df, aes(Ques, Freq, group = Var1), label = main.prop,
-#               position = position_fill(vjust=0.5), color = tex.col, size = 30) +
-#     # labs(title = qval) +
-#     scale_x_discrete(breaks = unique(main.df$Ques),
-#                      labels = addline_format(ld.title)) +
-#     # ubc.theme.ld +
-#     coord_flip()
-# 
-#   print(plot.bar)
-# }
-# 
-# mc("QN105", new.dat)
-
-
 
 

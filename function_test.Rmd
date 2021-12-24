@@ -28,13 +28,7 @@ data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" 
 ```
 
 ```{R echo = FALSE, fig.height = 75}
-mc("QN105", data.ok)
+mx("QN105", data.ok)
+tb_mx("QN105", data.ok)
 ```
 
-```{R echo = FALSE, fig.height = 75}
-mc("mindset", data.ok)
-```
-
-```{R echo = FALSE, fig.height = 75}
-mc("QN111", data.ok)
-```

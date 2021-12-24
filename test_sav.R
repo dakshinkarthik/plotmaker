@@ -16,13 +16,13 @@ data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY"
 
 str(data.ok)
 
-qval <- "QN111"
+qval <- "QN105"
 
 cnames <- colnames(data.ok)
 rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
 
 
-get(rc_list[2], data.ok) %>% attr('labels')
+get(rc_list[1], data.ok) %>% attr('label')
 
 
 
@@ -158,3 +158,5 @@ nchar(substr(get(rc_list[1], data.ok) %>% attr('label'),
              unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label'))),
              unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label')))))
 nchar("To what extent do you agree or disagree with the following statements?")
+
+

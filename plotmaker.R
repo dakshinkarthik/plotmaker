@@ -9,7 +9,7 @@ flip <- function(data) {
 }
 
 # Plot theme formatting
-ubc.theme.ld <-  theme(legend.position = c(0.05,0.02),
+ubc.theme.ld <-  theme(legend.position = c(0.07,0.02),
                        legend.direction = "horizontal",
                        legend.title = element_blank(),
                        legend.key.height = unit(2, 'cm'),
@@ -19,8 +19,9 @@ ubc.theme.ld <-  theme(legend.position = c(0.05,0.02),
                        legend.spacing.y = unit(1, "cm"),
                        legend.box.spacing = unit(2, "cm"),
                        plot.background = element_rect(colour = "grey", fill = NA, size = 2),
-                       plot.title = element_text(color = "#2B73C2", size = 175, hjust = -0.7),
-                       plot.subtitle = element_text(size = 150, hjust = -1.5),
+                       plot.subtitle = element_text(size = 150),
+                       plot.title.position = "plot",
+                       plot.title = element_text(color = "#2B73C2", size = 175, hjust = 0.5),
                        axis.line = element_blank(),
                        axis.text.x = element_blank(),
                        axis.text.y = element_text(family = "serif", size = 200, hjust = 1),
@@ -33,7 +34,7 @@ ubc.theme.ld <-  theme(legend.position = c(0.05,0.02),
 
 
 
-mc <- function(qval, new.dat){
+mx <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
   rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
@@ -72,7 +73,7 @@ mc <- function(qval, new.dat){
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
     
     # Geometry text prep
-    prop[[i]] <- ceiling(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
+    prop[[i]] <- floor(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
     
     for(j in 1:length(prop[[i]])){
       label_count_var <- label_count_var + 1
@@ -149,11 +150,53 @@ mc <- function(qval, new.dat){
     scale_x_discrete(breaks = unique(main.df$Ques),
                      labels = ld.title) +
     ubc.theme.ld + 
-    theme(plot.subtitle = element_text(hjust = sidestep)) +
+    # theme(plot.subtitle = element_text(hjust = sidestep)) +
     coord_flip()
   
   # Printing plot
   print(plot.bar)
 }
+
+
+tb_mx <- function(qval, new.dat){
+  cnames <- colnames(new.dat)
+  rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  mattt <- matrix(rep(1,length(resp)*length(rc_list)), ncol = length(resp))
+  
+  df.list <- list()
+  main.df<- data.frame()
+  ld.main <- c()
+  row_tot <- c()
+  
+  i <- 1
+  for (qn in rc_list) {
+    df.list[[i]] <- data.frame(table(get(qn, data.ok)))
+    ld <- substr(get(qn, data.ok) %>% attr('label'),
+                 unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
+                 nchar(get(qn, new.dat) %>% attr('label')))
+    
+    row_tot <- c(row_tot, sum(df.list[[i]]$Freq))
+    for (j in 1:length(resp)) {
+      if(!is.na(df.list[[i]]$Freq[j]))
+        mattt[i,j] <- paste0(floor(100*df.list[[i]]$Freq[j]/row_tot[i]),"%")
+      else
+        mattt[i,j] <- "NA"
+    }
+    
+    ld.main <- c(ld.main, ld)
+    i <- i + 1
+  }
+  
+  main.df <- data.frame(ld.main,mattt,row_tot)
+  colnames(main.df) <- c("UBCO",resp,"Total")
+  ft <- flextable(main.df) %>% theme_box()
+  ft <- fontsize(ft, size = 6, part = "all")
+  set_table_properties(ft, layout = "autofit")
+  ft <- align_text_col(ft, align = "center", header = TRUE)
+  ft %>% colformat_int(big.mark = "")
+}
+
+
 
 

@@ -1,8 +1,8 @@
 ---
 title: "Function Test"
-author: "Dakshin Karthik"
-date: "12/6/2021"
-output: word_document
+output:
+  word_document:
+    reference_docx: ref_doc.docx
 ---
 
 <!-- Setup and library calls -->

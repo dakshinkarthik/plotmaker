@@ -162,12 +162,14 @@ tb_mx <- function(qval, new.dat){
   cnames <- colnames(new.dat)
   rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
-  mattt <- matrix(rep(1,length(resp)*length(rc_list)), ncol = length(resp))
+  mattt <- matrix(rep(1,(length(resp)+0)*length(rc_list)), ncol = length(resp)+0)
   
   df.list <- list()
   main.df<- data.frame()
   ld.main <- c()
   row_tot <- c()
+  c_vc <- c()
+  c_vc_sc <- c()
   
   i <- 1
   for (qn in rc_list) {
@@ -177,24 +179,48 @@ tb_mx <- function(qval, new.dat){
                  nchar(get(qn, new.dat) %>% attr('label')))
     
     row_tot <- c(row_tot, sum(df.list[[i]]$Freq))
-    for (j in 1:length(resp)) {
-      if(!is.na(df.list[[i]]$Freq[j]))
+    c_vc.sum <- 0
+    c_vc_sc.sum <- 0
+    for (j in 1:length(resp)+0) {
+
+      if(!is.na(df.list[[i]]$Freq[j])){
         mattt[i,j] <- paste0(floor(100*df.list[[i]]$Freq[j]/row_tot[i]),"%")
+        if(j==3){
+          c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
+        }
+        if(j>=4){
+          c_vc.sum <- c_vc.sum + df.list[[i]]$Freq[j]
+          c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
+        }
+      }
       else
         mattt[i,j] <- "NA"
     }
-    
+
     ld.main <- c(ld.main, ld)
+    c_vc <- c(c_vc, paste0(floor(100*c_vc.sum/row_tot[i]),"%"))
+    c_vc_sc <- c(c_vc_sc, paste0(floor(100*c_vc_sc.sum/row_tot[i]),"%"))
     i <- i + 1
   }
   
-  main.df <- data.frame(ld.main,mattt,row_tot)
-  colnames(main.df) <- c("UBCO",resp,"Total")
+  main.df <- data.frame(mattt)
+  colnames(main.df) <- c(resp)
+  main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>% 
+    add_column(`Very concerned/Concerned` = c_vc) %>%
+    add_column(`Including somewhat concerned` = c_vc_sc) %>%
+    add_column(Total = row_tot)
+  
+  
   ft <- flextable(main.df) %>% theme_box()
   ft <- fontsize(ft, size = 6, part = "all")
   set_table_properties(ft, layout = "autofit")
-  ft <- align_text_col(ft, align = "center", header = TRUE)
-  ft %>% colformat_int(big.mark = "")
+  ft <- align_text_col(ft, align = "center", header = TRUE) %>% 
+    align_nottext_col(align = "center", header = TRUE)
+  ft %>% colformat_int(big.mark = "") %>%
+    valign(valign = "center", part = "all") %>%
+    bg(bg = "grey", part = "all") %>%
+    border(border = fp_border_default(color = "white"), part = "all") %>%
+    width(width = 0.65, unit = "in")
 }
 
 

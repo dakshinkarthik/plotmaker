@@ -9,7 +9,7 @@ flip <- function(data) {
 }
 
 # Plot theme formatting
-ubc.theme.ld <-  theme(legend.position = c(0.07,0.02),
+ubc.theme <-  theme(legend.position = c(0.07,0.02),
                        legend.direction = "horizontal",
                        legend.title = element_blank(),
                        legend.key.height = unit(2, 'cm'),
@@ -32,7 +32,9 @@ ubc.theme.ld <-  theme(legend.position = c(0.07,0.02),
 
 
 
-
+mc <- function(qval, new.dat){
+  
+}
 
 mx <- function(qval, new.dat){
   # Column names to read data
@@ -145,7 +147,7 @@ mx <- function(qval, new.dat){
          subtitle = subt) +
     scale_x_discrete(breaks = unique(main.df$Ques),
                      labels = ld.title) +
-    ubc.theme.ld + 
+    ubc.theme + 
     # theme(plot.subtitle = element_text(hjust = sidestep)) +
     coord_flip()
   
@@ -256,5 +258,43 @@ tb_mx <- function(qval, new.dat){
 }
 
 
-
-
+mc <- function(qval, new.dat){
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rev(cnames[grepl(qval, cnames, fixed = TRUE)])
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  resp_b <- c()
+  
+  # Variable initialization
+  df.list <- list()
+  main.df <- NULL
+  prop <- list()
+  main.prop <- NULL
+  main.df<- data.frame()
+  col <- rev(c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF"))
+  tex.col.base <- rev(c("white","white","black","black","black","black"))
+  tex.col <- c()
+  label_count <- length(tex.col)
+  ld.title <- c()
+  i <- 1
+  
+  main.df <- data.frame(table(get(rc_list, data.ok)))
+  tot <- sum(main.df$Freq)
+  for (qn in main.df$Var1) {
+    resp_b <- c(resp_b, as.numeric(qn))
+  }
+  
+  plot.bar <- ggplot(data = main.df, aes(x=Var1, y=Freq)) +
+    geom_bar(stat = "identity") +
+    scale_x_discrete(breaks = main.df$Var1, labels = resp[resp_b]) +
+    scale_fill_manual(values = rep("#0055B7",length(resp_b)), 
+                      guide = guide_legend(reverse = TRUE),
+                      labels = resp[resp_b]) +
+    geom_text(data = main.df, aes(Var1, Freq, group = Var1),
+              label = paste0(floor(100*main.df$Freq/tot),"%"), position = position_stack(vjust = 0.5),
+              size = 75, color = rep("white",length(resp_b))) +
+    ubc.theme +
+    coord_flip()
+  print(plot.bar)
+}
+# mc("reside",data.ok)

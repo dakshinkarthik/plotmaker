@@ -42,3 +42,7 @@ mx("QN28", data.ok)
 tb_mx("QN28", data.ok)
 ```
 
+```{R echo = FALSE, fig.height = 75}
+mc("reside",data.ok)
+```
+

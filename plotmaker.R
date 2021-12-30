@@ -37,7 +37,7 @@ ubc.theme.ld <-  theme(legend.position = c(0.07,0.02),
 mx <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  rc_list <- rev(cnames[grepl(qval, cnames, fixed = TRUE)])
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   
   # Variable initialization
@@ -56,11 +56,16 @@ mx <- function(qval, new.dat){
   for (qn in rc_list) {
     label_count_var <- 0
     i <- i + 1
-    ld <- substr(get(qn, data.ok) %>% attr('label'),
-                 unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
-                 nchar(get(qn, new.dat) %>% attr('label')))
+    if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(qn, data.ok) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
+                   nchar(get(qn, new.dat) %>% attr('label')))
+    }
+    else{
+      ld <- get(qn, new.dat) %>% attr('label')
+    }
     
-    if (nchar(ld)>63) {
+    if(nchar(ld)>63){
       ld <- paste0(substr(ld,1,sapply(gregexpr(pattern = " ", substr(ld,1,63)),max)), "\n ",
                    substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,63)),max)+1,nchar(ld)))
     }
@@ -84,10 +89,10 @@ mx <- function(qval, new.dat){
     }
     
     # Color for geom text
-    if (label_count_var == label_count) {
+    if(label_count_var == label_count){
       tex.col <- c(tex.col, tex.col.base)
     }
-    else {
+    else{
       tex.col <- c(tex.col, tex.col.base[1:label_count_var])
     }
     
@@ -98,45 +103,36 @@ mx <- function(qval, new.dat){
   
   # Subtitle building
   subt <- "Subtitle"
-  subt_index <- unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label')))
+  subt_how <- unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label')))
+  subt_to <- unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))
   
-  if(unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label'))) == -1 ||
-     unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))){
+  if(subt_how != -1){
+    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_how,
+                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+  }else if(subt_to != -1){
+    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_to,
+                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+  }else if(subt_how == -1 || subt_to == -1){
     subt <-  substr(get(rc_list[1], data.ok) %>% attr('label'),1,
                     unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('label')))-1)
   }
-  
-  else if (unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label')))){
-    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),
-           unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label'))),
-           unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
-  }
-  else if (unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))){
-    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),
-                   unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label'))),
-                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
-  }
-  else {
+  else{
     subt <- "Unidentified subtitle format"
   }
   
   # Subtitle positioning and geom text size
   sidestep <- NULL
   geom_text_size <- NULL
-  if(length(rc_list) <= 3) {
+  if(length(rc_list) <= 3){
     geom_text_size <- 90
     sidestep <- -1
-  } else if (length(rc_list) <= 6) {
+  }else if(length(rc_list) <= 6){
     geom_text_size <- 75
     sidestep <- -1.2
-  } else {
+  }else{
     geom_text_size <- 50
     sidestep <- -1.5
   }
-  
-
-  
-
   
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=Ques, y=Freq, fill = Var1)) +
@@ -174,9 +170,15 @@ tb_mx <- function(qval, new.dat){
   i <- 1
   for (qn in rc_list) {
     df.list[[i]] <- data.frame(table(get(qn, data.ok)))
-    ld <- substr(get(qn, data.ok) %>% attr('label'),
-                 unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
-                 nchar(get(qn, new.dat) %>% attr('label')))
+    if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(qn, data.ok) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
+                   nchar(get(qn, new.dat) %>% attr('label')))
+    }
+    else{
+      ld <- get(qn, new.dat) %>% attr('label')
+    }
+
     
     row_tot <- c(row_tot, sum(df.list[[i]]$Freq))
     c_vc.sum <- 0
@@ -185,12 +187,24 @@ tb_mx <- function(qval, new.dat){
 
       if(!is.na(df.list[[i]]$Freq[j])){
         mattt[i,j] <- paste0(floor(100*df.list[[i]]$Freq[j]/row_tot[i]),"%")
-        if(j==3){
-          c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
+        if(unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
+          if(j==3){
+            c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
+          }
+          if(j>=4 && j<=5){
+            c_vc.sum <- c_vc.sum + df.list[[i]]$Freq[j]
+            c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
+          }
         }
-        if(j>=4){
-          c_vc.sum <- c_vc.sum + df.list[[i]]$Freq[j]
-          c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
+        else if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1 || 
+                unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1){
+          if(j==4){
+            c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
+          }
+          if(j>=5 && j<=6){
+            c_vc.sum <- c_vc.sum + df.list[[i]]$Freq[j]
+            c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
+          }
         }
       }
       else
@@ -205,12 +219,30 @@ tb_mx <- function(qval, new.dat){
   
   main.df <- data.frame(mattt)
   colnames(main.df) <- c(resp)
-  main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>% 
-    add_column(`Very concerned/Concerned` = c_vc) %>%
-    add_column(`Including somewhat concerned` = c_vc_sc) %>%
-    add_column(Total = row_tot)
+  c.width <- 1
   
-  
+  if(unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
+    main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>% 
+      add_column(`Very concerned/Concerned` = c_vc) %>%
+      add_column(`Including somewhat concerned` = c_vc_sc) %>%
+      add_column(Total = row_tot)
+    c.width <- 0.65
+  }
+  else if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1){
+    main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>% 
+      add_column(`Strongly agree/Agree` = c_vc) %>%
+      add_column(`Including somewhat agree` = c_vc_sc) %>%
+      add_column(Total = row_tot)
+    c.width <- 0.6
+  }
+  else if(unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1){
+    main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>% 
+      add_column(`Very satisfied/Satisfied` = c_vc) %>%
+      add_column(`Including somewhat satisfied` = c_vc_sc) %>%
+      add_column(Total = row_tot)
+    c.width <- 0.6
+  }
+
   ft <- flextable(main.df) %>% theme_box()
   ft <- fontsize(ft, size = 6, part = "all")
   set_table_properties(ft, layout = "autofit")
@@ -220,7 +252,7 @@ tb_mx <- function(qval, new.dat){
     valign(valign = "center", part = "all") %>%
     bg(bg = "grey", part = "all") %>%
     border(border = fp_border_default(color = "white"), part = "all") %>%
-    width(width = 0.65, unit = "in")
+    width(width = c.width, unit = "in")
 }
 
 

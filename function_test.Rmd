@@ -1,5 +1,5 @@
 ---
-title: "Function Test"
+title: "Test report"
 output:
   word_document:
     reference_docx: ref_doc.docx
@@ -30,5 +30,15 @@ data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" 
 ```{R echo = FALSE, fig.height = 75}
 mx("QN105", data.ok)
 tb_mx("QN105", data.ok)
+```
+
+```{R echo = FALSE, fig.height = 75}
+mx("QN980", data.ok)
+tb_mx("QN980", data.ok)
+```
+
+```{R echo = FALSE, fig.height = 75}
+mx("QN28", data.ok)
+tb_mx("QN28", data.ok)
 ```
 

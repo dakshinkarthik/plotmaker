@@ -16,7 +16,7 @@ data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY"
 
 str(data.ok)
 
-qval <- "QN105"
+qval <- "QN28"
 
 cnames <- colnames(data.ok)
 rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
@@ -142,6 +142,9 @@ substr(get(rc_list[1], data.ok) %>% attr('label'),
        unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
 
 unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))
+unlist(gregexpr(pattern = 'satisfied', "Very dissatisfied"))
+unlist(gregexpr(pattern = 'How', 
+                "How satisfied are you with your overall experience with UBC so far?"))
 
 sidestep <- NULL
 if(length(rc_list) <= 3){

@@ -9,7 +9,7 @@ flip <- function(data) {
 }
 
 # Plot theme formatting
-ubc.theme <-  theme(legend.position = c(0.07,0.02),
+ubc.theme <-  theme(legend.position = c(0.1,0.02),
                        legend.direction = "horizontal",
                        legend.title = element_blank(),
                        legend.key.height = unit(2, 'cm'),
@@ -18,7 +18,7 @@ ubc.theme <-  theme(legend.position = c(0.07,0.02),
                        legend.spacing.x = unit(2, "cm"),
                        legend.spacing.y = unit(1, "cm"),
                        legend.box.spacing = unit(2, "cm"),
-                       plot.background = element_rect(colour = "grey", fill = NA, size = 2),
+                       plot.background = element_rect(colour = "grey", fill = NA, size = 4),
                        plot.subtitle = element_text(size = 150),
                        plot.title.position = "plot",
                        plot.title = element_text(color = "#2B73C2", size = 175, hjust = 0.5),
@@ -29,12 +29,6 @@ ubc.theme <-  theme(legend.position = c(0.07,0.02),
                        axis.title.x = element_blank(),
                        axis.title.y = element_blank())
 
-
-
-
-mc <- function(qval, new.dat){
-  
-}
 
 mx <- function(qval, new.dat){
   # Column names to read data
@@ -74,7 +68,7 @@ mx <- function(qval, new.dat){
     
     ld.title <- c(ld.title, ld)
     
-    # Datafram building
+    # Dataframe building
     df.list[[i]] <- data.frame(table(get(qn, data.ok)), Ques = c(i))
     levels(df.list[[i]]) <- factor(resp)
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
@@ -222,31 +216,34 @@ tb_mx <- function(qval, new.dat){
   main.df <- data.frame(mattt)
   colnames(main.df) <- c(resp)
   c.width <- 1
+  ft.size <- 6
+  
+  main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1])
   
   if(unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
-    main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>% 
-      add_column(`Very concerned/Concerned` = c_vc) %>%
+      main.df <- main.df %>% add_column(`Very concerned/Concerned` = c_vc) %>%
       add_column(`Including somewhat concerned` = c_vc_sc) %>%
       add_column(Total = row_tot)
     c.width <- 0.65
+    ft.size <- 6
   }
   else if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1){
-    main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>% 
-      add_column(`Strongly agree/Agree` = c_vc) %>%
+      main.df <- main.df %>% add_column(`Strongly agree/\nAgree` = c_vc) %>%
       add_column(`Including somewhat agree` = c_vc_sc) %>%
       add_column(Total = row_tot)
     c.width <- 0.6
+    ft.size <- 6
   }
   else if(unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1){
-    main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>% 
-      add_column(`Very satisfied/Satisfied` = c_vc) %>%
+      main.df <- main.df %>% add_column(`Very satisfied/\nSatisfied` = c_vc) %>%
       add_column(`Including somewhat satisfied` = c_vc_sc) %>%
       add_column(Total = row_tot)
     c.width <- 0.6
+    ft.size <- 5.5
   }
 
   ft <- flextable(main.df) %>% theme_box()
-  ft <- fontsize(ft, size = 6, part = "all")
+  ft <- fontsize(ft, size = ft.size, part = "all")
   set_table_properties(ft, layout = "autofit")
   ft <- align_text_col(ft, align = "center", header = TRUE) %>% 
     align_nottext_col(align = "center", header = TRUE)
@@ -278,14 +275,41 @@ mc <- function(qval, new.dat){
   ld.title <- c()
   i <- 1
   
+  # Dataframe building
   main.df <- data.frame(table(get(rc_list, data.ok)))
-  tot <- sum(main.df$Freq)
+  tot <- sum(main.df$Freq) #row total
+  
+  # Selecting valid choices from the data subset
   for (qn in main.df$Var1) {
     resp_b <- c(resp_b, as.numeric(qn))
   }
   
-  plot.bar <- ggplot(data = main.df, aes(x=Var1, y=Freq)) +
-    geom_bar(stat = "identity") +
+  # Subtitle building
+  subt <- "Subtitle"
+  subt_how <- unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label')))
+  subt_to <- unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))
+  subt_where <- unlist(gregexpr(pattern ='Where', get(rc_list[1], data.ok) %>% attr('label')))
+  
+  if(subt_how != -1){
+    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_how,
+                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+  }else if(subt_to != -1){
+    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_to,
+                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+  }else if(subt_where != -1){
+    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_to,
+                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+  }else if(subt_how == -1 || subt_to == -1 || subt_where == -1){
+    subt <-  substr(get(rc_list[1], data.ok) %>% attr('label'),1,
+                    unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('label')))-1)
+  }
+  else{
+    subt <- "Unidentified subtitle format"
+  }
+  
+  plot.bar <- ggplot(data = main.df, aes(x=Var1, y=Freq, fill = Var1)) +
+    geom_bar(stat = "identity", width = 0.5) +
+    theme_economist(base_size = 14) +
     scale_x_discrete(breaks = main.df$Var1, labels = resp[resp_b]) +
     scale_fill_manual(values = rep("#0055B7",length(resp_b)), 
                       guide = guide_legend(reverse = TRUE),
@@ -293,8 +317,10 @@ mc <- function(qval, new.dat){
     geom_text(data = main.df, aes(Var1, Freq, group = Var1),
               label = paste0(floor(100*main.df$Freq/tot),"%"), position = position_stack(vjust = 0.5),
               size = 75, color = rep("white",length(resp_b))) +
-    ubc.theme +
+    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+         subtitle = subt) +
+    ubc.theme + 
+    theme(legend.position = "none") +
     coord_flip()
   print(plot.bar)
 }
-# mc("reside",data.ok)

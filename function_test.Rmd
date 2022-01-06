@@ -7,7 +7,7 @@ output:
 
 <!-- Setup and library calls -->
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.width = 150, fig.height = 10)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.width = 180, fig.height = 10)
 library(knitr)
 library(ggplot2)
 library(ggthemes)
@@ -19,8 +19,6 @@ library(haven)
 library(flextable)
 source("plotmaker.R")
 ```
-
-
 <!-- Reads and formats -->
 ```{R echo=FALSE}
 nubc2021joined <- read_sav("data/nubc2021_new.sav")
@@ -45,4 +43,6 @@ tb_mx("QN28", data.ok)
 ```{R echo = FALSE, fig.height = 75}
 mc("reside",data.ok)
 ```
+
+
 

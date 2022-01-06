@@ -117,22 +117,26 @@ mx <- function(qval, new.dat){
   }
   
   # Subtitle positioning and geom text size
-  sidestep <- NULL
   geom_text_size <- NULL
-  if(length(rc_list) <= 3){
+  c.width <- NULL
+  
+  if(length(rc_list) == 1){
+    geom_text_size <- 75
+    c.width <- 0.15
+  }else if(length(rc_list) <= 3){
     geom_text_size <- 90
-    sidestep <- -1
+    c.width <- 0.5
   }else if(length(rc_list) <= 6){
     geom_text_size <- 75
-    sidestep <- -1.2
+    c.width <- 0.75
   }else{
     geom_text_size <- 50
-    sidestep <- -1.5
+    c.width <- 0.5
   }
   
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=Ques, y=Freq, fill = Var1)) +
-    geom_bar(stat = "identity", position = "fill", width = 0.5) +
+    geom_bar(stat = "identity", position = "fill", width = c.width) +
     theme_economist(base_size = 14) +
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
     geom_text(data = main.df, aes(Ques, Freq, group = Var1), label = main.prop,
@@ -206,37 +210,63 @@ tb_mx <- function(qval, new.dat){
       else
         mattt[i,j] <- "NA"
     }
-
     ld.main <- c(ld.main, ld)
     c_vc <- c(c_vc, paste0(floor(100*c_vc.sum/row_tot[i]),"%"))
     c_vc_sc <- c(c_vc_sc, paste0(floor(100*c_vc_sc.sum/row_tot[i]),"%"))
     i <- i + 1
   }
   
-  main.df <- data.frame(mattt)
+  main.df <- rev(data.frame(mattt))
+  # main.df <- data.frame(mattt)
+  is_conc <- unlist(gregexpr(pattern = 'concerned', resp[1]))
+  is_agr <- unlist(gregexpr(pattern = 'agree', resp[1]))
+  is_satis <- unlist(gregexpr(pattern = 'satisfied', resp[1]))
+  
+  resp <- rev(resp)
   colnames(main.df) <- c(resp)
   c.width <- 1
   ft.size <- 6
   
+  # main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1])
+  # 
+  # if(unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
+  #     main.df <- main.df %>% add_column(`Very concerned/Concerned` = c_vc) %>%
+  #     add_column(`Including somewhat concerned` = c_vc_sc) %>%
+  #     add_column(Total = row_tot)
+  #   c.width <- 0.65
+  #   ft.size <- 6
+  # }
+  # else if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1){
+  #     main.df <- main.df %>% add_column(`Strongly agree/\nAgree` = c_vc) %>%
+  #     add_column(`Including somewhat agree` = c_vc_sc) %>%
+  #     add_column(Total = row_tot)
+  #   c.width <- 0.6
+  #   ft.size <- 6
+  # }
+  # else if(unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1){
+  #     main.df <- main.df %>% add_column(`Very satisfied/\nSatisfied` = c_vc) %>%
+  #     add_column(`Including somewhat satisfied` = c_vc_sc) %>%
+  #     add_column(Total = row_tot)
+  #   c.width <- 0.6
+  #   ft.size <- 5.5
+  # }
   main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1])
   
-  if(unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
-      main.df <- main.df %>% add_column(`Very concerned/Concerned` = c_vc) %>%
-      add_column(`Including somewhat concerned` = c_vc_sc) %>%
+  if(is_conc != -1){
+    main.df <- main.df %>% add_column(`Very concerned/Concerned` = c_vc, .after = resp[1]) %>%
+      add_column(`Including somewhat concerned` = c_vc_sc, .after = "Very concerned/Concerned") %>%
       add_column(Total = row_tot)
     c.width <- 0.65
     ft.size <- 6
-  }
-  else if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1){
-      main.df <- main.df %>% add_column(`Strongly agree/\nAgree` = c_vc) %>%
-      add_column(`Including somewhat agree` = c_vc_sc) %>%
+  }else if(is_agr != -1){
+    main.df <- main.df %>% add_column(`Strongly agree/\nAgree` = c_vc, .after = resp[1]) %>%
+      add_column(`Including somewhat agree` = c_vc_sc, .after = "Strongly agree/\nAgree") %>%
       add_column(Total = row_tot)
     c.width <- 0.6
     ft.size <- 6
-  }
-  else if(unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1){
-      main.df <- main.df %>% add_column(`Very satisfied/\nSatisfied` = c_vc) %>%
-      add_column(`Including somewhat satisfied` = c_vc_sc) %>%
+  }else if(is_satis != -1){
+    main.df <- main.df %>% add_column(`Very satisfied/\nSatisfied` = c_vc, .after = resp[1]) %>%
+      add_column(`Including somewhat satisfied` = c_vc_sc, .after = "Very satisfied/\nSatisfied") %>%
       add_column(Total = row_tot)
     c.width <- 0.6
     ft.size <- 5.5
@@ -245,7 +275,7 @@ tb_mx <- function(qval, new.dat){
   ft <- flextable(main.df) %>% theme_box()
   ft <- fontsize(ft, size = ft.size, part = "all")
   set_table_properties(ft, layout = "autofit")
-  ft <- align_text_col(ft, align = "center", header = TRUE) %>% 
+  ft <- align_text_col(ft, align = "center", header = TRUE) %>%
     align_nottext_col(align = "center", header = TRUE)
   ft %>% colformat_int(big.mark = "") %>%
     valign(valign = "center", part = "all") %>%

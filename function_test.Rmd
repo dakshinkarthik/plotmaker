@@ -44,5 +44,10 @@ tb_mx("QN28", data.ok)
 mc("reside",data.ok)
 ```
 
+```{R echo = FALSE, fig.height = 75}
+mx("commAgree", data.ok)
+tb_mx("commAgree", data.ok)
+```
+
 
 

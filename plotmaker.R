@@ -9,7 +9,7 @@ flip <- function(data) {
 }
 
 # Plot theme formatting
-ubc.theme <-  theme(legend.position = c(0.1,0.02),
+ubc.theme <-  theme(legend.position = c(0.15,0.02),
                        legend.direction = "horizontal",
                        legend.title = element_blank(),
                        legend.key.height = unit(2, 'cm'),
@@ -18,7 +18,7 @@ ubc.theme <-  theme(legend.position = c(0.1,0.02),
                        legend.spacing.x = unit(2, "cm"),
                        legend.spacing.y = unit(1, "cm"),
                        legend.box.spacing = unit(2, "cm"),
-                       plot.background = element_rect(colour = "grey", fill = NA, size = 4),
+                       plot.background = element_rect(colour = "grey", fill = NA, size = 8),
                        plot.subtitle = element_text(size = 150),
                        plot.title.position = "plot",
                        plot.title = element_text(color = "#2B73C2", size = 175, hjust = 0.5),
@@ -128,7 +128,7 @@ mx <- function(qval, new.dat){
     c.width <- 0.5
   }else if(length(rc_list) <= 6){
     geom_text_size <- 75
-    c.width <- 0.75
+    c.width <- 0.7
   }else{
     geom_text_size <- 50
     c.width <- 0.5
@@ -227,29 +227,6 @@ tb_mx <- function(qval, new.dat){
   c.width <- 1
   ft.size <- 6
   
-  # main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1])
-  # 
-  # if(unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
-  #     main.df <- main.df %>% add_column(`Very concerned/Concerned` = c_vc) %>%
-  #     add_column(`Including somewhat concerned` = c_vc_sc) %>%
-  #     add_column(Total = row_tot)
-  #   c.width <- 0.65
-  #   ft.size <- 6
-  # }
-  # else if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1){
-  #     main.df <- main.df %>% add_column(`Strongly agree/\nAgree` = c_vc) %>%
-  #     add_column(`Including somewhat agree` = c_vc_sc) %>%
-  #     add_column(Total = row_tot)
-  #   c.width <- 0.6
-  #   ft.size <- 6
-  # }
-  # else if(unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1){
-  #     main.df <- main.df %>% add_column(`Very satisfied/\nSatisfied` = c_vc) %>%
-  #     add_column(`Including somewhat satisfied` = c_vc_sc) %>%
-  #     add_column(Total = row_tot)
-  #   c.width <- 0.6
-  #   ft.size <- 5.5
-  # }
   main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1])
   
   if(is_conc != -1){
@@ -262,13 +239,13 @@ tb_mx <- function(qval, new.dat){
     main.df <- main.df %>% add_column(`Strongly agree/\nAgree` = c_vc, .after = resp[1]) %>%
       add_column(`Including somewhat agree` = c_vc_sc, .after = "Strongly agree/\nAgree") %>%
       add_column(Total = row_tot)
-    c.width <- 0.6
-    ft.size <- 6
+    c.width <- 0.59
+    ft.size <- 5.5
   }else if(is_satis != -1){
     main.df <- main.df %>% add_column(`Very satisfied/\nSatisfied` = c_vc, .after = resp[1]) %>%
       add_column(`Including somewhat satisfied` = c_vc_sc, .after = "Very satisfied/\nSatisfied") %>%
       add_column(Total = row_tot)
-    c.width <- 0.6
+    c.width <- 0.59
     ft.size <- 5.5
   }
 
@@ -279,8 +256,8 @@ tb_mx <- function(qval, new.dat){
     align_nottext_col(align = "center", header = TRUE)
   ft %>% colformat_int(big.mark = "") %>%
     valign(valign = "center", part = "all") %>%
-    bg(bg = "grey", part = "all") %>%
-    border(border = fp_border_default(color = "white"), part = "all") %>%
+    # bg(bg = "grey", part = "all") %>%
+    border(border = fp_border_default(color = "grey"), part = "all") %>%
     width(width = c.width, unit = "in")
 }
 

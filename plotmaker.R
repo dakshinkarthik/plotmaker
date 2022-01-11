@@ -9,22 +9,23 @@ flip <- function(data) {
 }
 
 # Plot theme formatting
-ubc.theme <-  theme(legend.position = c(0.15,0.02),
+ubc.theme <-  theme(text = element_text(family = "calibri"),
+                    legend.position = c(0.15,0.98),
                        legend.direction = "horizontal",
                        legend.title = element_blank(),
                        legend.key.height = unit(2, 'cm'),
                        legend.key.width = unit(4, 'cm'),
-                       legend.text = element_text(size = 175),
+                       legend.text = element_text(size = 160),
                        legend.spacing.x = unit(2, "cm"),
                        legend.spacing.y = unit(1, "cm"),
                        legend.box.spacing = unit(2, "cm"),
-                       plot.background = element_rect(colour = "grey", fill = NA, size = 8),
-                       plot.subtitle = element_text(size = 150),
+                       plot.background = element_rect(colour = "grey", fill = NA, size = 6),
+                       plot.subtitle = element_text(size = 160),
                        plot.title.position = "plot",
                        plot.title = element_text(color = "#2B73C2", size = 175, hjust = 0.5),
                        axis.line = element_blank(),
                        axis.text.x = element_blank(),
-                       axis.text.y = element_text(family = "serif", size = 200, hjust = 1),
+                       axis.text.y = element_text(family = "serif", face = "bold", size = 200, hjust = 1),
                        axis.ticks = element_blank(),
                        axis.title.x = element_blank(),
                        axis.title.y = element_blank())
@@ -148,6 +149,106 @@ mx <- function(qval, new.dat){
     ubc.theme + 
     # theme(plot.subtitle = element_text(hjust = sidestep)) +
     coord_flip()
+  
+  # Printing plot
+  print(plot.bar)
+}
+
+mx.tri <- function(qval, new.dat){
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rev(cnames[grepl(qval, cnames, fixed = TRUE)])
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  
+  # Variable initialization
+  df.list <- list()
+  prop <- list()
+  main.prop <- NULL
+  main.df<- data.frame()
+  col <- c("#3C5A2A","#498325","#89C265")
+  ld.title <- c()
+  i <- 0
+  
+  # Axis question building and formatting
+  for (qn in rc_list) {
+    label_count_var <- 0
+    i <- i + 1
+    if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(qn, data.ok) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
+                   nchar(get(qn, new.dat) %>% attr('label')))
+    }
+    else{
+      ld <- names(get(qn, new.dat) %>% attr('label'))
+    }
+    if(nchar(ld)>40){
+      ld <- paste0(substr(ld,1,sapply(gregexpr(pattern = " ", substr(ld,1,20)),max)), "\n ",
+                   substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,20)),max)+1,
+                          sapply(gregexpr(pattern = " ", substr(ld,1,40)),max)), "\n ",
+                   substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,40)),max)+1,nchar(ld)))
+    }else if(nchar(ld)>20){
+      ld <- paste0(substr(ld,1,sapply(gregexpr(pattern = " ", substr(ld,1,20)),max)), "\n ",
+                   substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,20)),max)+1,nchar(ld)))
+    }
+
+    
+    ld.title <- c(ld.title, ld)
+    
+    # Dataframe building
+    df.list[[i]] <- data.frame(table(get(qn, data.ok)), Ques = c(i))
+    levels(df.list[[i]]) <- factor(resp)
+    df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
+    
+    # Geometry text prep
+    prop[[i]] <- floor(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
+    
+    for(j in 1:length(prop[[i]])){
+      label_count_var <- label_count_var + 1
+      prop[[i]][j] = paste0(prop[[i]][j], "%")
+    }
+    
+    # Main dataframe and geom text for plotting
+    main.prop <- c(main.prop, prop[[i]])
+    main.df <- rbind(main.df, df.list[[i]])
+  }
+  
+  # Subtitle building
+  subt <- "Subtitle"
+  subt_how <- unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label')))
+  subt_to <- unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))
+  
+  if(subt_how != -1){
+    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_how,
+                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+  }else if(subt_to != -1){
+    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_to,
+                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+  }else if(subt_how == -1 || subt_to == -1){
+    subt <-  substr(get(rc_list[1], data.ok) %>% attr('label'),1,
+                    unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('label')))-1)
+  }
+  else{
+    subt <- "Unidentified subtitle format"
+  }
+  
+  # GGplot graphing
+  plot.bar <- ggplot(data = main.df, aes(x=Ques, y=Freq, fill = Var1)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.9) +
+    theme_economist(base_size = 14) +
+    scale_fill_manual(values = col, guide = guide_legend(reverse = FALSE, nrow = 3), labels = resp) +
+    geom_text(data = main.df, label = main.prop,
+              position = position_dodge(width = 0.9), size = 60, vjust = -1) +
+    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+         subtitle = subt) +
+    scale_x_discrete(breaks = unique(main.df$Ques),
+                     labels = ld.title) +
+    ubc.theme +
+    theme(axis.text.x = element_text(family = "serif", face = "bold", size = 180),
+          axis.text.y = element_blank(),
+          legend.position = c(0.5,0.75),
+          legend.spacing.y = unit(3, "in")
+          ) +
+    scale_y_continuous(limits = c(0, 2 * max(main.df$Freq)))
   
   # Printing plot
   print(plot.bar)
@@ -331,3 +432,5 @@ mc <- function(qval, new.dat){
     coord_flip()
   print(plot.bar)
 }
+
+

@@ -25,6 +25,10 @@ nubc2021joined <- read_sav("data/nubc2021_new.sav")
 data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Okanagan"),]
 ```
 
+```{R echo = FALSE, fig.height = 60}
+mx.tri("commFreq", data.ok)
+```
+
 ```{R echo = FALSE, fig.height = 75}
 mx("QN105", data.ok)
 tb_mx("QN105", data.ok)

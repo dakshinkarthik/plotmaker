@@ -157,7 +157,7 @@ mx <- function(qval, new.dat){
 mx.tri <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- rev(cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   
   # Variable initialization
@@ -254,6 +254,69 @@ mx.tri <- function(qval, new.dat){
   print(plot.bar)
 }
 
+tb_mx.tri <- function(qval, new.dat){
+  cnames <- colnames(new.dat)
+  rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  mattt <- matrix(rep(1,(length(resp)+0)*length(rc_list)), ncol = length(resp)+0)
+  
+  df.list <- list()
+  main.df<- data.frame()
+  ld.main <- c()
+  row_tot <- c()
+  
+  i <- 1
+  for (qn in rc_list) {
+    df.list[[i]] <- data.frame(table(get(qn, data.ok)))
+    
+    #Row labels
+    if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(qn, data.ok) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
+                   nchar(get(qn, new.dat) %>% attr('label')))
+    }
+    else{
+      ld <- get(qn, new.dat) %>% attr('label')
+    }
+    
+    row_tot <- c(row_tot, sum(df.list[[i]]$Freq))
+    
+    for (j in 1:length(resp)+0) {
+      if (!is.na(df.list[[i]]$Freq[j])) {
+        mattt[i,j] <- paste0(floor(100*df.list[[i]]$Freq[j]/row_tot[i]),"%")
+      }
+      else
+        mattt[i,j] <- "NA"
+    }
+    
+    ld.main <- c(ld.main, ld)
+    i <- i + 1
+  }
+  
+  main.df <- data.frame(mattt)
+  
+  resp <- (resp)
+  colnames(main.df) <- c(resp)
+  c.width <- 1.3
+  ft.size <- 6
+  
+  main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>%
+    add_column(Total = row_tot)
+  
+  ft <- flextable(main.df) %>% theme_box()
+  ft <- fontsize(ft, size = ft.size, part = "all")
+  set_table_properties(ft, layout = "autofit")
+  ft <- align_text_col(ft, align = "center", header = TRUE) %>%
+    align_nottext_col(align = "center", header = TRUE)
+  ft %>% colformat_int(big.mark = "") %>%
+    valign(valign = "center", part = "all") %>%
+    # bg(bg = "grey", part = "all") %>%
+    border(border = fp_border_default(color = "grey", width = 1), part = "all") %>%
+    width(width = c.width, unit = "in")
+  
+  
+}
+
 
 tb_mx <- function(qval, new.dat){
   cnames <- colnames(new.dat)
@@ -271,6 +334,8 @@ tb_mx <- function(qval, new.dat){
   i <- 1
   for (qn in rc_list) {
     df.list[[i]] <- data.frame(table(get(qn, data.ok)))
+    
+    #Row labels
     if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
       ld <- substr(get(qn, data.ok) %>% attr('label'),
                    unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
@@ -282,6 +347,7 @@ tb_mx <- function(qval, new.dat){
 
     
     row_tot <- c(row_tot, sum(df.list[[i]]$Freq))
+    #To calculate the cumulative top 2 and 3 response levels
     c_vc.sum <- 0
     c_vc_sc.sum <- 0
     for (j in 1:length(resp)+0) {

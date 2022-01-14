@@ -431,8 +431,10 @@ tb_mx <- function(qval, new.dat){
 
 mc <- function(qval, new.dat){
   # Column names to read data
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
-  rc_list <- rev(cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   resp_b <- c()
   
@@ -440,7 +442,7 @@ mc <- function(qval, new.dat){
   df.list <- list()
   main.df <- NULL
   prop <- list()
-  main.prop <- NULL
+  main.prop <- c()
   main.df<- data.frame()
   col <- rev(c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF"))
   tex.col.base <- rev(c("white","white","black","black","black","black"))
@@ -450,13 +452,42 @@ mc <- function(qval, new.dat){
   i <- 1
   
   # Dataframe building
-  main.df <- data.frame(table(get(rc_list, data.ok)))
-  tot <- sum(main.df$Freq) #row total
+  main.df <- data.frame(table(get(rc_list, new.dat)))
+  i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
+  d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
+  
+  i.prop <- paste0(floor(100*i.df$Freq/sum(i.df$Freq)),"%") 
+  d.prop <- paste0(floor(100*d.df$Freq/sum(d.df$Freq)),"%")
+  main.prop <- c(d.prop,i.prop)
+
   
   # Selecting valid choices from the data subset
+  resp_b <- c()
   for (qn in main.df$Var1) {
     resp_b <- c(resp_b, as.numeric(qn))
   }
+  
+  axis.q <- c()
+  axis.q <- resp[resp_b]
+  
+  for (j in 1:length(axis.q)) {
+    if(nchar(axis.q[j])>40){
+      axis.q[j] <- paste0(substr(axis.q[j],1,sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)), "\n ",
+                          substr(axis.q[j],sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)+1,
+                          sapply(gregexpr(pattern = " ", substr(axis.q[j],1,40)),max)), "\n ",
+                   substr(axis.q[j],sapply(gregexpr(pattern = " ", substr(axis.q[j],1,40)),max)+1,nchar(axis.q[j])))
+    }else if(nchar(axis.q[j])>20){
+      axis.q[j] <- paste0(substr(axis.q[j],1,sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)), "\n ",
+                          substr(axis.q[j],sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)+1,nchar(axis.q[j])))
+    }
+  }
+  
+  main.df <- rbind(d.df,i.df)
+  levels(main.df) <- factor(axis.q)
+  main.df$Ques <- as.factor(main.df$Ques)
+  # main.df <- main.df[nrow(main.df):1,]
+  
+  tot <- sum(main.df$Freq) #row total
   
   # Subtitle building
   subt <- "Subtitle"
@@ -481,22 +512,24 @@ mc <- function(qval, new.dat){
     subt <- "Unidentified subtitle format"
   }
   
-  plot.bar <- ggplot(data = main.df, aes(x=Var1, y=Freq, fill = Var1)) +
-    geom_bar(stat = "identity", width = 0.5) +
+  plot.bar <- ggplot(data = main.df, aes(x=Var1, y=Freq, fill = Ques)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.5) +
     theme_economist(base_size = 14) +
-    scale_x_discrete(breaks = main.df$Var1, labels = resp[resp_b]) +
-    scale_fill_manual(values = rep("#0055B7",length(resp_b)), 
-                      guide = guide_legend(reverse = TRUE),
-                      labels = resp[resp_b]) +
-    geom_text(data = main.df, aes(Var1, Freq, group = Var1),
-              label = paste0(floor(100*main.df$Freq/tot),"%"), position = position_stack(vjust = 0.5),
-              size = 75, color = rep("white",length(resp_b))) +
+    scale_x_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
+    scale_fill_manual(values = c("#579C2C","#FFC279"),
+                      guide = guide_legend(reverse = FALSE)) +
+    geom_text(data = main.df, label = main.prop,
+              position = position_dodge(width = 0.5), size = 60, vjust = -1) +
     labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
          subtitle = subt) +
-    ubc.theme + 
-    theme(legend.position = "none") +
-    coord_flip()
+    ubc.theme +
+    theme(axis.text.y = element_blank(),
+          axis.text.x = element_text(family = "serif", face = "bold", size = 200),
+          legend.position = c(0.5,0.75)) +
+    scale_y_continuous(limits = c(0, 2 * max(main.df$Freq)))
+  
   print(plot.bar)
 }
+# mc("reside",data.ok)
 
 

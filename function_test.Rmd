@@ -25,8 +25,9 @@ nubc2021joined <- read_sav("data/nubc2021_new.sav")
 data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Okanagan"),]
 ```
 
-```{R echo = FALSE, fig.height = 75}
+```{R echo = FALSE, fig.height = 60}
 mc("reside",data.ok)
+tb_mc("reside",data.ok)
 ```
 
 ```{R echo = FALSE, fig.height = 60}

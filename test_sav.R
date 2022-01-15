@@ -16,17 +16,28 @@ data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY"
 
 str(data.ok)
 
-qval <- "QN28"
+qval <- "reside"
 
 cnames <- colnames(data.ok)
 rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
 
 
-get(rc_list[1], data.ok) %>% attr('label')
+get(rc_list[1], data.ok) %>% attr('labels')
 
 
+df1 <- data.frame(table(get(rc_list[1], data.ok)), Ques = c(1))
+df2 <- data.frame(table(get(rc_list[2], data.ok)), Ques = c(2))
+df3 <- rbind(df1,df2)
+ggplot(df3, aes(fill=Var1, y=Freq, x=Ques)) + 
+  geom_bar(position="dodge", stat="identity")
 
+unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('labels')))
 
+substr(get(rc_list[1], data.ok) %>% attr('labels'),
+       unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('labels')))+3,
+       nchar(get(rc_list[1], data.ok) %>% attr('labels')))
+
+names(get(rc_list[2], data.ok) %>% attr('label'))
 
 
 mc <- function(qval, new.dat){
@@ -207,3 +218,28 @@ mc <- function(qval, new.dat){
   # print(resp[resp_b])
 }
 mc("reside",data.ok)
+
+font_import()
+loadfonts(device = "win")
+
+ggplot(mtcars, aes(x=wt, y=mpg)) + geom_point() +
+  ggtitle("Fuel Efficiency of 32 Cars") +
+  xlab("Weight (x1000 lb)") + ylab("Miles per Gallon") +
+  theme(text=element_text(size=16,  family="calibri"))
+
+rev(table(get("mc.reside", data.ok)))
+
+
+ft <- flextable( head( iris ))
+ft <- set_header_labels(ft, Sepal.Length = "Sepal length",
+                        Sepal.Width = "Sepal width", Petal.Length = "Petal length",
+                        Petal.Width = "Petal width"
+)
+
+ft <- flextable( head( iris ))
+ft <- set_header_labels(ft,
+                        values = list(Sepal.Length = "Sepal length",
+                                      Sepal.Width = "Sepal width",
+                                      Petal.Length = "Petal length",
+                                      Petal.Width = "Petal width" ) )
+print(ft)

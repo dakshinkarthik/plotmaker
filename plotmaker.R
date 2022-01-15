@@ -20,12 +20,12 @@ ubc.theme <-  theme(text = element_text(family = "calibri"),
                        legend.spacing.y = unit(1, "cm"),
                        legend.box.spacing = unit(2, "cm"),
                        plot.background = element_rect(colour = "grey", fill = NA, size = 6),
-                       plot.subtitle = element_text(size = 160),
+                       plot.subtitle = element_text(colour = "#54504C", size = 170),
                        plot.title.position = "plot",
                        plot.title = element_text(color = "#2B73C2", size = 175, hjust = 0.5),
                        axis.line = element_blank(),
                        axis.text.x = element_blank(),
-                       axis.text.y = element_text(family = "serif", face = "bold", size = 200, hjust = 1),
+                       axis.text.y = element_text(family = "serif", size = 200, hjust = 0.5),
                        axis.ticks = element_blank(),
                        axis.title.x = element_blank(),
                        axis.title.y = element_blank())
@@ -99,23 +99,7 @@ mx <- function(qval, new.dat){
   }
   
   # Subtitle building
-  subt <- "Subtitle"
-  subt_how <- unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label')))
-  subt_to <- unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))
-  
-  if(subt_how != -1){
-    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_how,
-                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
-  }else if(subt_to != -1){
-    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_to,
-                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
-  }else if(subt_how == -1 || subt_to == -1){
-    subt <-  substr(get(rc_list[1], data.ok) %>% attr('label'),1,
-                    unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('label')))-1)
-  }
-  else{
-    subt <- "Unidentified subtitle format"
-  }
+  subt <- subt_builder(rc_list, new.dat)
   
   # Subtitle positioning and geom text size
   geom_text_size <- NULL
@@ -213,23 +197,7 @@ mx.tri <- function(qval, new.dat){
   }
   
   # Subtitle building
-  subt <- "Subtitle"
-  subt_how <- unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label')))
-  subt_to <- unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))
-  
-  if(subt_how != -1){
-    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_how,
-                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
-  }else if(subt_to != -1){
-    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_to,
-                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
-  }else if(subt_how == -1 || subt_to == -1){
-    subt <-  substr(get(rc_list[1], data.ok) %>% attr('label'),1,
-                    unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('label')))-1)
-  }
-  else{
-    subt <- "Unidentified subtitle format"
-  }
+  subt <- subt_builder(rc_list, new.dat)
   
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=Ques, y=Freq, fill = Var1)) +
@@ -243,7 +211,7 @@ mx.tri <- function(qval, new.dat){
     scale_x_discrete(breaks = unique(main.df$Ques),
                      labels = ld.title) +
     ubc.theme +
-    theme(axis.text.x = element_text(family = "serif", face = "bold", size = 180),
+    theme(axis.text.x = element_text(family = "serif", size = 180),
           axis.text.y = element_blank(),
           legend.position = c(0.5,0.75),
           legend.spacing.y = unit(3, "in")
@@ -311,12 +279,13 @@ tb_mx.tri <- function(qval, new.dat){
   ft %>% colformat_int(big.mark = "") %>%
     valign(valign = "center", part = "all") %>%
     # bg(bg = "grey", part = "all") %>%
-    border(border = fp_border_default(color = "grey", width = 1), part = "all") %>%
-    width(width = c.width, unit = "in")
-  
+    border(border = fp_border_default(color = "#A7A19D", width = 1), part = "all") %>%
+    width(width = c.width, unit = "in") %>%
+    color(color = "#A7A19D", part = "header") %>%
+    color(j = 2:dim(mattt)[2]+1, color = "#A7A19D", part = "body")
   
 }
-
+# tb_mx.tri("commFreq", data.ok)
 
 tb_mx <- function(qval, new.dat){
   cnames <- colnames(new.dat)
@@ -423,12 +392,73 @@ tb_mx <- function(qval, new.dat){
     align_nottext_col(align = "center", header = TRUE)
   ft %>% colformat_int(big.mark = "") %>%
     valign(valign = "center", part = "all") %>%
-    # bg(bg = "grey", part = "all") %>%
     border(border = fp_border_default(color = "grey"), part = "all") %>%
     width(width = c.width, unit = "in")
 }
 
+tb_mc <- function(qval, new.dat){
+  # Column names to read data
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  cnames <- colnames(new.dat)
+  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  resp_b <- c()
+  
+  main.df <- data.frame(rev(table(get(rc_list, new.dat))))
+  i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
+  d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
+  
+  resp_b <- c()
+  for (qn in main.df$Var1) {
+    resp_b <- c(resp_b, as.numeric(qn))
+  }
+  
+  mattt <- matrix(rep(1,4*(length(resp_b)+1)), ncol = 4)
+  
+  for (j in 1:(dim(mattt)[1])) {
+    if(j == dim(mattt)[1]){
+      mattt[j,1] <- "100%"
+      mattt[j,2] <- sum(d.df$Freq)
+      mattt[j,3] <- "100%"
+      mattt[j,4] <- sum(i.df$Freq)
+    }
+    else{
+      mattt[j,1] <- paste0(floor(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+      mattt[j,2] <- d.df$Freq[j] 
+      mattt[j,3] <- paste0(floor(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
+      mattt[j,4] <- i.df$Freq[j]
+    }
+  }
 
+  main.df <- data.frame(mattt)
+  
+  axis.q <- c()
+  axis.q <- c(rev(resp[resp_b]),"Distinct count of respondents")
+  
+  main.df <- cbind(UBCO = axis.q, main.df)
+  
+  ft <- flextable(main.df) %>% theme_box() %>%
+    set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+    add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+    merge_h(part = "header") %>%
+    merge_v(part = "header") %>%
+    color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+    color(j = "UBCO", color = "#A7A19D", part = "header") %>%
+    # color(j = "Domestic", part = "header", color = "#54504C") %>%
+    fontsize(size = 6, part = "all") %>%
+    align_text_col(align = "center", header = TRUE) %>%
+    align_nottext_col(align = "center", header = TRUE)
+
+  set_table_properties(ft, layout = "autofit")
+
+  ft %>% colformat_int(big.mark = "") %>%
+    valign(valign = "center", part = "all") %>%
+    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+    width(width = 3.5, unit = "in",j = "UBCO")
+  # print(main.df)
+}
+# tb_mc("reside",data.ok)
 mc <- function(qval, new.dat){
   # Column names to read data
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
@@ -444,15 +474,13 @@ mc <- function(qval, new.dat){
   prop <- list()
   main.prop <- c()
   main.df<- data.frame()
-  col <- rev(c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF"))
-  tex.col.base <- rev(c("white","white","black","black","black","black"))
   tex.col <- c()
   label_count <- length(tex.col)
   ld.title <- c()
   i <- 1
   
   # Dataframe building
-  main.df <- data.frame(table(get(rc_list, new.dat)))
+  main.df <- data.frame(rev(table(get(rc_list, new.dat))))
   i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
   d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
   
@@ -468,7 +496,7 @@ mc <- function(qval, new.dat){
   }
   
   axis.q <- c()
-  axis.q <- resp[resp_b]
+  axis.q <- rev(resp[resp_b])
   
   for (j in 1:length(axis.q)) {
     if(nchar(axis.q[j])>40){
@@ -490,46 +518,57 @@ mc <- function(qval, new.dat){
   tot <- sum(main.df$Freq) #row total
   
   # Subtitle building
+  subt <- subt_builder(rc_list, new.dat)
+  
+  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=Var1, fill = Ques)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.5) +
+    theme_economist(base_size = 14) +
+    scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
+    scale_fill_manual(values = c("#579C2C","#FFC279"),
+                      guide = guide_legend(reverse = TRUE,nrow = 2)) +
+    geom_text(data = main.df, label = main.prop,
+              position = position_dodge(width = 0.5), size = 60, hjust = -0.1) +
+    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+         subtitle = subt) +
+    ubc.theme +
+    theme(legend.position = c(0.85,0.5)) +
+    scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
+    # coord_flip()
+  
+  print(plot.bar)
+
+}
+
+
+
+#-----------------------------------HELPER FUNCTIONS----------------------------------------
+
+subt_builder <- function(rc_list, new.dat){
   subt <- "Subtitle"
-  subt_how <- unlist(gregexpr(pattern ='How', get(rc_list[1], data.ok) %>% attr('label')))
-  subt_to <- unlist(gregexpr(pattern ='To', get(rc_list[1], data.ok) %>% attr('label')))
-  subt_where <- unlist(gregexpr(pattern ='Where', get(rc_list[1], data.ok) %>% attr('label')))
+  subt_how <- unlist(gregexpr(pattern ='How', get(rc_list[1], new.dat) %>% attr('label')))
+  subt_to <- unlist(gregexpr(pattern ='To', get(rc_list[1], new.dat) %>% attr('label')))
+  subt_where <- unlist(gregexpr(pattern ='Where', get(rc_list[1], new.dat) %>% attr('label')))
   
   if(subt_how != -1){
-    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_how,
-                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+    subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_how,
+                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
   }else if(subt_to != -1){
-    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_to,
-                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+    subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_to,
+                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
   }else if(subt_where != -1){
     subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_to,
-                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], data.ok) %>% attr('label'))))
+                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
   }else if(subt_how == -1 || subt_to == -1 || subt_where == -1){
-    subt <-  substr(get(rc_list[1], data.ok) %>% attr('label'),1,
-                    unlist(gregexpr(pattern =' - ', get(rc_list[1], data.ok) %>% attr('label')))-1)
+    subt <-  substr(get(rc_list[1], new.dat) %>% attr('label'),1,
+                    unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label')))-1)
   }
   else{
     subt <- "Unidentified subtitle format"
   }
   
-  plot.bar <- ggplot(data = main.df, aes(x=Var1, y=Freq, fill = Ques)) +
-    geom_bar(stat = "identity", position = "dodge", width = 0.5) +
-    theme_economist(base_size = 14) +
-    scale_x_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
-    scale_fill_manual(values = c("#579C2C","#FFC279"),
-                      guide = guide_legend(reverse = FALSE)) +
-    geom_text(data = main.df, label = main.prop,
-              position = position_dodge(width = 0.5), size = 60, vjust = -1) +
-    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
-         subtitle = subt) +
-    ubc.theme +
-    theme(axis.text.y = element_blank(),
-          axis.text.x = element_text(family = "serif", face = "bold", size = 200),
-          legend.position = c(0.5,0.75)) +
-    scale_y_continuous(limits = c(0, 2 * max(main.df$Freq)))
-  
-  print(plot.bar)
+  return(subt)
 }
-# mc("reside",data.ok)
+
+
 
 

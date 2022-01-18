@@ -451,10 +451,12 @@ mc <- function(qval, new.dat){
   # Dataframe building
   main.df <- data.frame(rev(table(get(rc_list, new.dat))))
   i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
+  i.df$Freq <- floor(100*i.df$Freq/sum(i.df$Freq))
   d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
+  d.df$Freq <- floor(100*d.df$Freq/sum(d.df$Freq))
   
-  i.prop <- paste0(floor(100*i.df$Freq/sum(i.df$Freq)),"%") 
-  d.prop <- paste0(floor(100*d.df$Freq/sum(d.df$Freq)),"%")
+  i.prop <- paste0(i.df$Freq,"%") 
+  d.prop <- paste0(d.df$Freq,"%")
   main.prop <- c(d.prop,i.prop)
 
   
@@ -510,6 +512,7 @@ mc <- function(qval, new.dat){
   
   print(plot.bar)
 }
+# mc("reside",data.ok)
 
 mc.yn <- function(qval, new.dat){
   mc(qval,new.dat)

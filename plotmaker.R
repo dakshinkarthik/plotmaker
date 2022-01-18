@@ -1,35 +1,3 @@
-addline_format <- function(x,...){
-  gsub('\\s',' ',x)
-}
-
-flip <- function(data) {
-  new <- data[rev(rownames(data)), ]
-  rownames(new) <- NULL
-  new
-}
-
-# Plot theme formatting
-ubc.theme <-  theme(text = element_text(family = "calibri"),
-                    legend.position = c(0.15,0.98),
-                       legend.direction = "horizontal",
-                       legend.title = element_blank(),
-                       legend.key.height = unit(2, 'cm'),
-                       legend.key.width = unit(4, 'cm'),
-                       legend.text = element_text(size = 160),
-                       legend.spacing.x = unit(2, "cm"),
-                       legend.spacing.y = unit(1, "cm"),
-                       legend.box.spacing = unit(2, "cm"),
-                       plot.background = element_rect(colour = "grey", fill = NA, size = 6),
-                       plot.subtitle = element_text(colour = "#54504C", size = 170),
-                       plot.title.position = "plot",
-                       plot.title = element_text(color = "#2B73C2", size = 175, hjust = 0.5),
-                       axis.line = element_blank(),
-                       axis.text.x = element_blank(),
-                       axis.text.y = element_text(family = "serif", size = 200, hjust = 0.5),
-                       axis.ticks = element_blank(),
-                       axis.title.x = element_blank(),
-                       axis.title.y = element_blank())
-
 
 mx <- function(qval, new.dat){
   # Column names to read data
@@ -130,7 +98,7 @@ mx <- function(qval, new.dat){
          subtitle = subt) +
     scale_x_discrete(breaks = unique(main.df$Ques),
                      labels = ld.title) +
-    ubc.theme + 
+    ubc.theme() + 
     # theme(plot.subtitle = element_text(hjust = sidestep)) +
     coord_flip()
   
@@ -210,7 +178,7 @@ mx.tri <- function(qval, new.dat){
          subtitle = subt) +
     scale_x_discrete(breaks = unique(main.df$Ques),
                      labels = ld.title) +
-    ubc.theme +
+    ubc.theme() +
     theme(axis.text.x = element_text(family = "serif", size = 180),
           axis.text.y = element_blank(),
           legend.position = c(0.5,0.75),
@@ -279,13 +247,12 @@ tb_mx.tri <- function(qval, new.dat){
   ft %>% colformat_int(big.mark = "") %>%
     valign(valign = "center", part = "all") %>%
     # bg(bg = "grey", part = "all") %>%
-    border(border = fp_border_default(color = "#A7A19D", width = 1), part = "all") %>%
+    border(border = fp_border_default(color = "#A7A19D", width = 0.8), part = "all") %>%
     width(width = c.width, unit = "in") %>%
     color(color = "#A7A19D", part = "header") %>%
-    color(j = 2:dim(mattt)[2]+1, color = "#A7A19D", part = "body")
+    color(j = 0:dim(mattt)[2]+2, color = "#A7A19D", part = "body")
   
 }
-# tb_mx.tri("commFreq", data.ok)
 
 tb_mx <- function(qval, new.dat){
   cnames <- colnames(new.dat)
@@ -392,8 +359,10 @@ tb_mx <- function(qval, new.dat){
     align_nottext_col(align = "center", header = TRUE)
   ft %>% colformat_int(big.mark = "") %>%
     valign(valign = "center", part = "all") %>%
-    border(border = fp_border_default(color = "grey"), part = "all") %>%
-    width(width = c.width, unit = "in")
+    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+    width(width = c.width, unit = "in") %>%
+    color(color = "#A7A19D", part = "header") %>%
+    color(j = -2:dim(mattt)[2]+4, color = "#A7A19D", part = "body")
 }
 
 tb_mc <- function(qval, new.dat){
@@ -458,7 +427,7 @@ tb_mc <- function(qval, new.dat){
     width(width = 3.5, unit = "in",j = "UBCO")
   # print(main.df)
 }
-# tb_mc("reside",data.ok)
+
 mc <- function(qval, new.dat){
   # Column names to read data
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
@@ -496,7 +465,11 @@ mc <- function(qval, new.dat){
   }
   
   axis.q <- c()
-  axis.q <- rev(resp[resp_b])
+  if(0 %in% resp_b){
+    axis.q <- resp
+  }else{
+    axis.q <- rev(resp[resp_b])
+  }
   
   for (j in 1:length(axis.q)) {
     if(nchar(axis.q[j])>40){
@@ -530,24 +503,27 @@ mc <- function(qval, new.dat){
               position = position_dodge(width = 0.5), size = 60, hjust = -0.1) +
     labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
          subtitle = subt) +
-    ubc.theme +
+    ubc.theme() +
     theme(legend.position = c(0.85,0.5)) +
     scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
     # coord_flip()
   
   print(plot.bar)
-
 }
 
 
-
+mc.yn <- function(qval, new.dat){
+  mc(qval,new.dat)
+}
+mc.yn("QN30",data.ok)
 #-----------------------------------HELPER FUNCTIONS----------------------------------------
 
 subt_builder <- function(rc_list, new.dat){
-  subt <- "Subtitle"
+  subt <- get(rc_list[1], new.dat) %>% attr('label')
   subt_how <- unlist(gregexpr(pattern ='How', get(rc_list[1], new.dat) %>% attr('label')))
   subt_to <- unlist(gregexpr(pattern ='To', get(rc_list[1], new.dat) %>% attr('label')))
   subt_where <- unlist(gregexpr(pattern ='Where', get(rc_list[1], new.dat) %>% attr('label')))
+  subt_hyp <- unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label')))
   
   if(subt_how != -1){
     subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_how,
@@ -558,17 +534,43 @@ subt_builder <- function(rc_list, new.dat){
   }else if(subt_where != -1){
     subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_to,
                    unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
-  }else if(subt_how == -1 || subt_to == -1 || subt_where == -1){
+  }else if(subt_hyp != -1){
     subt <-  substr(get(rc_list[1], new.dat) %>% attr('label'),1,
                     unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label')))-1)
   }
   else{
-    subt <- "Unidentified subtitle format"
+    subt <- get(rc_list[1], new.dat) %>% attr('label')
   }
   
   return(subt)
 }
-
-
-
-
+addline_format <- function(x,...){
+  gsub('\\s',' ',x)
+}
+flip <- function(data) {
+  new <- data[rev(rownames(data)), ]
+  rownames(new) <- NULL
+  new
+}
+ubc.theme <- function(){
+  return(theme(text = element_text(family = "calibri"),
+               legend.position = c(0.15,0.98),
+               legend.direction = "horizontal",
+               legend.title = element_blank(),
+               legend.key.height = unit(2, 'cm'),
+               legend.key.width = unit(4, 'cm'),
+               legend.text = element_text(size = 160),
+               legend.spacing.x = unit(2, "cm"),
+               legend.spacing.y = unit(1, "cm"),
+               legend.box.spacing = unit(2, "cm"),
+               plot.background = element_rect(colour = "grey", fill = NA, size = 6),
+               plot.subtitle = element_text(colour = "#54504C", size = 170),
+               plot.title.position = "plot",
+               plot.title = element_text(color = "#2B73C2", size = 175, hjust = 0.5),
+               axis.line = element_blank(),
+               axis.text.x = element_blank(),
+               axis.text.y = element_text(family = "serif", size = 200, hjust = 0.5),
+               axis.ticks = element_blank(),
+               axis.title.x = element_blank(),
+               axis.title.y = element_blank()))
+}

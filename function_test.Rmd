@@ -36,7 +36,14 @@ tb_mx.tri("commFreq", data.ok)
 ```
 
 ```{R echo = FALSE, fig.height = 75}
+# source("plotmaker.R")
+mc.yn("QN30",data.ok)
+mc.yn("QN94",data.ok)
+```
+
+```{R echo = FALSE, fig.height = 75}
 mx("QN105", data.ok)
+# source("plotmaker.R")
 tb_mx("QN105", data.ok)
 ```
 

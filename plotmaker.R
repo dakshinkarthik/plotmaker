@@ -428,6 +428,65 @@ tb_mc <- function(qval, new.dat){
   # print(main.df)
 }
 
+tb_mc.yn <- function(qval, new.dat){
+  # Column names to read data
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  cnames <- colnames(new.dat)
+  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  resp_b <- c()
+  
+  main.df <- data.frame(rev(table(get(rc_list, new.dat))))
+  i.df <- data.frame(rev(table(get(rc_list, i.dat))), Ques = c("International"))
+  d.df <- data.frame(rev(table(get(rc_list, d.dat))), Ques = c("Domestic"))
+  
+  # Selecting valid choices from the data subset
+  resp_b <- c()
+  for (qn in main.df$Var1) {
+    resp_b <- c(resp_b, as.numeric(qn))
+  }
+  
+  axis.q <- c()
+  if(0 %in% resp_b){
+    axis.q <- c(rev(resp),"Total")
+  }else{
+    axis.q <- c(rev(resp[resp_b]),"Total")
+  }
+  
+  mattt <- matrix(rep(1,2*(length(resp_b)+1)), ncol = 2)
+  
+  for (j in 1:dim(mattt)[1]) {
+    if(j == dim(mattt)[1]){
+      mattt[j,1] <- sum(d.df$Freq)
+      mattt[j,2] <- sum(i.df$Freq)
+    }
+    else{
+      mattt[j,1] <- paste0(floor(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
+      mattt[j,2] <- paste0(floor(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+    }
+  }
+  
+  main.df <- data.frame(mattt)
+  main.df <- cbind(UBCO = axis.q, main.df)
+  
+  ft <- flextable(main.df) %>% theme_box() %>%
+    set_header_labels(X1="International",X2="Domestic") %>%
+    color(j = c("X1","X2"), color = "#A7A19D", part = "all") %>%
+    color(j = "UBCO", color = "#A7A19D", part = "header") %>%
+    fontsize(size = 6, part = "all") %>%
+    align_text_col(align = "center", header = TRUE) %>%
+    align_nottext_col(align = "center", header = TRUE)
+
+  set_table_properties(ft, layout = "autofit")
+   
+  ft %>% colformat_int(big.mark = "") %>%
+    valign(valign = "center", part = "all") %>%
+    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+    width(width = 5, unit = "in",j = "UBCO")
+}
+# tb_mc.yn("QN94",data.ok)
+
 mc <- function(qval, new.dat){
   # Column names to read data
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]

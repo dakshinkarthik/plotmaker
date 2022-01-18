@@ -511,11 +511,10 @@ mc <- function(qval, new.dat){
   print(plot.bar)
 }
 
-
 mc.yn <- function(qval, new.dat){
   mc(qval,new.dat)
 }
-mc.yn("QN30",data.ok)
+
 #-----------------------------------HELPER FUNCTIONS----------------------------------------
 
 subt_builder <- function(rc_list, new.dat){
@@ -538,8 +537,10 @@ subt_builder <- function(rc_list, new.dat){
     subt <-  substr(get(rc_list[1], new.dat) %>% attr('label'),1,
                     unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label')))-1)
   }
-  else{
+  else if(subt_how == -1 || subt_to == -1 || subt_where == -1 || subt_hyp == -1){
     subt <- get(rc_list[1], new.dat) %>% attr('label')
+  }else{
+    subt <- "Unidentified subtitle format"
   }
   
   return(subt)

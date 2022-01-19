@@ -1,8 +1,10 @@
-
+# for mx questions
 mx <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
   rc_list <- rev(cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- rc_eval("mx",rc_list)
+  
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   
   # Variable initialization
@@ -105,11 +107,13 @@ mx <- function(qval, new.dat){
   # Printing plot
   print(plot.bar)
 }
-
+# for mx tri questions with only 3 response levels
 mx.tri <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
   rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- rc_eval("mx",rc_list)
+  
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   
   # Variable initialization
@@ -485,14 +489,15 @@ tb_mc.yn <- function(qval, new.dat){
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
     width(width = 5, unit = "in",j = "UBCO")
 }
-# tb_mc.yn("QN94",data.ok)
-
+# for mc questions
 mc <- function(qval, new.dat){
   # Column names to read data
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
   rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- rc_eval("mc",rc_list)
+  
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   resp_b <- c()
   
@@ -571,7 +576,6 @@ mc <- function(qval, new.dat){
   
   print(plot.bar)
 }
-# mc("reside",data.ok)
 
 mc.yn <- function(qval, new.dat){
   mc(qval,new.dat)
@@ -607,14 +611,17 @@ subt_builder <- function(rc_list, new.dat){
   
   return(subt)
 }
+
 addline_format <- function(x,...){
   gsub('\\s',' ',x)
 }
+
 flip <- function(data) {
   new <- data[rev(rownames(data)), ]
   rownames(new) <- NULL
   new
 }
+
 ubc.theme <- function(){
   return(theme(text = element_text(family = "calibri"),
                legend.position = c(0.15,0.98),
@@ -636,4 +643,16 @@ ubc.theme <- function(){
                axis.ticks = element_blank(),
                axis.title.x = element_blank(),
                axis.title.y = element_blank()))
+}
+
+rc_eval <- function(eval.st,rc_list){
+  bl <- c()
+  for (j in 1:length(rc_list)) {
+    if(unlist(gregexpr(pattern = eval.st, rc_list[j])) != -1){
+      bl <- c(bl,TRUE)
+    }else{
+      bl <- c(bl,FALSE)
+    }
+  }
+  return(rc_list[bl])
 }

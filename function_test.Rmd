@@ -38,7 +38,9 @@ tb_mx.tri("commFreq", data.ok)
 ```{R echo = FALSE, fig.height = 75}
 # source("plotmaker.R")
 mc.yn("QN30",data.ok)
+tb_mc.yn("QN30",data.ok)
 mc.yn("QN94",data.ok)
+tb_mc.yn("QN94",data.ok)
 ```
 
 ```{R echo = FALSE, fig.height = 75}
@@ -52,10 +54,10 @@ mx("QN980", data.ok)
 tb_mx("QN980", data.ok)
 ```
 
-```{R echo = FALSE, fig.height = 75}
-mx("QN28", data.ok)
-tb_mx("QN28", data.ok)
-```
+<!-- ```{R echo = FALSE, fig.height = 75} -->
+<!-- mx("QN28", data.ok) -->
+<!-- tb_mx("QN28", data.ok) -->
+<!-- ``` -->
 
 ```{R echo = FALSE, fig.height = 75}
 mx("commAgree", data.ok)

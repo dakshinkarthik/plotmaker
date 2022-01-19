@@ -8,7 +8,8 @@ library(surveytoolbox)
 nubc2021joined <- read_sav("./data/nubc2021_new.sav")
 data.ok <- nubc2021joined
 
-data.ok$mc.housing %>% attr('label')
+data.ok$mc.QN30 %>% attr('label')
+get("mc.QN30",data.ok) %>% attr('label')
 data.ok$campusName 
 
 data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY"
@@ -16,12 +17,12 @@ data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY"
 
 str(data.ok)
 
-qval <- "reside"
+qval <- "commFreq"
 
 cnames <- colnames(data.ok)
-rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+rc_list <- cnames[grepl(qval, cnames, fixed = T)]
 
-
+unlist(gregexpr(pattern ='rk',rc_list))
 get(rc_list[1], data.ok) %>% attr('labels')
 
 

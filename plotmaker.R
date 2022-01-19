@@ -1,10 +1,76 @@
+main.graph <- function(qval, new.dat){
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rev(cnames[grepl(qval, cnames, fixed = TRUE)])
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  
+  if(length(rc_list) == 1){
+    if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
+       unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
+       unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
+      # print("mx")
+      mx(qval, new.dat)
+      tb_mx(qval, new.dat)
+    }
+    else{
+      chk <- 0
+      for (j in 1:length(resp)) {
+        if(unlist(gregexpr(pattern = 'Yes', resp[j])) != -1){
+          chk <- 1
+          break
+        }
+      }
+      if(chk == 1){
+        # print("mc.yn")
+        mc.yn(qval, new.dat)
+        tb_mc.yn(qval, new.dat)
+      }
+      else{
+        # print("mc")
+        mc(qval,new.dat)
+        tb_mc(qval, new.dat)
+      }
+    }
+  }
+  else{
+    if(unlist(gregexpr(pattern = 'mx', rc_list[1])) != -1){
+      if(unlist(gregexpr(pattern = 'agree', resp[1])) == -1&& 
+         unlist(gregexpr(pattern = 'satisfied', resp[1])) == -1&&
+         unlist(gregexpr(pattern = 'concerned', resp[1])) == -1){
+        # print("mx.tri")
+        mx.tri(qval,new.dat)
+        tb_mx.tri(qval, new.dat)
+      }else{
+        # print("mx")
+        mx(qval,new.dat)
+        tb_mx(qval, new.dat)
+      }
+    }
+    else if(unlist(gregexpr(pattern = 'rk', rc_list[1])) != -1){
+      # rk(qval,new.dat)
+      # print("rk")
+      print("Function is being developed.")
+    }
+    else if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
+      # ms(qval,new.dat)
+      # print("ms")
+      print("Function is being developed.")
+    }
+    else if(unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
+      # cs(qval,new.dat)
+      # print("cs")
+      print("Function is being developed.")
+    }
+  }
+}
+# main.graph("QN104",data.ok)
+
 # for mx questions
 mx <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
   rc_list <- rev(cnames[grepl(qval, cnames, fixed = TRUE)])
-  rc_list <- rc_eval("mx",rc_list)
-  
+
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   
   # Variable initialization

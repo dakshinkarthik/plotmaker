@@ -26,42 +26,33 @@ data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" 
 ```
 
 ```{R echo = FALSE, fig.height = 60}
-mc("reside",data.ok)
-tb_mc("reside",data.ok)
+main.graph("reside",data.ok)
 ```
 
 ```{R echo = FALSE, fig.height = 60}
-mx.tri("commFreq", data.ok)
-tb_mx.tri("commFreq", data.ok)
+main.graph("commFreq", data.ok)
 ```
 
 ```{R echo = FALSE, fig.height = 75}
 # source("plotmaker.R")
-mc.yn("QN30",data.ok)
-tb_mc.yn("QN30",data.ok)
-mc.yn("QN94",data.ok)
-tb_mc.yn("QN94",data.ok)
+main.graph("QN30",data.ok)
+main.graph("QN94",data.ok)
 ```
 
 ```{R echo = FALSE, fig.height = 75}
-mx("QN105", data.ok)
-# source("plotmaker.R")
-tb_mx("QN105", data.ok)
+main.graph("QN105", data.ok)
 ```
 
 ```{R echo = FALSE, fig.height = 75}
-mx("QN980", data.ok)
-tb_mx("QN980", data.ok)
+main.graph("QN980", data.ok)
 ```
 
-<!-- ```{R echo = FALSE, fig.height = 75} -->
-<!-- mx("QN28", data.ok) -->
-<!-- tb_mx("QN28", data.ok) -->
-<!-- ``` -->
+```{R echo = FALSE, fig.height = 75}
+main.graph("QN28", data.ok)
+```
 
 ```{R echo = FALSE, fig.height = 75}
-mx("commAgree", data.ok)
-tb_mx("commAgree", data.ok)
+main.graph("commAgree", data.ok)
 ```
 
 

@@ -5,7 +5,7 @@ library(devtools)
 library(glue)
 library(surveytoolbox)
 
-nubc2021joined <- read_sav("./data/nubc2021_new.sav")
+nubc2021joined <- read_sav("./data/nubc2021com.sav")
 data.ok <- nubc2021joined
 
 data.ok$mc.QN30 %>% attr('label')
@@ -13,18 +13,24 @@ get("mc.QN30",data.ok) %>% attr('label')
 data.ok$campusName 
 
 data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY"
-                     & nubc2021joined$campusName == "Okanagan"),]
+                     & nubc2021joined$campusName == "Okanagan"
+                     & get("isi", nubc2021joined) == "Domestic"),]
 
 str(data.ok)
 
-qval <- "commFreq"
+qval <- "QN98"
 
 cnames <- colnames(data.ok)
 rc_list <- cnames[grepl(qval, cnames, fixed = T)]
 
-unlist(gregexpr(pattern ='rk',rc_list))
-get(rc_list[1], data.ok) %>% attr('labels')
+unlist(gregexpr(pattern ='complete',rc_eval("rk",rc_list)[8]))
+table(get(rc_eval("rk",rc_list)[10], data.ok))
+data.frame(get(rc_list[11], data.ok))
+table(data.ok$rk.QN98complete)
 
+data.ok$isi[1000]
+
+get("rk.QN98complete", data.ok) %>% attr('label')
 
 df1 <- data.frame(table(get(rc_list[1], data.ok)), Ques = c(1))
 df2 <- data.frame(table(get(rc_list[2], data.ok)), Ques = c(2))

@@ -1,5 +1,7 @@
 main.graph <- function(qval, new.dat){
   # Column names to read data
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
   rc_list <- rev(cnames[grepl(qval, cnames, fixed = TRUE)])
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
@@ -47,9 +49,10 @@ main.graph <- function(qval, new.dat){
       }
     }
     else if(unlist(gregexpr(pattern = 'rk', rc_list[1])) != -1){
-      # rk(qval,new.dat)
+      rk(qval,d.dat)
+      rk(qval,i.dat)
       # print("rk")
-      print("Function is being developed.")
+      # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
       # ms(qval,new.dat)
@@ -64,6 +67,117 @@ main.graph <- function(qval, new.dat){
   }
 }
 # main.graph("QN104",data.ok)
+
+# for rk questions
+rk <- function(qval, new.dat){
+  # Column names to read data
+  # new.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  cnames <- colnames(new.dat)
+  rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  new.dat <- rc_complete(rc_list, new.dat)
+  rc_list <- rc_eval("rk",rc_list)
+  
+  resp <- rev(names(get(rc_list[1], new.dat) %>% attr('labels')))
+
+  # Variable initialization
+  df.list <- list()
+  prop <- list()
+  main.prop <- NULL
+  main.df<- data.frame()
+  col <- rev(c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF"))
+  tex.col.base <- rev(c("white","white","white","black","black","black","black"))
+  tex.col <- c()
+  label_count <- length(tex.col)
+  ld.title <- c()
+  i <- 0
+
+  # Axis question building and formatting
+  for (qn in rc_list) {
+    label_count_var <- 0
+    i <- i + 1
+    if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(qn, new.dat) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
+                   nchar(get(qn, new.dat) %>% attr('label')))
+    }
+    else{
+      ld <- get(qn, new.dat) %>% attr('label')
+    }
+
+    if(nchar(ld)>63){
+      ld <- paste0(substr(ld,1,sapply(gregexpr(pattern = " ", substr(ld,1,63)),max)), "\n ",
+                   substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,63)),max)+1,nchar(ld)))
+    }
+
+    ld.title <- c(ld.title, ld)
+
+    # Dataframe building
+    df.list[[i]] <- data.frame(rev(table(get(qn, new.dat))), Ques = c(i))
+    levels(df.list[[i]]) <- factor(resp)
+    df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
+
+    # Geometry text prep
+    prop[[i]] <- floor((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
+
+    for(j in 1:length(prop[[i]])){
+      label_count_var <- label_count_var + 1
+      if(as.integer(prop[[i]][j])<5)
+        prop[[i]][j] = ''
+      else
+        prop[[i]][j] = paste0(prop[[i]][j], "%")
+    }
+    # Color for geom text
+    if(label_count_var == label_count){
+      tex.col <- c(tex.col, tex.col.base)
+    }
+    else{
+      tex.col <- c(tex.col, tex.col.base[1:label_count_var])
+    }
+
+    # Main dataframe and geom text for plotting
+    main.prop <- c(main.prop, prop[[i]])
+    main.df <- rbind(main.df, df.list[[i]])
+
+  }
+
+  # Subtitle building
+  subt <- subt_builder(rc_list, new.dat)
+
+  # Subtitle positioning and geom text size
+  geom_text_size <- NULL
+  c.width <- NULL
+
+  if(length(rc_list) == 1){
+    geom_text_size <- 75
+    c.width <- 0.15
+  }else if(length(rc_list) <= 3){
+    geom_text_size <- 90
+    c.width <- 0.5
+  }else if(length(rc_list) <= 6){
+    geom_text_size <- 75
+    c.width <- 0.7
+  }else{
+    geom_text_size <- 50
+    c.width <- 0.5
+  }
+
+  # GGplot graphing
+  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=Ques, fill = Var1)) +
+    geom_bar(stat = "identity", position = "fill", width = c.width) +
+    theme_economist(base_size = 14) +
+    scale_fill_manual(values = col, guide = guide_legend(reverse = FALSE, nrow = 1), labels = resp) +
+    geom_text(data = main.df, aes(Freq, Ques, group = Var1), label = main.prop,
+              position = position_fill(vjust=c.width), color = tex.col, size = geom_text_size) +
+    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+         subtitle = subt) +
+    scale_y_discrete(breaks = unique(main.df$Ques),
+                     labels = ld.title) +
+    ubc.theme()
+  
+  print(plot.bar)
+  
+}
+# main.graph("QN98",data.ok)
 
 # for mx questions
 mx <- function(qval, new.dat){
@@ -90,7 +204,7 @@ mx <- function(qval, new.dat){
     label_count_var <- 0
     i <- i + 1
     if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
-      ld <- substr(get(qn, data.ok) %>% attr('label'),
+      ld <- substr(get(qn, new.dat) %>% attr('label'),
                    unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
                    nchar(get(qn, new.dat) %>% attr('label')))
     }
@@ -106,7 +220,7 @@ mx <- function(qval, new.dat){
     ld.title <- c(ld.title, ld)
     
     # Dataframe building
-    df.list[[i]] <- data.frame(table(get(qn, data.ok)), Ques = c(i))
+    df.list[[i]] <- data.frame(table(get(qn, new.dat)), Ques = c(i))
     levels(df.list[[i]]) <- factor(resp)
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
     
@@ -647,6 +761,7 @@ mc.yn <- function(qval, new.dat){
   mc(qval,new.dat)
 }
 
+
 #-----------------------------------HELPER FUNCTIONS----------------------------------------
 
 subt_builder <- function(rc_list, new.dat){
@@ -715,10 +830,27 @@ rc_eval <- function(eval.st,rc_list){
   bl <- c()
   for (j in 1:length(rc_list)) {
     if(unlist(gregexpr(pattern = eval.st, rc_list[j])) != -1){
-      bl <- c(bl,TRUE)
+      if(unlist(gregexpr(pattern = "complete", rc_list[j])) != -1){
+        bl <- c(bl,FALSE)
+      }
+      else{
+        bl <- c(bl,TRUE)
+      }
     }else{
       bl <- c(bl,FALSE)
     }
   }
   return(rc_list[bl])
+}
+
+rc_complete <- function(rc_list, new.dat){
+  chk <- 0
+  for (j in 1:length(rc_list)) {
+    if(unlist(gregexpr(pattern = "complete", rc_list[j])) != -1){
+      chk <- 1
+      return(new.dat[which(get(rc_list[j], new.dat) == 1),])
+    }
+  }
+  if(chk == 0)
+    return(new.dat)
 }

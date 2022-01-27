@@ -66,7 +66,6 @@ main.graph <- function(qval, new.dat){
     }
   }
 }
-# main.graph("QN104",data.ok)
 
 # for rk questions
 rk <- function(qval, new.dat){
@@ -77,14 +76,28 @@ rk <- function(qval, new.dat){
   new.dat <- rc_complete(rc_list, new.dat)
   rc_list <- rc_eval("rk",rc_list)
   
-  resp <- rev(names(get(rc_list[1], new.dat) %>% attr('labels')))
+  ti.tle <- NULL
+  if(new.dat$isi[1] == "Domestic"){
+    col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
+    ti.tle <- "Domestic Direct-Entry Undergraduate Students, UBC Okanagan"
+  }
+  else if(new.dat$isi[1] == "ISI"){
+    col <- c("#A1600A", "#C37918", "#D38622", "#FF940A", "#FFA55D", "#FFB377", "#FFD5A0")
+    ti.tle <- "International Direct-Entry Undergraduate Students, UBC Okanagan"
+  }
+  else{
+    col <- c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF")
+    ti.tle <- "Direct-Entry Undergraduate Students, UBC Okanagan"
+  }
+  
+  resp <- paste("Rank", rev(names(get(rc_list[1], new.dat) %>% attr('labels'))), sep = " ")
 
   # Variable initialization
   df.list <- list()
   prop <- list()
   main.prop <- NULL
   main.df<- data.frame()
-  col <- rev(c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF"))
+  col <- rev(col)
   tex.col.base <- rev(c("white","white","white","black","black","black","black"))
   tex.col <- c()
   label_count <- length(tex.col)
@@ -115,6 +128,7 @@ rk <- function(qval, new.dat){
     df.list[[i]] <- data.frame(rev(table(get(qn, new.dat))), Ques = c(i))
     levels(df.list[[i]]) <- factor(resp)
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
+    df.list[[i]]$Freq <- floor((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
 
     # Geometry text prep
     prop[[i]] <- floor((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
@@ -165,14 +179,16 @@ rk <- function(qval, new.dat){
   plot.bar <- ggplot(data = main.df, aes(x=Freq, y=Ques, fill = Var1)) +
     geom_bar(stat = "identity", position = "fill", width = c.width) +
     theme_economist(base_size = 14) +
-    scale_fill_manual(values = col, guide = guide_legend(reverse = FALSE, nrow = 1), labels = resp) +
+    scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
     geom_text(data = main.df, aes(Freq, Ques, group = Var1), label = main.prop,
               position = position_fill(vjust=c.width), color = tex.col, size = geom_text_size) +
-    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+    labs(title = ti.tle,
          subtitle = subt) +
     scale_y_discrete(breaks = unique(main.df$Ques),
                      labels = ld.title) +
-    ubc.theme()
+    scale_x_continuous(labels = scales::percent) +
+    ubc.theme() +
+    theme(axis.text.x = element_text(size = 180))
   
   print(plot.bar)
   
@@ -287,6 +303,7 @@ mx <- function(qval, new.dat){
   # Printing plot
   print(plot.bar)
 }
+
 # for mx tri questions with only 3 response levels
 mx.tri <- function(qval, new.dat){
   # Column names to read data
@@ -669,6 +686,7 @@ tb_mc.yn <- function(qval, new.dat){
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
     width(width = 5, unit = "in",j = "UBCO")
 }
+
 # for mc questions
 mc <- function(qval, new.dat){
   # Column names to read data
@@ -788,6 +806,11 @@ subt_builder <- function(rc_list, new.dat){
     subt <- get(rc_list[1], new.dat) %>% attr('label')
   }else{
     subt <- "Unidentified subtitle format"
+  }
+  
+  if(nchar(subt)>58){
+    subt <- paste0(substr(subt,1,sapply(gregexpr(pattern = " ", substr(subt,1,58)),max)), "\n ",
+                 substr(subt,sapply(gregexpr(pattern = " ", substr(subt,1,58)),max)+1,nchar(subt)))
   }
   
   return(subt)

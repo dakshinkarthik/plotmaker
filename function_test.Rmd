@@ -31,7 +31,7 @@ d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 <!-- main.graph("QN98",d.dat) -->
 <!-- ``` -->
 ```{R qID-chunk, echo=FALSE}
-qIDs <- c("QN98","QN105")
+qIDs <- c("QN98","QN105","commFreq")
 ```
 
 ```{R chunk-generator ,echo=FALSE}

@@ -27,52 +27,30 @@ i.dat <- data.ok[which(data.ok$isi == "ISI"),]
 d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 ```
 
-```{R echo=FALSE}
-qIDs <- c("QN105","QN98","commAgree")
+<!-- ```{R echo = FALSE, fig.height = 80} -->
+<!-- main.graph("QN98",d.dat) -->
+<!-- ``` -->
+```{R qID-chunk, echo=FALSE}
+qIDs <- c("QN98","QN105")
 ```
- 
+
 ```{R chunk-generator ,echo=FALSE}
 out = NULL
+cnames <- colnames(data.ok)
 for (i in qIDs) {
-  knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n main.graph(\'",i,"\',d.dat)\n
-                          main.graph(\'",i,"\',i.dat)\n\n```")
-  out = c(out, knit_expanded)
+    rc_list <- rev(cnames[grepl(i, cnames, fixed = TRUE)])
+    if(length(rc_list) != 1){
+      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
+      out = c(out, knit_expanded)
+    }
+    else{
+      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n main.graph(\'",i,"\',data.ok)\n\n```")
+      out = c(out, knit_expanded)
+    }
 }
 ```
 
 `r paste(knit(text = out), collapse = '\n')`
-
-<!-- ```{R echo = FALSE, fig.height = 80} -->
-<!-- main.graph("QN98",d.dat) -->
-<!-- main.graph("QN98",i.dat) -->
-<!-- ``` -->
-
-<!-- ```{R echo = FALSE, fig.height = 60} -->
-<!-- main.graph("commFreq", data.ok) -->
-<!-- ``` -->
-
-<!-- ```{R echo = FALSE, fig.height = 75} -->
-<!-- # source("plotmaker.R") -->
-<!-- main.graph("QN30",data.ok) -->
-<!-- main.graph("QN94",data.ok) -->
-<!-- ``` -->
-
-<!-- ```{R echo = FALSE, fig.height = 75} -->
-<!-- main.graph("QN105", d.dat) -->
-<!-- main.graph("QN105", i.dat) -->
-<!-- ``` -->
-
-<!-- ```{R echo = FALSE, fig.height = 75} -->
-<!-- main.graph("QN980", data.ok) -->
-<!-- ``` -->
-
-<!-- ```{R echo = FALSE, fig.height = 75} -->
-<!-- main.graph("QN28", data.ok) -->
-<!-- ``` -->
-
-<!-- ```{R echo = FALSE, fig.height = 75} -->
-<!-- main.graph("commAgree", data.ok) -->
-<!-- ``` -->
 
 
 

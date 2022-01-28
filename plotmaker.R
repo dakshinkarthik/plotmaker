@@ -50,6 +50,7 @@ main.graph <- function(qval, new.dat){
     }
     else if(unlist(gregexpr(pattern = 'rk', rc_list[1])) != -1){
       rk(qval,new.dat)
+      tb_rk(qval,new.dat)
       # print("rk")
       # print("Function is being developed.")
     }
@@ -126,7 +127,7 @@ rk <- function(qval, new.dat){
     df.list[[i]] <- data.frame(rev(table(get(qn, new.dat))), Ques = c(i))
     levels(df.list[[i]]) <- factor(resp)
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
-    df.list[[i]]$Freq <- floor((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
+    # df.list[[i]]$Freq <- floor((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
 
     # Geometry text prep
     prop[[i]] <- floor((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
@@ -191,7 +192,6 @@ rk <- function(qval, new.dat){
   print(plot.bar)
   
 }
-# main.graph("QN98",data.ok)
 
 # for mx questions
 mx <- function(qval, new.dat){
@@ -606,36 +606,75 @@ tb_rk <- function(qval, new.dat){
   new.dat <- rc_complete(rc_list, new.dat)
   rc_list <- rc_eval("rk",rc_list)
   resp <- paste("Rank", rev(names(get(rc_list[1], new.dat) %>% attr('labels'))), sep = " ")
-  mattt <- matrix(rep(1,(length(resp)+0)*length(rc_list)), ncol = length(resp)+0)
+  mattt <- matrix(rep(1,(length(resp)+0)*(length(rc_list)+1)), ncol = length(resp)+0)
   
   # Variable initialization
   df.list <- list()
   prop <- list()
   main.prop <- NULL
   main.df<- data.frame()
-  
+  ld.main <- c()
 
   
   i <- 1
-  for(qn in rc_list){
-    df.list[[i]] <- data.frame(table(get(qn, new.dat)))
-    row_tot <- sum(df.list[[i]]$Freq)
-    
-    for (j in 1:length(resp)+0) {
-      if(!is.na(df.list[[i]]$Freq[j])){
-        mattt[i,j] <- paste0(floor(100*df.list[[i]]$Freq[j]/row_tot),"%")
+  for(i in 1:dim(mattt)[1]){
+    if(i != dim(mattt)[1]){
+      df.list[[i]] <- data.frame(table(get(rc_list[i], new.dat)))
+      ld <- NULL
+      #Row labels
+      if(unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label'))) != -1){
+        ld <- substr(get(rc_list[i], data.ok) %>% attr('label'),
+                     unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label')))+3,
+                     nchar(get(rc_list[i], new.dat) %>% attr('label')))
       }
       else{
-        mattt[i,j] <- "NA"
+        ld <- get(qn, new.dat) %>% attr('label')
+      }
+      
+      row_tot <- sum(df.list[[i]]$Freq)
+      for(j in 1:dim(mattt)[2]){
+        if(!is.na(df.list[[i]]$Freq[j])){
+          mattt[i,j] <- paste0(floor(100*df.list[[i]]$Freq[j]/row_tot),"%")
+        }
+        else{
+          mattt[i,j] <- "NA"
+        }
+      }
+      ld.main <- c(ld.main, ld)
+    }
+    else{
+      for(j in 1:dim(mattt)[2]){
+        mattt[i,j] <- nrow(new.dat)
       }
     }
-    i <- i + 1
   }
+  ld.main <- c(ld.main,"Total")
   main.df <- data.frame(mattt)
-  colnames(main.df) <- rev(resp)
-  print(main.df)
+  resp <- c(rev(resp))
+  colnames(main.df) <- resp
+  
+  if(new.dat$isi[1] == "Domestic"){
+    main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1])
+  }
+  else if(new.dat$isi[1] == "ISI"){
+    main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
+  }
+  
+  ft <- flextable(main.df) %>% theme_box()
+  ft <- fontsize(ft, size = 5.5, part = "all")
+  set_table_properties(ft, layout = "autofit")
+  ft <- align_text_col(ft, align = "center", header = TRUE) %>%
+    align_nottext_col(align = "center", header = TRUE)
+  ft %>% colformat_int(big.mark = "") %>%
+    valign(valign = "center", part = "all") %>%
+    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+    # width(width = 0.81, unit = "in") %>%
+    width(width = 0.5, unit = "in") %>%
+    width(j = 1, width = 2.98, unit = "in") %>%
+    color(j = 2:dim(mattt)[2]+1, color = "#A7A19D", part = "header") %>%
+    color(j = 2:dim(mattt)[2]+1, color = "#A7A19D", part = "all")
 }
-# tb_rk("QN98",d.dat)
+# tb_rk("QN98",i.dat)
 
 tb_mc <- function(qval, new.dat){
   # Column names to read data
@@ -949,9 +988,4 @@ rc_complete <- function(rc_list, new.dat){
     return(new.dat)
 }
 
-fn_caller <- function(fn_type, qval, new.dat){
-  if(fn_type == 'mx'){
-    mx(qval, new.dat)
-    tb_mx(qval, new.dat)
-  }
-}
+

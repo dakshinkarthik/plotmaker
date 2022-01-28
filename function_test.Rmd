@@ -6,7 +6,7 @@ output:
 ---
 
 <!-- Setup and library calls -->
-```{r setup, include=FALSE}
+```{R setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.width = 180, fig.height = 10)
 library(knitr)
 library(ggplot2)
@@ -21,39 +21,58 @@ source("plotmaker.R")
 ```
 <!-- Reads and formats -->
 ```{R echo=FALSE}
-nubc2021joined <- read_sav("data/nubc2021_new.sav")
+nubc2021joined <- read_sav("data/nubc2021com.sav")
 data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Okanagan"),]
+i.dat <- data.ok[which(data.ok$isi == "ISI"),]
+d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 ```
 
-```{R echo = FALSE, fig.height = 60}
-main.graph("reside",data.ok)
+```{R echo=FALSE}
+qIDs <- c("QN105","QN98","commAgree")
+```
+ 
+```{R chunk-generator ,echo=FALSE}
+out = NULL
+for (i in qIDs) {
+  knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n main.graph(\'",i,"\',d.dat)\n
+                          main.graph(\'",i,"\',i.dat)\n\n```")
+  out = c(out, knit_expanded)
+}
 ```
 
-```{R echo = FALSE, fig.height = 60}
-main.graph("commFreq", data.ok)
-```
+`r paste(knit(text = out), collapse = '\n')`
 
-```{R echo = FALSE, fig.height = 75}
-# source("plotmaker.R")
-main.graph("QN30",data.ok)
-main.graph("QN94",data.ok)
-```
+<!-- ```{R echo = FALSE, fig.height = 80} -->
+<!-- main.graph("QN98",d.dat) -->
+<!-- main.graph("QN98",i.dat) -->
+<!-- ``` -->
 
-```{R echo = FALSE, fig.height = 75}
-main.graph("QN105", data.ok)
-```
+<!-- ```{R echo = FALSE, fig.height = 60} -->
+<!-- main.graph("commFreq", data.ok) -->
+<!-- ``` -->
 
-```{R echo = FALSE, fig.height = 75}
-main.graph("QN980", data.ok)
-```
+<!-- ```{R echo = FALSE, fig.height = 75} -->
+<!-- # source("plotmaker.R") -->
+<!-- main.graph("QN30",data.ok) -->
+<!-- main.graph("QN94",data.ok) -->
+<!-- ``` -->
 
-```{R echo = FALSE, fig.height = 75}
-main.graph("QN28", data.ok)
-```
+<!-- ```{R echo = FALSE, fig.height = 75} -->
+<!-- main.graph("QN105", d.dat) -->
+<!-- main.graph("QN105", i.dat) -->
+<!-- ``` -->
 
-```{R echo = FALSE, fig.height = 75}
-main.graph("commAgree", data.ok)
-```
+<!-- ```{R echo = FALSE, fig.height = 75} -->
+<!-- main.graph("QN980", data.ok) -->
+<!-- ``` -->
+
+<!-- ```{R echo = FALSE, fig.height = 75} -->
+<!-- main.graph("QN28", data.ok) -->
+<!-- ``` -->
+
+<!-- ```{R echo = FALSE, fig.height = 75} -->
+<!-- main.graph("commAgree", data.ok) -->
+<!-- ``` -->
 
 
 

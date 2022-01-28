@@ -204,15 +204,15 @@ mx <- function(qval, new.dat){
   # Domestic/international titles and colors
   ti.tle <- NULL
   if(new.dat$isi[1] == "Domestic"){
-    # col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
+    col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
     ti.tle <- "Domestic Direct-Entry Undergraduate Students, UBC Okanagan"
   }
   else if(new.dat$isi[1] == "ISI"){
-    # col <- c("#A1600A", "#C37918", "#D38622", "#FF940A", "#FFA55D", "#FFB377", "#FFD5A0")
+    col <- c("#A1600A", "#C37918", "#D38622", "#FF940A", "#FFA55D", "#FFB377", "#FFD5A0")
     ti.tle <- "International Direct-Entry Undergraduate Students, UBC Okanagan"
   }
   else{
-    # col <- c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF")
+    col <- c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF")
     ti.tle <- "Direct-Entry Undergraduate Students, UBC Okanagan"
   }
   
@@ -221,7 +221,7 @@ mx <- function(qval, new.dat){
   prop <- list()
   main.prop <- NULL
   main.df<- data.frame()
-  col <- rev(c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF"))
+  col <- rev(col)
   tex.col.base <- rev(c("white","white","black","black","black","black"))
   tex.col <- c()
   label_count <- length(tex.col)
@@ -331,15 +331,15 @@ mx.tri <- function(qval, new.dat){
   # Domestic/international titles and colors
   ti.tle <- NULL
   if(new.dat$isi[1] == "Domestic"){
-    # col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
+    col <- c("#3C5A2A","#498325","#89C265")
     ti.tle <- "Domestic Direct-Entry Undergraduate Students, UBC Okanagan"
   }
   else if(new.dat$isi[1] == "ISI"){
-    # col <- c("#A1600A", "#C37918", "#D38622", "#FF940A", "#FFA55D", "#FFB377", "#FFD5A0")
+    col <- c("#894E09","#BC7521","#FAB484")
     ti.tle <- "International Direct-Entry Undergraduate Students, UBC Okanagan"
   }
   else{
-    # col <- c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF")
+    col <- c("#3C5A2A","#498325","#89C265")
     ti.tle <- "Direct-Entry Undergraduate Students, UBC Okanagan"
   }
   
@@ -348,7 +348,6 @@ mx.tri <- function(qval, new.dat){
   prop <- list()
   main.prop <- NULL
   main.df<- data.frame()
-  col <- c("#3C5A2A","#498325","#89C265")
   ld.title <- c()
   i <- 0
   
@@ -469,8 +468,17 @@ tb_mx.tri <- function(qval, new.dat){
   c.width <- 1.3
   ft.size <- 6
   
-  main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>%
-    add_column(Total = row_tot)
+  # main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>%
+  #   add_column(Total = row_tot)
+  
+  if(new.dat$isi[1] == "Domestic"){
+    main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1]) %>%
+      add_column(Total = row_tot)
+  }
+  else if(new.dat$isi[1] == "ISI"){
+    main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1]) %>%
+      add_column(Total = row_tot)
+  }
   
   ft <- flextable(main.df) %>% theme_box()
   ft <- fontsize(ft, size = ft.size, part = "all")
@@ -563,7 +571,14 @@ tb_mx <- function(qval, new.dat){
   c.width <- 1
   ft.size <- 6
   
-  main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1])
+  # main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1])
+  
+  if(new.dat$isi[1] == "Domestic"){
+    main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1])
+  }
+  else if(new.dat$isi[1] == "ISI"){
+    main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
+  }
   
   if(is_conc != -1){
     main.df <- main.df %>% add_column(`Very concerned/Concerned` = c_vc, .after = resp[1]) %>%

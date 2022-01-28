@@ -1,7 +1,7 @@
 main.graph <- function(qval, new.dat){
   # Column names to read data
-  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
-  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  # d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
   rc_list <- rev(cnames[grepl(qval, cnames, fixed = TRUE)])
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
@@ -11,8 +11,8 @@ main.graph <- function(qval, new.dat){
        unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
        unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
       # print("mx")
-      mx(qval, new.dat)
-      tb_mx(qval, new.dat)
+      mx(qval,new.dat)
+      tb_mx(qval,new.dat)
     }
     else{
       chk <- 0
@@ -29,7 +29,7 @@ main.graph <- function(qval, new.dat){
       }
       else{
         # print("mc")
-        mc(qval,new.dat)
+        mc(qval, new.dat)
         tb_mc(qval, new.dat)
       }
     }
@@ -41,16 +41,15 @@ main.graph <- function(qval, new.dat){
          unlist(gregexpr(pattern = 'concerned', resp[1])) == -1){
         # print("mx.tri")
         mx.tri(qval,new.dat)
-        tb_mx.tri(qval, new.dat)
+        tb_mx.tri(qval,new.dat)
       }else{
         # print("mx")
         mx(qval,new.dat)
-        tb_mx(qval, new.dat)
+        tb_mx(qval,new.dat)
       }
     }
     else if(unlist(gregexpr(pattern = 'rk', rc_list[1])) != -1){
-      rk(qval,d.dat)
-      rk(qval,i.dat)
+      rk(qval,new.dat)
       # print("rk")
       # print("Function is being developed.")
     }
@@ -70,7 +69,6 @@ main.graph <- function(qval, new.dat){
 # for rk questions
 rk <- function(qval, new.dat){
   # Column names to read data
-  # new.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
   rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
   new.dat <- rc_complete(rc_list, new.dat)
@@ -203,6 +201,21 @@ mx <- function(qval, new.dat){
 
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   
+  # Domestic/international titles and colors
+  ti.tle <- NULL
+  if(new.dat$isi[1] == "Domestic"){
+    # col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
+    ti.tle <- "Domestic Direct-Entry Undergraduate Students, UBC Okanagan"
+  }
+  else if(new.dat$isi[1] == "ISI"){
+    # col <- c("#A1600A", "#C37918", "#D38622", "#FF940A", "#FFA55D", "#FFB377", "#FFD5A0")
+    ti.tle <- "International Direct-Entry Undergraduate Students, UBC Okanagan"
+  }
+  else{
+    # col <- c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF")
+    ti.tle <- "Direct-Entry Undergraduate Students, UBC Okanagan"
+  }
+  
   # Variable initialization
   df.list <- list()
   prop <- list()
@@ -214,6 +227,8 @@ mx <- function(qval, new.dat){
   label_count <- length(tex.col)
   ld.title <- c()
   i <- 0
+  
+
   
   # Axis question building and formatting
   for (qn in rc_list) {
@@ -292,7 +307,7 @@ mx <- function(qval, new.dat){
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
     geom_text(data = main.df, aes(Ques, Freq, group = Var1), label = main.prop,
               position = position_fill(vjust=0.5), color = tex.col, size = geom_text_size) +
-    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+    labs(title = ti.tle,
          subtitle = subt) +
     scale_x_discrete(breaks = unique(main.df$Ques),
                      labels = ld.title) +
@@ -312,6 +327,21 @@ mx.tri <- function(qval, new.dat){
   rc_list <- rc_eval("mx",rc_list)
   
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  
+  # Domestic/international titles and colors
+  ti.tle <- NULL
+  if(new.dat$isi[1] == "Domestic"){
+    # col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
+    ti.tle <- "Domestic Direct-Entry Undergraduate Students, UBC Okanagan"
+  }
+  else if(new.dat$isi[1] == "ISI"){
+    # col <- c("#A1600A", "#C37918", "#D38622", "#FF940A", "#FFA55D", "#FFB377", "#FFD5A0")
+    ti.tle <- "International Direct-Entry Undergraduate Students, UBC Okanagan"
+  }
+  else{
+    # col <- c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF")
+    ti.tle <- "Direct-Entry Undergraduate Students, UBC Okanagan"
+  }
   
   # Variable initialization
   df.list <- list()
@@ -348,7 +378,7 @@ mx.tri <- function(qval, new.dat){
     ld.title <- c(ld.title, ld)
     
     # Dataframe building
-    df.list[[i]] <- data.frame(table(get(qn, data.ok)), Ques = c(i))
+    df.list[[i]] <- data.frame(table(get(qn, new.dat)), Ques = c(i))
     levels(df.list[[i]]) <- factor(resp)
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
     
@@ -375,7 +405,7 @@ mx.tri <- function(qval, new.dat){
     scale_fill_manual(values = col, guide = guide_legend(reverse = FALSE, nrow = 3), labels = resp) +
     geom_text(data = main.df, label = main.prop,
               position = position_dodge(width = 0.9), size = 60, vjust = -1) +
-    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+    labs(title = ti.tle,
          subtitle = subt) +
     scale_x_discrete(breaks = unique(main.df$Ques),
                      labels = ld.title) +
@@ -389,6 +419,8 @@ mx.tri <- function(qval, new.dat){
   
   # Printing plot
   print(plot.bar)
+  
+  # tb_mx.tri(qval, new.dat)
 }
 
 tb_mx.tri <- function(qval, new.dat){
@@ -404,7 +436,7 @@ tb_mx.tri <- function(qval, new.dat){
   
   i <- 1
   for (qn in rc_list) {
-    df.list[[i]] <- data.frame(table(get(qn, data.ok)))
+    df.list[[i]] <- data.frame(table(get(qn, new.dat)))
     
     #Row labels
     if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
@@ -470,7 +502,7 @@ tb_mx <- function(qval, new.dat){
   
   i <- 1
   for (qn in rc_list) {
-    df.list[[i]] <- data.frame(table(get(qn, data.ok)))
+    df.list[[i]] <- data.frame(table(get(qn, new.dat)))
     
     #Row labels
     if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
@@ -564,7 +596,46 @@ tb_mx <- function(qval, new.dat){
     width(width = c.width, unit = "in") %>%
     color(color = "#A7A19D", part = "header") %>%
     color(j = -2:dim(mattt)[2]+4, color = "#A7A19D", part = "body")
+  
 }
+
+tb_rk <- function(qval, new.dat){
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  new.dat <- rc_complete(rc_list, new.dat)
+  rc_list <- rc_eval("rk",rc_list)
+  resp <- paste("Rank", rev(names(get(rc_list[1], new.dat) %>% attr('labels'))), sep = " ")
+  mattt <- matrix(rep(1,(length(resp)+0)*length(rc_list)), ncol = length(resp)+0)
+  
+  # Variable initialization
+  df.list <- list()
+  prop <- list()
+  main.prop <- NULL
+  main.df<- data.frame()
+  
+
+  
+  i <- 1
+  for(qn in rc_list){
+    df.list[[i]] <- data.frame(table(get(qn, new.dat)))
+    row_tot <- sum(df.list[[i]]$Freq)
+    
+    for (j in 1:length(resp)+0) {
+      if(!is.na(df.list[[i]]$Freq[j])){
+        mattt[i,j] <- paste0(floor(100*df.list[[i]]$Freq[j]/row_tot),"%")
+      }
+      else{
+        mattt[i,j] <- "NA"
+      }
+    }
+    i <- i + 1
+  }
+  main.df <- data.frame(mattt)
+  colnames(main.df) <- rev(resp)
+  print(main.df)
+}
+# tb_rk("QN98",d.dat)
 
 tb_mc <- function(qval, new.dat){
   # Column names to read data
@@ -876,4 +947,11 @@ rc_complete <- function(rc_list, new.dat){
   }
   if(chk == 0)
     return(new.dat)
+}
+
+fn_caller <- function(fn_type, qval, new.dat){
+  if(fn_type == 'mx'){
+    mx(qval, new.dat)
+    tb_mx(qval, new.dat)
+  }
 }

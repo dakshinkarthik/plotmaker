@@ -56,7 +56,7 @@ main.graph <- function(qval, new.dat){
     }
     else if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
       # ms(qval,new.dat)
-      # print("ms")
+      print("ms")
       print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
@@ -127,7 +127,6 @@ rk <- function(qval, new.dat){
     df.list[[i]] <- data.frame(rev(table(get(qn, new.dat))), Ques = c(i))
     levels(df.list[[i]]) <- factor(resp)
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
-    # df.list[[i]]$Freq <- floor((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
 
     # Geometry text prep
     prop[[i]] <- floor((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
@@ -904,6 +903,71 @@ mc.yn <- function(qval, new.dat){
   mc(qval,new.dat)
 }
 
+ms <- function(qval, new.dat){
+  # Column names to read data
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  
+  cnames <- colnames(new.dat)
+  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- rc_eval("ms",rc_list)
+  
+  # Variable initialization
+  df.list <- list()
+  i.df.list <- list()
+  d.df.list <- list()
+  main.df <- NULL
+  prop <- list()
+  i.prop <- list()
+  d.prop <- list()
+  main.prop <- c()
+  main.df<- data.frame()
+  tex.col <- c()
+  label_count <- length(tex.col)
+  ld.title <- c()
+  axis.q <- c()
+  i <- 1
+  
+  for (qn in rc_list) {
+    # Dataframe building
+    d.df.list[[i]] <- data.frame(table(get(qn, d.dat)), Ques = c("Domestic"))
+    i.df.list[[i]] <- data.frame(table(get(qn, i.dat)), Ques = c("International"))
+    df.list[[i]] <- data.frame(table(get(qn, new.dat)))
+    
+    # Geometry text prep
+    prop[[i]] <- floor((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
+    d.prop[[i]] <- floor((100*d.df.list[[i]]$Freq/sum(d.df.list[[i]]$Freq)))
+    i.prop[[i]] <- floor((100*i.df.list[[i]]$Freq/sum(i.df.list[[i]]$Freq)))
+    main.df <- rbind(main.df,d.df.list[[i]][2,],i.df.list[[i]][2,])
+    axis.q <- c(axis.q, names(get(rc_list[i], new.dat) %>% attr('labels')))
+    i <- i + 1
+  }
+  
+  levels(main.df$Ques) <- c("Domestic","International")
+  i.dc <- 0
+  d.dc <- 0
+  for (stu in i.dat$ExternalReference) {
+    for (qn in rc_list) {
+      if((get(qn, i.dat)[i.dat$ExternalReference == stu] + 0) == 1){
+        i.dc <- i.dc + 1
+        break
+      }
+    }
+  }
+  
+  for (stu in d.dat$ExternalReference) {
+    for (qn in rc_list) {
+      if((get(qn, d.dat)[d.dat$ExternalReference == stu] + 0) == 1){
+        d.dc <- d.dc + 1
+        break
+      }
+    }
+  }
+  # main.df <- rbind(d.df.list, i.df.list)
+  print(rc_list)
+}
+# main.graph("QN48",data.ok)
+
 
 #-----------------------------------HELPER FUNCTIONS----------------------------------------
 
@@ -979,6 +1043,9 @@ rc_eval <- function(eval.st,rc_list){
   for (j in 1:length(rc_list)) {
     if(unlist(gregexpr(pattern = eval.st, rc_list[j])) != -1){
       if(unlist(gregexpr(pattern = "complete", rc_list[j])) != -1){
+        bl <- c(bl,FALSE)
+      }
+      else if(unlist(gregexpr(pattern = "Sum", rc_list[j])) != -1){
         bl <- c(bl,FALSE)
       }
       else{

@@ -55,9 +55,9 @@ main.graph <- function(qval, new.dat){
       # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
-      # ms(qval,new.dat)
-      print("ms")
-      print("Function is being developed.")
+      ms(qval,new.dat)
+      # print("ms")
+      # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
       # cs(qval,new.dat)
@@ -930,43 +930,107 @@ ms <- function(qval, new.dat){
   
   for (qn in rc_list) {
     # Dataframe building
-    d.df.list[[i]] <- data.frame(table(get(qn, d.dat)), Ques = c("Domestic"))
-    i.df.list[[i]] <- data.frame(table(get(qn, i.dat)), Ques = c("International"))
+    if(nrow(table(get(qn, d.dat))) == 0){
+      tcv <- matrix(0)
+      rownames(tcv) <- c(i)
+      tcv <- as.table(tcv)
+      colnames(tcv) <- c("")
+      tdf <- data.frame(tcv)
+      tdf <- data.frame(Var1 = tdf$Var1, Freq = tdf$Freq, Ques = c("Domestic"))
+      d.df.list[[i]] <- tdf
+    }
+    else{
+      tdf <- data.frame(table(get(qn, d.dat)), Ques = c("Domestic"))
+      tdf$Var1 <- c(i)
+      d.df.list[[i]] <- tdf
+    }
+    
+    if(nrow(table(get(qn, i.dat))) == 0){
+      tcv <- matrix(0)
+      rownames(tcv) <- c(i)
+      tcv <- as.table(tcv)
+      colnames(tcv) <- c("")
+      tdf <- data.frame(tcv)
+      tdf <- data.frame(Var1 = tdf$Var1, Freq = tdf$Freq, Ques = c("International"))
+      i.df.list[[i]] <- tdf
+    }
+    
+    else{
+      tdf <- data.frame(table(get(qn, i.dat)), Ques = c("International"))
+      tdf$Var1 <- c(i)
+      i.df.list[[i]] <- tdf
+    }
+    
+
+
     df.list[[i]] <- data.frame(table(get(qn, new.dat)))
     
     # Geometry text prep
     prop[[i]] <- floor((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
     d.prop[[i]] <- floor((100*d.df.list[[i]]$Freq/sum(d.df.list[[i]]$Freq)))
     i.prop[[i]] <- floor((100*i.df.list[[i]]$Freq/sum(i.df.list[[i]]$Freq)))
-    main.df <- rbind(main.df,d.df.list[[i]][2,],i.df.list[[i]][2,])
+    
+    main.df <- rbind(main.df,d.df.list[[i]],i.df.list[[i]])
     axis.q <- c(axis.q, names(get(rc_list[i], new.dat) %>% attr('labels')))
     i <- i + 1
   }
   
   levels(main.df$Ques) <- c("Domestic","International")
+  main.df$Var1 <- factor(main.df$Var1)
   i.dc <- 0
   d.dc <- 0
   for (stu in i.dat$ExternalReference) {
     for (qn in rc_list) {
-      if((get(qn, i.dat)[i.dat$ExternalReference == stu] + 0) == 1){
-        i.dc <- i.dc + 1
-        break
+      if(!is.na(get(qn, i.dat)[i.dat$ExternalReference == stu])){
+        if((get(qn, i.dat)[i.dat$ExternalReference == stu] + 0) == 1){
+          i.dc <- i.dc + 1
+          break
+        }
+      }
+    }
+  }
+
+  for (stu in d.dat$ExternalReference) {
+    for(qn in rc_list){
+      if(!is.na(get(qn, d.dat)[d.dat$ExternalReference == stu])){
+        if((get(qn, d.dat)[d.dat$ExternalReference == stu] + 0) == 1){
+          d.dc <- d.dc + 1
+          break
+        }
       }
     }
   }
   
-  for (stu in d.dat$ExternalReference) {
-    for (qn in rc_list) {
-      if((get(qn, d.dat)[d.dat$ExternalReference == stu] + 0) == 1){
-        d.dc <- d.dc + 1
-        break
-      }
-    }
+  i <- 1
+  for (qn in rc_list) {
+    d.prop[[i]] <- floor((100*d.df.list[[i]]$Freq/d.dc))
+    i.prop[[i]] <- floor((100*i.df.list[[i]]$Freq/i.dc))
+    main.prop <- c(main.prop, d.prop[[i]], i.prop[[i]])
+    i <- i + 1
   }
-  # main.df <- rbind(d.df.list, i.df.list)
-  print(rc_list)
+  
+
+  # Subtitle building
+  subt <- subt_builder(rc_list, new.dat)
+  
+  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=Var1, fill = Ques)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.5) +
+    theme_economist(base_size = 14) 
+    # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
+    # scale_fill_manual(values = c("#579C2C","#FFC279"),
+    #                   guide = guide_legend(reverse = TRUE,nrow = 2)) +
+    # geom_text(data = main.df, label = main.prop,
+    #           position = position_dodge(width = 0.5), size = 60, hjust = -0.1) +
+    # labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+    #      subtitle = subt) +
+    # ubc.theme() 
+    # theme(legend.position = c(0.85,0.5)) +
+    # scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
+  
+  # print(main.df$Var1)
+  print(plot.bar)
 }
-# main.graph("QN48",data.ok)
+main.graph("QN48",data.ok)
 
 
 #-----------------------------------HELPER FUNCTIONS----------------------------------------

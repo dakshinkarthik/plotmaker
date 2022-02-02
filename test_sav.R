@@ -18,10 +18,31 @@ data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY"
 
 str(data.ok)
 
-qval <- "QN98"
+qval <- "QN48"
 
 cnames <- colnames(data.ok)
 rc_list <- cnames[grepl(qval, cnames, fixed = T)]
+rc_list <- rc_eval("ms",rc_list)
+
+for (i in 1:length(rc_list)) {
+  data.frame(table(get(rc_list[i], d.dat)), Ques = c("Domestic"))
+  data.frame(table(get(rc_list[i], i.dat)), Ques = c("International"))
+}
+
+data.frame(table(get(rc_list[2], i.dat)))
+table(get(rc_list[2], i.dat))
+nrow(table(get(rc_list[2], i.dat)))
+
+get(rc_list[6], d.dat)[d.dat$ExternalReference == "NUBC2021_ 10028"]
+
+tcv <- matrix(0)
+rownames(tcv) <- c(1)
+# tcv[1,1] <- 0
+tcv <- as.table(tcv)
+colnames(tcv) <- c("")
+tdf <- data.frame(tcv)
+tdf <- data.frame(Var1 = tdf$Var1, Freq = tdf$Freq)
+tdf
 
 unlist(gregexpr(pattern ='complete',rc_eval("rk",rc_list)[8]))
 table(get(rc_eval("rk",rc_list)[10], data.ok))
@@ -250,3 +271,28 @@ ft <- set_header_labels(ft,
                                       Petal.Length = "Petal length",
                                       Petal.Width = "Petal width" ) )
 print(ft)
+
+
+
+data.ok$ms.spRestriction_1[data.ok$ExternalReference == "NUBC2021_ 983"] + 0
+data.ok$ms.[7]
+
+get(rc_list[1], d.dat)[d.dat$ExternalReference == "NUBC2021_ 9890"]
+d.dat$ExternalReference
+ceiling(100*8/832)
+
+
+
+
+dat <- read.table(text=
+"SC_LTSL_BM    16.8275
+SC_STSL_BM    17.3914
+proB_FrBC_FL   122.1580
+preB_FrD_FL    18.5051
+B_Fo_Sp    14.4693
+B_GC_Sp    15.4986", header = FALSE, stringsAsFactors = FALSE)
+
+str(dat)
+
+dat$V1 <- factor(dat$V1, levels = dat$V1)
+ggplot(dat,aes(x=V1,y=V2))+geom_bar(stat="identity")

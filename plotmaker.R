@@ -65,7 +65,6 @@ main.graph <- function(qval, new.dat){
   }
 }
 
-
 # for rk questions
 rk <- function(qval, new.dat){
   # Column names to read data
@@ -905,14 +904,12 @@ mc.yn <- function(qval, new.dat){
 # for ms questions
 ms <- function(qval, new.dat){
   # Column names to read data
-  # print(1)
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
-  # print(2)
   cnames <- colnames(new.dat)
   rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
   rc_list <- rc_eval("ms",rc_list)
-  # print(3)
+
   i.dc <- 0
   d.dc <- 0
   for (stu in i.dat$ExternalReference) {
@@ -936,7 +933,7 @@ ms <- function(qval, new.dat){
       }
     }
   }
-  # print(4)
+
   # Variable initialization
   df.list <- list()
   i.df.list <- list()
@@ -952,13 +949,12 @@ ms <- function(qval, new.dat){
   ld.title <- c()
   axis.q <- c()
   axis.c <- NULL
+  
   i <- 1
   j <- 1
-  # print(5)
   for (qn in rc_list) {
     # Dataframe building
     ## Domestic fraction
-    # print(6)
     axis.c <- names(get(qn, new.dat) %>% attr('labels'))
     if(nrow(table(get(qn, d.dat))) == 0){
       tcv <- matrix(0)
@@ -973,7 +969,6 @@ ms <- function(qval, new.dat){
     }
     else{
       tdf <- data.frame(table(get(qn, d.dat)), Ques = c("Domestic"))
-      # tdf$Var1 <- c(i)
       d.df.list[[i]] <- tdf
       if(dim(d.df.list[[i]])[1] != 1){
         d.df.list[[i]][2,]$Freq <- floor((100*d.df.list[[i]][2,]$Freq/d.dc))
@@ -982,7 +977,9 @@ ms <- function(qval, new.dat){
       }
       else{
         if(d.df.list[[i]]$Var1 == 0){
-          i <- i - 1
+          # i <- i - 1
+          d.df.list[[i]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("Domestic"))
+          main.df <- rbind(main.df,d.df.list[[i]])
         }
         else{
           d.df.list[[i]]$Freq <- floor((100*d.df.list[[i]]$Freq/d.dc))
@@ -1005,7 +1002,6 @@ ms <- function(qval, new.dat){
     }
     else{
       tdf <- data.frame(table(get(qn, i.dat)), Ques = c("International"))
-      # tdf$Var1 <- c(i)
       i.df.list[[j]] <- tdf
       if(dim(i.df.list[[j]])[1] != 1){
         i.df.list[[j]][2,]$Freq <- floor((100*i.df.list[[j]][2,]$Freq/i.dc))
@@ -1014,7 +1010,9 @@ ms <- function(qval, new.dat){
       }
       else{
         if(i.df.list[[j]]$Var1 == 0){
-          j <- j - 1
+          # j <- j - 1
+          i.df.list[[j]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("International"))
+          main.df <- rbind(main.df,i.df.list[[j]])
         }
         else{
           i.df.list[[j]]$Freq <- floor((100*i.df.list[[j]]$Freq/i.dc))
@@ -1023,53 +1021,31 @@ ms <- function(qval, new.dat){
         }
       }
     }
-
-
-    # if(dim(d.df.list[[i]]) != 1 & dim(i.df.list[[i]]) != 1){
-    #   d.df.list[[i]][2,]$Freq <- floor((100*d.df.list[[i]][2,]$Freq/d.dc))
-    #   i.df.list[[i]][2,]$Freq <- floor((100*i.df.list[[i]][2,]$Freq/i.dc))
-    #   d.df.list[[i]]$Var1 <- c(axis.c)
-    #   i.df.list[[i]]$Var1 <- c(axis.c)
-    #   main.df <- rbind(main.df,d.df.list[[i]][2,],i.df.list[[i]][2,])
+    # cat("i:",i," ")
+    # cat("j:",j,"\n")
+    # if(j < i){
+    #   j <- j + 1
+    #   i.df.list[[j]] <- d.df.list[[i]]
+    #   i.df.list[[j]]$Ques <- c("International")
+    #   i.df.list[[j]]$Freq <- 0 
+    #   main.df <- rbind(main.df,i.df.list[[j]])
     # }
-    # else{
-    #   if(data.frame(table(get(qn, i.dat)))$Var1 == 0 || 
-    #      data.frame(table(get(qn, d.dat)))$Var1 == 0 ){
-    #     i <- i - 1
-    #   }
-    #   else{
-    #     d.df.list[[i]]$Freq <- floor((100*d.df.list[[i]]$Freq/d.dc))
-    #     i.df.list[[i]]$Freq <- floor((100*i.df.list[[i]]$Freq/i.dc))
-    #     d.df.list[[i]]$Var1 <- c(axis.c)
-    #     i.df.list[[i]]$Var1 <- c(axis.c)
-    #     main.df <- rbind(main.df,d.df.list[[i]],i.df.list[[i]])
-    #   }
+    # else if(j > i){
+    #   i <- i + 1
+    #   d.df.list[[i]] <- i.df.list[[j]]
+    #   d.df.list[[i]]$Ques <- c("Domestic")
+    #   d.df.list[[i]]$Freq <- 0
+    #   main.df <- rbind(main.df,d.df.list[[i]])
     # }
+    # cat("i:",i," ")
+    # cat("j:",j,"\n\n")
     
     i <- i + 1
     j <- j + 1
   }
   levels(main.df$Ques) <- c("Domestic","International")
   main.df$Var1 <- factor(main.df$Var1)
-  # main.df <- main.df[order(main.df$Freq),]
 
-  
-  # rc_list <- sort(rc_list)
-  # i <- 1
-  # for (qn in rc_list) {
-  #   # axis.q <- c(axis.q, names(get(rc_list[i], new.dat) %>% attr('labels')))
-  #   if(dim(d.df.list[[i]]) != 1 & dim(i.df.list[[i]]) != 1){
-  #     d.prop[[i]] <- d.df.list[[i]][2,]$Freq
-  #     i.prop[[i]] <- i.df.list[[i]][2,]$Freq
-  #   }
-  #   else{
-  #     d.prop[[i]] <- d.df.list[[i]]$Freq
-  #     i.prop[[i]] <- i.df.list[[i]]$Freq
-  #   }
-  # 
-  #   main.prop <- c(main.prop, d.prop[[i]], i.prop[[i]])
-  #   i <- i + 1
-  # }
   
 
   # # Subtitle building
@@ -1094,11 +1070,8 @@ ms <- function(qval, new.dat){
   # print(plot.bar)
   # print(rc_list)
   print(main.df)
-  # print(main.prop)
-  # print(d.df.list[[1]][2,])
-  # print(main.df[which(main.df$Ques == "Domestic"),]$Freq)
 }
-
+# main.graph("QN59",data.ok)
 #-----------------------------------HELPER FUNCTIONS----------------------------------------
 
 subt_builder <- function(rc_list, new.dat){

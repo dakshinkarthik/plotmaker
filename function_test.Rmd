@@ -28,18 +28,38 @@ d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 ```
 
 <!-- ```{R echo = FALSE, fig.height = 80} -->
-<!-- main.graph("QN98",d.dat) -->
+<!-- main.graph("healthResource",data.ok) -->
 <!-- ``` -->
+
 ```{R qID-chunk, echo=FALSE}
-qIDs <- c("QN98","QN105","commFreq")
+qIDs <- c("QN59","QN55","healthResource","spRestriction","QN48")
 ```
 
 ```{R chunk-generator ,echo=FALSE}
 out = NULL
 cnames <- colnames(data.ok)
 for (i in qIDs) {
-    rc_list <- rev(cnames[grepl(i, cnames, fixed = TRUE)])
-    if(length(rc_list) != 1){
+    rc_list <- cnames[grepl(i, cnames, fixed = TRUE)]
+    if(length(rc_list) < 10){
+      if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
+      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n main.graph(\'",i,"\',data.ok)\n\n```")
+      out = c(out, knit_expanded)
+      }
+      else if(length(rc_list) != 1){
+      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
+      out = c(out, knit_expanded)
+      }
+      else{
+      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n main.graph(\'",i,"\',data.ok)\n\n```")
+      out = c(out, knit_expanded)
+      }
+    }
+   else{
+     if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
+      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n main.graph(\'",i,"\',data.ok)\n\n```")
+      out = c(out, knit_expanded)
+    }
+    else if(length(rc_list) != 1){
       knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
       out = c(out, knit_expanded)
     }
@@ -47,6 +67,7 @@ for (i in qIDs) {
       knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n main.graph(\'",i,"\',data.ok)\n\n```")
       out = c(out, knit_expanded)
     }
+   }
 }
 ```
 

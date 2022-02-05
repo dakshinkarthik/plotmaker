@@ -54,6 +54,7 @@ main.graph <- function(qval, new.dat){
     }
     else if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
       ms(qval,new.dat)
+      tb_ms(qval,new.dat)
       # print("ms")
       # print("Function is being developed.")
     }
@@ -687,6 +688,199 @@ tb_rk <- function(qval, new.dat){
     color(j = 2:dim(mattt)[2]+1, color = "#A7A19D", part = "all")
 }
 
+tb_ms <- function(qval, new.dat){
+  # Column names to read data
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  cnames <- colnames(new.dat)
+  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- rc_eval("ms",rc_list)
+  
+  # Variable initialization
+  df.list <- list()
+  i.df.list <- list()
+  d.df.list <- list()
+  main.df <- NULL
+  prop <- list()
+  i.prop <- list()
+  d.prop <- list()
+  main.prop <- c()
+  main.df<- data.frame()
+  tex.col <- c()
+  label_count <- length(tex.col)
+  ld.title <- c()
+  axis.q <- c()
+  axis.c <- NULL
+  
+
+  
+  i.dc <- 0
+  d.dc <- 0
+  for (stu in i.dat$ExternalReference) {
+    for (qn in rc_list) {
+      if(!is.na(get(qn, i.dat)[i.dat$ExternalReference == stu])){
+        if((get(qn, i.dat)[i.dat$ExternalReference == stu] + 0) == 1){
+          i.dc <- i.dc + 1
+          break
+        }
+      }
+    }
+  }
+  
+  for (stu in d.dat$ExternalReference) {
+    for(qn in rc_list){
+      if(!is.na(get(qn, d.dat)[d.dat$ExternalReference == stu])){
+        if((get(qn, d.dat)[d.dat$ExternalReference == stu] + 0) == 1){
+          d.dc <- d.dc + 1
+          break
+        }
+      }
+    }
+  }
+  
+  i <- 1
+  j <- 1
+  
+  for (qn in rc_list) {
+    # Dataframe building
+    ## Domestic fraction
+    axis.c <- names(get(qn, new.dat) %>% attr('labels'))
+    axis.q <- c(axis.q,axis.c)
+    if(nrow(table(get(qn, d.dat))) == 0){
+      tcv <- matrix(0)
+      rownames(tcv) <- c(i)
+      tcv <- as.table(tcv)
+      colnames(tcv) <- c("")
+      tdf <- data.frame(tcv)
+      tdf <- data.frame(Var1 = tdf$Var1, Freq = tdf$Freq, Ques = c("Domestic"))
+      d.df.list[[i]] <- tdf
+      d.df.list[[i]]$Var1 <- c(axis.c)
+      main.df <- rbind(main.df,d.df.list[[i]])
+    }
+    else{
+      tdf <- data.frame(table(get(qn, d.dat)), Ques = c("Domestic"))
+      d.df.list[[i]] <- tdf
+      if(dim(d.df.list[[i]])[1] != 1){
+        # d.df.list[[i]][2,]$Freq <- floor((100*d.df.list[[i]][2,]$Freq/d.dc))
+        d.df.list[[i]]$Var1 <- c(axis.c)
+        main.df <- rbind(main.df,d.df.list[[i]][2,])
+      }
+      else{
+        if(d.df.list[[i]]$Var1 == 0){
+          # i <- i - 1
+          d.df.list[[i]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("Domestic"))
+          main.df <- rbind(main.df,d.df.list[[i]])
+        }
+        else{
+          # d.df.list[[i]]$Freq <- floor((100*d.df.list[[i]]$Freq/d.dc))
+          d.df.list[[i]]$Var1 <- c(axis.c)
+          main.df <- rbind(main.df,d.df.list[[i]])
+        }
+      }
+    }
+    ## International fracrtion
+    if(nrow(table(get(qn, i.dat))) == 0){
+      tcv <- matrix(0)
+      rownames(tcv) <- c(j)
+      tcv <- as.table(tcv)
+      colnames(tcv) <- c("")
+      tdf <- data.frame(tcv)
+      tdf <- data.frame(Var1 = tdf$Var1, Freq = tdf$Freq, Ques = c("International"))
+      i.df.list[[j]] <- tdf
+      i.df.list[[j]]$Var1 <- c(axis.c)
+      main.df <- rbind(main.df,i.df.list[[j]])
+    }
+    else{
+      tdf <- data.frame(table(get(qn, i.dat)), Ques = c("International"))
+      i.df.list[[j]] <- tdf
+      if(dim(i.df.list[[j]])[1] != 1){
+        # i.df.list[[j]][2,]$Freq <- floor((100*i.df.list[[j]][2,]$Freq/i.dc))
+        i.df.list[[j]]$Var1 <- c(axis.c)
+        main.df <- rbind(main.df,i.df.list[[j]][2,])
+      }
+      else{
+        if(i.df.list[[j]]$Var1 == 0){
+          # j <- j - 1
+          i.df.list[[j]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("International"))
+          main.df <- rbind(main.df,i.df.list[[j]])
+        }
+        else{
+          # i.df.list[[j]]$Freq <- floor((100*i.df.list[[j]]$Freq/i.dc))
+          i.df.list[[j]]$Var1 <- c(axis.c)
+          main.df <- rbind(main.df,i.df.list[[j]])
+        }
+      }
+    }
+    
+    i <- i + 1
+    j <- j + 1
+  }
+  
+  l <- 1
+  nnull <- c()
+  for (qn in 1:dim(main.df)[1]) {
+    # print(k)
+    if(l < dim(main.df)[1]){
+      if(main.df$Freq[l] == 0 & main.df$Freq[l+1] == 0){
+        nnull <- c(nnull,l,l+1)
+      }
+    }
+    l <- l + 2
+  }
+  
+  if(!is.null(nnull)){
+    main.df <- main.df[-nnull,]
+  }
+
+
+  mattt <- matrix(rep(1,((dim(main.df)[1]/2)+1)*4), ncol = 4)
+  
+  k <- 1
+  for (m in 1:dim(mattt)[1]) {
+    if(k < dim(main.df)[1]){
+      mattt[m,1] <- paste0(floor(100*main.df$Freq[k]/d.dc),"%")
+      mattt[m,2] <- main.df$Freq[k]
+      mattt[m,3] <- paste0(floor(100*main.df$Freq[k+1]/i.dc),"%")
+      mattt[m,4] <- main.df$Freq[k+1]
+    }
+    else{
+      mattt[m,1] <- "100%"
+      mattt[m,2] <- d.dc
+      mattt[m,3] <- "100%"
+      mattt[m,4] <- i.dc
+    }
+    k <- k + 2
+  }
+
+  axis.q <- unique(main.df$Var1)
+
+  main.df <- data.frame(mattt)
+  main.df <- cbind(UBCO = c(axis.q,"Distinct count of Respondents"), main.df)
+
+  ft <- flextable(main.df) %>% theme_box() %>%
+    set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+    add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+    merge_h(part = "header") %>%
+    merge_v(part = "header") %>%
+    color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+    color(j = "UBCO", color = "#A7A19D", part = "header") %>%
+    # color(j = "Domestic", part = "header", color = "#54504C") %>%
+    fontsize(size = 6, part = "all") %>%
+    align_text_col(align = "center", header = TRUE) %>%
+    align_nottext_col(align = "center", header = TRUE)
+
+  set_table_properties(ft, layout = "autofit")
+
+  ft %>% colformat_int(big.mark = "") %>%
+    valign(valign = "center", part = "all") %>%
+    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+    width(width = 3.5, unit = "in",j = "UBCO")
+  
+  # print(main.df)
+  # print(is.null(nnull))
+}
+# tb_ms("QN59",data.ok)
+
 tb_mc <- function(qval, new.dat){
   # Column names to read data
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
@@ -1021,57 +1215,70 @@ ms <- function(qval, new.dat){
         }
       }
     }
-    # cat("i:",i," ")
-    # cat("j:",j,"\n")
-    # if(j < i){
-    #   j <- j + 1
-    #   i.df.list[[j]] <- d.df.list[[i]]
-    #   i.df.list[[j]]$Ques <- c("International")
-    #   i.df.list[[j]]$Freq <- 0 
-    #   main.df <- rbind(main.df,i.df.list[[j]])
-    # }
-    # else if(j > i){
-    #   i <- i + 1
-    #   d.df.list[[i]] <- i.df.list[[j]]
-    #   d.df.list[[i]]$Ques <- c("Domestic")
-    #   d.df.list[[i]]$Freq <- 0
-    #   main.df <- rbind(main.df,d.df.list[[i]])
-    # }
-    # cat("i:",i," ")
-    # cat("j:",j,"\n\n")
     
     i <- i + 1
     j <- j + 1
   }
+  
+  
+  
   levels(main.df$Ques) <- c("Domestic","International")
   main.df$Var1 <- factor(main.df$Var1)
 
-  
 
-  # # Subtitle building
-  # subt <- subt_builder(rc_list, new.dat)
-  # 
-  # plot.bar <- ggplot(data = main.df, aes(x=Freq, y=Var1, fill = Ques)) +
-  #   geom_bar(stat = "identity", position = "dodge", width = 1) +
-  #   # geom_col(width=2.5, position=position_dodge(5)) +
-  #   theme_economist(base_size = 14) +
-  #   # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
-  #   scale_fill_manual(values = c("#FFC279","#579C2C"),
-  #                     guide = guide_legend(reverse = TRUE,nrow = 2)) +
-  #   geom_text(data = main.df, label = paste0(main.prop,"%"),
-  #             position = position_dodge(width = 1), size = 60, hjust = -0.1) +
-  #   labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
-  #        subtitle = subt) +
-  #   ubc.theme() +
-  #   theme(legend.position = c(0.85,0.5)) +
-  #   scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
+  
+  k <- 1
+  nnull <- c()
+  for (qn in 1:dim(main.df)[1]) {
+    # print(k)
+    if(k < dim(main.df)[1]){
+      if(main.df$Freq[k] == 0 & main.df$Freq[k+1] == 0){
+        nnull <- c(nnull,k,k+1)
+        # print(main.df$Freq[k])
+        # print(main.df$Freq[k+1])
+      }
+    }
+    k <- k + 2
+  }
+  
+  if(!is.null(nnull)){
+    main.df <- main.df[-nnull,]
+  }
+  
+  for (frq in 1:length(main.df$Freq)){
+    if(main.df$Freq < 1){
+      main.prop <- c(main.prop,"")
+    }
+    else{
+      main.prop <-  c(main.prop,paste0(main.df$Freq[frq],"%"))
+    }
+  }
+
+  
+  # Subtitle building
+  subt <- subt_builder(rc_list, new.dat)
+
+  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=Var1, fill = Ques)) +
+    geom_bar(stat = "identity", position = "dodge", width = 1) +
+    # geom_col(width=2.5, position=position_dodge(5)) +
+    theme_economist(base_size = 14) +
+    # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
+    scale_fill_manual(values = c("#FFC279","#579C2C"),
+                      guide = guide_legend(reverse = TRUE,nrow = 2)) +
+    geom_text(data = main.df, label = main.prop,
+              position = position_dodge(width = 1), size = 60, hjust = -0.1) +
+    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+         subtitle = subt) +
+    ubc.theme() +
+    theme(legend.position = c(0.85,0.5)) +
+    scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
   
   
-  # print(plot.bar)
-  # print(rc_list)
-  print(main.df)
+  # print(main.prop)
+  # print(main.df)
+  print(plot.bar)
 }
-# main.graph("QN59",data.ok)
+# ms("healthResource",data.ok)
 #-----------------------------------HELPER FUNCTIONS----------------------------------------
 
 subt_builder <- function(rc_list, new.dat){

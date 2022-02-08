@@ -59,9 +59,9 @@ main.graph <- function(qval, new.dat){
       # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
-      # cs(qval,new.dat)
+      cs(qval,new.dat)
       # print("cs")
-      print("Function is being developed.")
+      # print("Function is being developed.")
     }
   }
 }
@@ -1288,6 +1288,8 @@ cs <- function(qval, new.dat){
   sum.field <- get_sum(rc_list)
   rc_list <- rc_eval("cs",rc_list)
   
+  ld.title <- c()
+  
   
   i.dc <- 0
   d.dc <- 0
@@ -1330,14 +1332,52 @@ cs <- function(qval, new.dat){
     
 
     # print(names(get(rc_list[i], data.ok) %>% attr('labels')))
+    if(unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(rc_list[i], new.dat) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label')))+3,
+                   nchar(get(rc_list[i], new.dat) %>% attr('label')))
+    }
+    else{
+      ld <- names(get(rc_list[i], new.dat) %>% attr('label'))
+    }
+    
+    ld.title <- c(ld.title, ld)
     
   }
-  df.d <- data.frame(Var1 = c()) #NEW DATASET GET
-  # print(round(d.perq/d.dc))
-  # print(round(i.perq/i.dc))
+  df.d <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(d.perq/d.dc), Ques = c("International"))
+  df.i <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(i.perq/i.dc), Ques = c("Domestic"))
+  main.df <- rbind(df.d,df.i)
+  
+  # Subtitle building
+  subt <- subt_builder(rc_list, new.dat)
+  
+  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=reorder(Var1, Freq), fill = Ques)) +
+    geom_bar(stat = "identity", position = "dodge", width = 1) +
+    # geom_col(width=2.5, position=position_dodge(5)) +
+    theme_economist(base_size = 14) +
+    # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
+    scale_fill_manual(values = c("#FFC279","#579C2C"),
+                      guide = guide_legend(reverse = TRUE,nrow = 2)) +
+    geom_text(data = main.df, label = paste0(main.df$Freq,"%"),
+              position = position_dodge(width = 1), size = 60, hjust = -0.1) +
+    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+         subtitle = subt) +
+    ubc.theme() +
+    theme(legend.position = c(0.85,0.5)) +
+    scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
+  
+  # print(df.d)
+  # print(df.i)
+  print(plot.bar)
   
 }
-cs("QN34",data.ok)
+
+tb_cs <- function(qval, new.dat){
+  
+}
+
+
+# main.graph("QN34",data.ok)
 #-----------------------------------HELPER FUNCTIONS----------------------------------------
 
 subt_builder <- function(rc_list, new.dat){

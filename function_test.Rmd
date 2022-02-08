@@ -21,18 +21,18 @@ source("plotmaker.R")
 ```
 <!-- Reads and formats -->
 ```{R echo=FALSE}
-nubc2021joined <- read_sav("data/nubc2021com.sav")
+nubc2021joined <- read_sav("data/nubc2021_v2.sav")
 data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Okanagan"),]
 i.dat <- data.ok[which(data.ok$isi == "ISI"),]
 d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 ```
 
 <!-- ```{R echo = FALSE, fig.height = 80} -->
-<!-- main.graph("healthResource",data.ok) -->
+<!-- main.graph("QN34",data.ok) -->
 <!-- ``` -->
 
 ```{R qID-chunk, echo=FALSE}
-qIDs <- c("QN59","QN55","healthResource","spRestriction","QN48")
+qIDs <- c("QN34")
 ```
 
 ```{R chunk-generator ,echo=FALSE}
@@ -41,7 +41,7 @@ cnames <- colnames(data.ok)
 for (i in qIDs) {
     rc_list <- cnames[grepl(i, cnames, fixed = TRUE)]
     if(length(rc_list) < 10){
-      if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
+      if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1 || unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
       knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n main.graph(\'",i,"\',data.ok)\n\n```")
       out = c(out, knit_expanded)
       }
@@ -55,7 +55,7 @@ for (i in qIDs) {
       }
     }
    else{
-     if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
+     if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1 || unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
       knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n main.graph(\'",i,"\',data.ok)\n\n```")
       out = c(out, knit_expanded)
     }

@@ -128,7 +128,7 @@ rk <- function(qval, new.dat){
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
 
     # Geometry text prep
-    prop[[i]] <- floor((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
+    prop[[i]] <- round((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
 
     for(j in 1:length(prop[[i]])){
       label_count_var <- label_count_var + 1
@@ -254,7 +254,7 @@ mx <- function(qval, new.dat){
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
     
     # Geometry text prep
-    prop[[i]] <- floor(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
+    prop[[i]] <- round(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
     
     for(j in 1:length(prop[[i]])){
       label_count_var <- label_count_var + 1
@@ -380,7 +380,7 @@ mx.tri <- function(qval, new.dat){
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
     
     # Geometry text prep
-    prop[[i]] <- floor(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
+    prop[[i]] <- round(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
     
     for(j in 1:length(prop[[i]])){
       label_count_var <- label_count_var + 1
@@ -1028,9 +1028,9 @@ mc <- function(qval, new.dat){
   # Dataframe building
   main.df <- data.frame(rev(table(get(rc_list, new.dat))))
   i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
-  i.df$Freq <- floor(100*i.df$Freq/sum(i.df$Freq))
+  i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq))
   d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
-  d.df$Freq <- floor(100*d.df$Freq/sum(d.df$Freq))
+  d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq))
   
   i.prop <- paste0(i.df$Freq,"%") 
   d.prop <- paste0(d.df$Freq,"%")
@@ -1165,7 +1165,7 @@ ms <- function(qval, new.dat){
       tdf <- data.frame(table(get(qn, d.dat)), Ques = c("Domestic"))
       d.df.list[[i]] <- tdf
       if(dim(d.df.list[[i]])[1] != 1){
-        d.df.list[[i]][2,]$Freq <- floor((100*d.df.list[[i]][2,]$Freq/d.dc))
+        d.df.list[[i]][2,]$Freq <- round((100*d.df.list[[i]][2,]$Freq/d.dc))
         d.df.list[[i]]$Var1 <- c(axis.c)
         main.df <- rbind(main.df,d.df.list[[i]][2,])
       }
@@ -1176,7 +1176,7 @@ ms <- function(qval, new.dat){
           main.df <- rbind(main.df,d.df.list[[i]])
         }
         else{
-          d.df.list[[i]]$Freq <- floor((100*d.df.list[[i]]$Freq/d.dc))
+          d.df.list[[i]]$Freq <- round((100*d.df.list[[i]]$Freq/d.dc))
           d.df.list[[i]]$Var1 <- c(axis.c)
           main.df <- rbind(main.df,d.df.list[[i]])
         }
@@ -1198,7 +1198,7 @@ ms <- function(qval, new.dat){
       tdf <- data.frame(table(get(qn, i.dat)), Ques = c("International"))
       i.df.list[[j]] <- tdf
       if(dim(i.df.list[[j]])[1] != 1){
-        i.df.list[[j]][2,]$Freq <- floor((100*i.df.list[[j]][2,]$Freq/i.dc))
+        i.df.list[[j]][2,]$Freq <- round((100*i.df.list[[j]][2,]$Freq/i.dc))
         i.df.list[[j]]$Var1 <- c(axis.c)
         main.df <- rbind(main.df,i.df.list[[j]][2,])
       }
@@ -1209,7 +1209,7 @@ ms <- function(qval, new.dat){
           main.df <- rbind(main.df,i.df.list[[j]])
         }
         else{
-          i.df.list[[j]]$Freq <- floor((100*i.df.list[[j]]$Freq/i.dc))
+          i.df.list[[j]]$Freq <- round((100*i.df.list[[j]]$Freq/i.dc))
           i.df.list[[j]]$Var1 <- c(axis.c)
           main.df <- rbind(main.df,i.df.list[[j]])
         }
@@ -1278,7 +1278,66 @@ ms <- function(qval, new.dat){
   # print(main.df)
   print(plot.bar)
 }
-# ms("healthResource",data.ok)
+
+cs <- function(qval, new.dat){
+  # Column names to read data
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  cnames <- colnames(new.dat)
+  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  sum.field <- get_sum(rc_list)
+  rc_list <- rc_eval("cs",rc_list)
+  
+  
+  i.dc <- 0
+  d.dc <- 0
+  for (stu in i.dat$ExternalReference) {
+    if(!is.na(get(sum.field, i.dat)[i.dat$ExternalReference == stu])){
+      if(get(sum.field, i.dat)[i.dat$ExternalReference == stu] == 100){
+        i.dc <- i.dc + 1
+      }
+    }
+  }
+
+  for (stu in d.dat$ExternalReference) {
+    if(!is.na(get(sum.field, d.dat)[d.dat$ExternalReference == stu])){
+      if(get(sum.field, d.dat)[d.dat$ExternalReference == stu] == 100){
+        d.dc <- d.dc + 1
+      }
+    }
+  }
+  
+  i.perq <- c()
+  d.perq <- c()
+  for (i in 1:length(rc_list)) {
+    resl.d <- 0
+    resl.i <- 0
+    df.d <- data.frame(table(get(rc_list[i], d.dat)))
+    df.i <- data.frame(table(get(rc_list[i], i.dat)))
+    for (j in 1:length(df.d$Freq)) {
+      df_v <- as.integer(levels(df.d$Var1)[as.integer(df.d$Var1)])[j]
+      df_f <- df.d$Freq[j]
+      resl.d <- resl.d + (df_v*df_f)
+    }
+    for (j in 1:length(df.i$Freq)) {
+      df_v <- as.integer(levels(df.i$Var1)[as.integer(df.i$Var1)])[j]
+      df_f <- df.i$Freq[j]
+      resl.i <- resl.i + (df_v*df_f)
+    }
+    # resl.vc <- c(resl.vc,resl)
+    d.perq <- c(d.perq,resl.d)
+    i.perq <- c(i.perq,resl.i)
+    
+
+    # print(names(get(rc_list[i], data.ok) %>% attr('labels')))
+    
+  }
+  df.d <- data.frame(Var1 = c()) #NEW DATASET GET
+  # print(round(d.perq/d.dc))
+  # print(round(i.perq/i.dc))
+  
+}
+cs("QN34",data.ok)
 #-----------------------------------HELPER FUNCTIONS----------------------------------------
 
 subt_builder <- function(rc_list, new.dat){
@@ -1364,6 +1423,34 @@ rc_eval <- function(eval.st,rc_list){
         bl <- c(bl,TRUE)
       }
     }else{
+      bl <- c(bl,FALSE)
+    }
+  }
+  return(rc_list[bl])
+}
+
+get_complete <- function(rc_list){
+  bl <- c()
+  for(j in 1:length(rc_list)){
+    if(unlist(gregexpr(pattern = "Complete", rc_list[j])) != -1 ||
+       unlist(gregexpr(pattern = "complete", rc_list[j])) != -1){
+      bl <- c(bl,TRUE)
+    }
+    else{
+      bl <- c(bl,FALSE)
+    }
+  }
+  return(rc_list[bl])
+}
+
+get_sum <-  function(rc_list){
+  bl <- c()
+  for(j in 1:length(rc_list)){
+    if(unlist(gregexpr(pattern = "Sum", rc_list[j])) != -1 ||
+       unlist(gregexpr(pattern = "sum", rc_list[j])) != -1){
+      bl <- c(bl,TRUE)
+    }
+    else{
       bl <- c(bl,FALSE)
     }
   }

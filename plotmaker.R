@@ -60,6 +60,7 @@ main.graph <- function(qval, new.dat){
     }
     else if(unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
       cs(qval,new.dat)
+      tb_cs(qval,new.dat)
       # print("cs")
       # print("Function is being developed.")
     }
@@ -1344,8 +1345,8 @@ cs <- function(qval, new.dat){
     ld.title <- c(ld.title, ld)
     
   }
-  df.d <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(d.perq/d.dc), Ques = c("International"))
-  df.i <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(i.perq/i.dc), Ques = c("Domestic"))
+  df.d <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(d.perq/d.dc), Ques = c("Domestic"))
+  df.i <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(i.perq/i.dc), Ques = c("International"))
   main.df <- rbind(df.d,df.i)
   
   # Subtitle building
@@ -1373,11 +1374,103 @@ cs <- function(qval, new.dat){
 }
 
 tb_cs <- function(qval, new.dat){
+  # Column names to read data
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  cnames <- colnames(new.dat)
+  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  sum.field <- get_sum(rc_list)
+  rc_list <- rc_eval("cs",rc_list)
   
+  ld.title <- c()
+  
+  
+  i.dc <- 0
+  d.dc <- 0
+  for (stu in i.dat$ExternalReference) {
+    if(!is.na(get(sum.field, i.dat)[i.dat$ExternalReference == stu])){
+      if(get(sum.field, i.dat)[i.dat$ExternalReference == stu] == 100){
+        i.dc <- i.dc + 1
+      }
+    }
+  }
+  
+  for (stu in d.dat$ExternalReference) {
+    if(!is.na(get(sum.field, d.dat)[d.dat$ExternalReference == stu])){
+      if(get(sum.field, d.dat)[d.dat$ExternalReference == stu] == 100){
+        d.dc <- d.dc + 1
+      }
+    }
+  }
+  
+  i.perq <- c()
+  d.perq <- c()
+  for (i in 1:length(rc_list)) {
+    resl.d <- 0
+    resl.i <- 0
+    df.d <- data.frame(table(get(rc_list[i], d.dat)))
+    df.i <- data.frame(table(get(rc_list[i], i.dat)))
+    for (j in 1:length(df.d$Freq)) {
+      df_v <- as.integer(levels(df.d$Var1)[as.integer(df.d$Var1)])[j]
+      df_f <- df.d$Freq[j]
+      resl.d <- resl.d + (df_v*df_f)
+    }
+    for (j in 1:length(df.i$Freq)) {
+      df_v <- as.integer(levels(df.i$Var1)[as.integer(df.i$Var1)])[j]
+      df_f <- df.i$Freq[j]
+      resl.i <- resl.i + (df_v*df_f)
+    }
+    # resl.vc <- c(resl.vc,resl)
+    d.perq <- c(d.perq,resl.d)
+    i.perq <- c(i.perq,resl.i)
+    
+    
+    # print(names(get(rc_list[i], data.ok) %>% attr('labels')))
+    if(unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(rc_list[i], new.dat) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label')))+3,
+                   nchar(get(rc_list[i], new.dat) %>% attr('label')))
+    }
+    else{
+      ld <- names(get(rc_list[i], new.dat) %>% attr('label'))
+    }
+    
+    ld.title <- c(ld.title, ld)
+    
+  }
+  df.d <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(d.perq/d.dc), Ques = c("Domestic"))
+  df.i <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(i.perq/i.dc), Ques = c("International"))
+
+  
+  # mattt <- matrix(rep(1,length(rc_list)*2), ncol = 2)
+  # 
+  # for (i in 1:dim(mattt)[1]) {
+  #   mattt[i,1] <- paste0(df.d$Freq[i],"%")
+  #   mattt[i,2] <- paste0(df.i$Freq[i],"%")
+  # }
+  # main.df <- data.frame(mattt)
+  main.df <- data.frame(UBCO = c(ld.title,"Total number of respondents"),
+                        Domestic = c(paste0(df.d$Freq,"%"),d.dc),
+                        International = c(paste0(df.i$Freq,"%"),i.dc))
+  
+  ft <- flextable(main.df) %>% theme_box() %>%
+    color(j = c("Domestic","International"), color = "#A7A19D", part = "all") %>%
+    color(j = "UBCO", color = "#A7A19D", part = "header") %>%
+    # color(j = "Domestic", part = "header", color = "#54504C") %>%
+    fontsize(size = 6, part = "all") %>%
+    align_text_col(align = "center", header = TRUE) %>%
+    align_nottext_col(align = "center", header = TRUE)
+  
+  set_table_properties(ft, layout = "autofit")
+  
+  ft %>% colformat_int(big.mark = "") %>%
+    valign(valign = "center", part = "all") %>%
+    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+    width(width = 5, unit = "in",j = "UBCO")
+  
+  # print(main.df)
 }
-
-
-# main.graph("QN34",data.ok)
+# tb_cs("QN34",data.ok)
 #-----------------------------------HELPER FUNCTIONS----------------------------------------
 
 subt_builder <- function(rc_list, new.dat){

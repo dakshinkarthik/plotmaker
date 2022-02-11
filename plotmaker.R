@@ -438,7 +438,7 @@ tb_mx.tri <- function(qval, new.dat){
     
     #Row labels
     if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
-      ld <- substr(get(qn, data.ok) %>% attr('label'),
+      ld <- substr(get(qn, new.dat) %>% attr('label'),
                    unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
                    nchar(get(qn, new.dat) %>% attr('label')))
     }
@@ -450,7 +450,7 @@ tb_mx.tri <- function(qval, new.dat){
     
     for (j in 1:length(resp)+0) {
       if (!is.na(df.list[[i]]$Freq[j])) {
-        mattt[i,j] <- paste0(floor(100*df.list[[i]]$Freq[j]/row_tot[i]),"%")
+        mattt[i,j] <- paste0(round(100*df.list[[i]]$Freq[j]/row_tot[i]),"%")
       }
       else
         mattt[i,j] <- "NA"
@@ -513,7 +513,7 @@ tb_mx <- function(qval, new.dat){
     
     #Row labels
     if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
-      ld <- substr(get(qn, data.ok) %>% attr('label'),
+      ld <- substr(get(qn, new.dat) %>% attr('label'),
                    unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
                    nchar(get(qn, new.dat) %>% attr('label')))
     }
@@ -529,7 +529,7 @@ tb_mx <- function(qval, new.dat){
     for (j in 1:length(resp)+0) {
 
       if(!is.na(df.list[[i]]$Freq[j])){
-        mattt[i,j] <- paste0(floor(100*df.list[[i]]$Freq[j]/row_tot[i]),"%")
+        mattt[i,j] <- paste0(round(100*df.list[[i]]$Freq[j]/row_tot[i]),"%")
         if(unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
           if(j==3){
             c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
@@ -554,8 +554,8 @@ tb_mx <- function(qval, new.dat){
         mattt[i,j] <- "NA"
     }
     ld.main <- c(ld.main, ld)
-    c_vc <- c(c_vc, paste0(floor(100*c_vc.sum/row_tot[i]),"%"))
-    c_vc_sc <- c(c_vc_sc, paste0(floor(100*c_vc_sc.sum/row_tot[i]),"%"))
+    c_vc <- c(c_vc, paste0(round(100*c_vc.sum/row_tot[i]),"%"))
+    c_vc_sc <- c(c_vc_sc, paste0(round(100*c_vc_sc.sum/row_tot[i]),"%"))
     i <- i + 1
   }
   
@@ -648,7 +648,7 @@ tb_rk <- function(qval, new.dat){
       row_tot <- sum(df.list[[i]]$Freq)
       for(j in 1:dim(mattt)[2]){
         if(!is.na(df.list[[i]]$Freq[j])){
-          mattt[i,j] <- paste0(floor(100*df.list[[i]]$Freq[j]/row_tot),"%")
+          mattt[i,j] <- paste0(round(100*df.list[[i]]$Freq[j]/row_tot),"%")
         }
         else{
           mattt[i,j] <- "NA"
@@ -762,7 +762,7 @@ tb_ms <- function(qval, new.dat){
       tdf <- data.frame(table(get(qn, d.dat)), Ques = c("Domestic"))
       d.df.list[[i]] <- tdf
       if(dim(d.df.list[[i]])[1] != 1){
-        # d.df.list[[i]][2,]$Freq <- floor((100*d.df.list[[i]][2,]$Freq/d.dc))
+        # d.df.list[[i]][2,]$Freq <- round((100*d.df.list[[i]][2,]$Freq/d.dc))
         d.df.list[[i]]$Var1 <- c(axis.c)
         main.df <- rbind(main.df,d.df.list[[i]][2,])
       }
@@ -773,7 +773,7 @@ tb_ms <- function(qval, new.dat){
           main.df <- rbind(main.df,d.df.list[[i]])
         }
         else{
-          # d.df.list[[i]]$Freq <- floor((100*d.df.list[[i]]$Freq/d.dc))
+          # d.df.list[[i]]$Freq <- round((100*d.df.list[[i]]$Freq/d.dc))
           d.df.list[[i]]$Var1 <- c(axis.c)
           main.df <- rbind(main.df,d.df.list[[i]])
         }
@@ -795,7 +795,7 @@ tb_ms <- function(qval, new.dat){
       tdf <- data.frame(table(get(qn, i.dat)), Ques = c("International"))
       i.df.list[[j]] <- tdf
       if(dim(i.df.list[[j]])[1] != 1){
-        # i.df.list[[j]][2,]$Freq <- floor((100*i.df.list[[j]][2,]$Freq/i.dc))
+        # i.df.list[[j]][2,]$Freq <- round((100*i.df.list[[j]][2,]$Freq/i.dc))
         i.df.list[[j]]$Var1 <- c(axis.c)
         main.df <- rbind(main.df,i.df.list[[j]][2,])
       }
@@ -806,7 +806,7 @@ tb_ms <- function(qval, new.dat){
           main.df <- rbind(main.df,i.df.list[[j]])
         }
         else{
-          # i.df.list[[j]]$Freq <- floor((100*i.df.list[[j]]$Freq/i.dc))
+          # i.df.list[[j]]$Freq <- round((100*i.df.list[[j]]$Freq/i.dc))
           i.df.list[[j]]$Var1 <- c(axis.c)
           main.df <- rbind(main.df,i.df.list[[j]])
         }
@@ -839,9 +839,9 @@ tb_ms <- function(qval, new.dat){
   k <- 1
   for (m in 1:dim(mattt)[1]) {
     if(k < dim(main.df)[1]){
-      mattt[m,1] <- paste0(floor(100*main.df$Freq[k]/d.dc),"%")
+      mattt[m,1] <- paste0(round(100*main.df$Freq[k]/d.dc),"%")
       mattt[m,2] <- main.df$Freq[k]
-      mattt[m,3] <- paste0(floor(100*main.df$Freq[k+1]/i.dc),"%")
+      mattt[m,3] <- paste0(round(100*main.df$Freq[k+1]/i.dc),"%")
       mattt[m,4] <- main.df$Freq[k+1]
     }
     else{
@@ -910,9 +910,9 @@ tb_mc <- function(qval, new.dat){
       mattt[j,4] <- sum(i.df$Freq)
     }
     else{
-      mattt[j,1] <- paste0(floor(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+      mattt[j,1] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
       mattt[j,2] <- d.df$Freq[j] 
-      mattt[j,3] <- paste0(floor(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
+      mattt[j,3] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
       mattt[j,4] <- i.df$Freq[j]
     }
   }
@@ -979,8 +979,8 @@ tb_mc.yn <- function(qval, new.dat){
       mattt[j,2] <- sum(i.df$Freq)
     }
     else{
-      mattt[j,1] <- paste0(floor(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
-      mattt[j,2] <- paste0(floor(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+      mattt[j,1] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
+      mattt[j,2] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
     }
   }
   
@@ -1224,8 +1224,10 @@ ms <- function(qval, new.dat){
   
   
   levels(main.df$Ques) <- c("Domestic","International")
-  main.df$Var1 <- factor(main.df$Var1)
-
+  # main.df <- data.frame(Var1 = factor(main.df$Var1,levels = unique(main.df$Var1)),
+  #                       Freq = main.df$Freq, Ques = factor(main.df$Ques,levels = main.df$Ques))
+  # main.df$Var1 <- factor(main.df$Var1)
+  
 
   
   k <- 1
@@ -1259,15 +1261,15 @@ ms <- function(qval, new.dat){
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
 
-  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=Var1, fill = Ques)) +
-    geom_bar(stat = "identity", position = "dodge", width = 1) +
+  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1,levels = rev(unique(Var1))), fill = Ques)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
     # geom_col(width=2.5, position=position_dodge(5)) +
     theme_economist(base_size = 14) +
     # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
     scale_fill_manual(values = c("#FFC279","#579C2C"),
                       guide = guide_legend(reverse = TRUE,nrow = 2)) +
     geom_text(data = main.df, label = main.prop,
-              position = position_dodge(width = 1), size = 60, hjust = -0.1) +
+              position = position_dodge(width = 0.8), size = 60, hjust = -0.1) +
     labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
          subtitle = subt) +
     ubc.theme() +
@@ -1275,10 +1277,11 @@ ms <- function(qval, new.dat){
     scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
   
   
-  # print(main.prop)
-  # print(main.df)
+  # print(new.df)
+  # print(str(main.df$Var1))
   print(plot.bar)
 }
+# ms("spRestriction",data.ok)
 
 cs <- function(qval, new.dat){
   # Column names to read data
@@ -1345,22 +1348,24 @@ cs <- function(qval, new.dat){
     ld.title <- c(ld.title, ld)
     
   }
-  df.d <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(d.perq/d.dc), Ques = c("Domestic"))
-  df.i <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(i.perq/i.dc), Ques = c("International"))
+  df.d <- data.frame(Var1 = ld.title, Freq = round(d.perq/d.dc), Ques = c("Domestic"))
+  df.i <- data.frame(Var1 = ld.title, Freq = round(i.perq/i.dc), Ques = c("International"))
   main.df <- rbind(df.d,df.i)
   
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
   
-  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=reorder(Var1, Freq), fill = Ques)) +
-    geom_bar(stat = "identity", position = "dodge", width = 1) +
+  # factor(Var1,levels = rev(unique(Var1))) reorder(Var1, Freq)
+  
+  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1,levels = rev(unique(Var1))), fill = Ques)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
     # geom_col(width=2.5, position=position_dodge(5)) +
     theme_economist(base_size = 14) +
     # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
     scale_fill_manual(values = c("#FFC279","#579C2C"),
                       guide = guide_legend(reverse = TRUE,nrow = 2)) +
     geom_text(data = main.df, label = paste0(main.df$Freq,"%"),
-              position = position_dodge(width = 1), size = 60, hjust = -0.1) +
+              position = position_dodge(width = 0.8), size = 60, hjust = -0.1) +
     labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
          subtitle = subt) +
     ubc.theme() +
@@ -1368,10 +1373,11 @@ cs <- function(qval, new.dat){
     scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
   
   # print(df.d)
-  # print(df.i)
+  # print(main.df)
   print(plot.bar)
   
 }
+# cs("QN34",data.ok)
 
 tb_cs <- function(qval, new.dat){
   # Column names to read data

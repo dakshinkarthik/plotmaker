@@ -4,6 +4,7 @@ main.graph <- function(qval, new.dat){
   # d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
   rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  resp <- names(get(rc_list[1],data.ok) %>% attr('labels'))
   if(length(rc_list) == 1){
     if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
        unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
@@ -72,9 +73,9 @@ rk <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
   rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
-  new.dat <- rc_complete(rc_list, new.dat)
   rc_list <- rc_eval("rk",rc_list)
-  
+  new.dat <- rc_complete(rc_list, new.dat)
+
   ti.tle <- NULL
   if(new.dat$isi[1] == "Domestic"){
     col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
@@ -88,7 +89,7 @@ rk <- function(qval, new.dat){
     col <- c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF")
     ti.tle <- "Direct-Entry Undergraduate Students, UBC Okanagan"
   }
-  
+
   resp <- paste("Rank", rev(names(get(rc_list[1], new.dat) %>% attr('labels'))), sep = " ")
 
   # Variable initialization
@@ -187,7 +188,7 @@ rk <- function(qval, new.dat){
     scale_x_continuous(labels = scales::percent) +
     ubc.theme() +
     theme(axis.text.x = element_text(size = 180))
-  
+
   print(plot.bar)
   
 }
@@ -1064,8 +1065,8 @@ mc <- function(qval, new.dat){
   }
   
   main.df <- rbind(d.df,i.df)
-  levels(main.df) <- factor(axis.q)
-  main.df$Ques <- as.factor(main.df$Ques)
+  # levels(main.df) <- factor(axis.q)
+  # main.df$Ques <- as.factor(main.df$Ques)
   # main.df <- main.df[nrow(main.df):1,]
   
   tot <- sum(main.df$Freq) #row total
@@ -1222,13 +1223,7 @@ ms <- function(qval, new.dat){
   }
   
   
-  
   levels(main.df$Ques) <- c("Domestic","International")
-  # main.df <- data.frame(Var1 = factor(main.df$Var1,levels = unique(main.df$Var1)),
-  #                       Freq = main.df$Freq, Ques = factor(main.df$Ques,levels = main.df$Ques))
-  # main.df$Var1 <- factor(main.df$Var1)
-  
-
   
   k <- 1
   nnull <- c()

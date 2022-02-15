@@ -3,13 +3,24 @@ main.graph <- function(qval, new.dat){
   # i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   # d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
-  rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  rc_list <- cnames[grepl(paste0(qval,""), cnames, fixed = T)]
+  
+  if(length(rc_list) != 1){
+    rc_list <- rc_list <- c(cnames[grepl(paste0(qval,"_"), cnames, fixed = T)],
+                            cnames[grepl(paste0(qval,"c"), cnames, fixed = T)],
+                            cnames[grepl(paste0(qval,"C"), cnames, fixed = T)],
+                            cnames[grepl(paste0(qval,"s"), cnames, fixed = T)],
+                            cnames[grepl(paste0(qval,"S"), cnames, fixed = T)])
+  }
+  
+
   resp <- names(get(rc_list[1],data.ok) %>% attr('labels'))
+  
   if(length(rc_list) == 1){
     if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
        unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
        unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
-      # print("mx")
+      print("1")
       mx(qval,new.dat)
       tb_mx(qval,new.dat)
     }
@@ -22,12 +33,12 @@ main.graph <- function(qval, new.dat){
         }
       }
       if(chk == 1){
-        # print("mc.yn")
+        print("2")
         mc.yn(qval, new.dat)
         tb_mc.yn(qval, new.dat)
       }
       else{
-        # print("mc")
+        print("3")
         mc(qval, new.dat)
         tb_mc(qval, new.dat)
       }
@@ -38,31 +49,31 @@ main.graph <- function(qval, new.dat){
       if(unlist(gregexpr(pattern = 'agree', resp[1])) == -1&& 
          unlist(gregexpr(pattern = 'satisfied', resp[1])) == -1&&
          unlist(gregexpr(pattern = 'concerned', resp[1])) == -1){
-        # print("mx.tri")
+        print("4")
         mx.tri(qval,new.dat)
         tb_mx.tri(qval,new.dat)
       }else{
-        # print("mx")
+        print("5")
         mx(qval,new.dat)
         tb_mx(qval,new.dat)
       }
     }
     else if(unlist(gregexpr(pattern = 'rk', rc_list[1])) != -1){
+      print("6")
       rk(qval,new.dat)
       tb_rk(qval,new.dat)
-      # print("rk")
       # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
+      print("7")
       ms(qval,new.dat)
       tb_ms(qval,new.dat)
-      # print("ms")
       # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
+      print("8")
       cs(qval,new.dat)
       tb_cs(qval,new.dat)
-      # print("cs")
       # print("Function is being developed.")
     }
   }
@@ -102,6 +113,7 @@ rk <- function(qval, new.dat){
   tex.col <- c()
   label_count <- length(tex.col)
   ld.title <- c()
+  sel <- c()
   i <- 0
 
   # Axis question building and formatting
@@ -126,9 +138,12 @@ rk <- function(qval, new.dat){
 
     # Dataframe building
     df.list[[i]] <- data.frame(rev(table(get(qn, new.dat))), Ques = c(i))
-    levels(df.list[[i]]) <- factor(resp)
-    df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
+    # levels(df.list[[i]]) <- factor(resp)
+    df.list[[i]]$Ques <- ld
 
+    
+    sel <- c(sel,df.list[[i]]$Freq[length(df.list[[i]]$Freq)])
+    
     # Geometry text prep
     prop[[i]] <- round((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
 
@@ -173,9 +188,26 @@ rk <- function(qval, new.dat){
     geom_text_size <- 50
     c.width <- 0.5
   }
+  
+  # new.df <- data.frame()
+  leveler <- c()
+  sel <- sort(sel,decreasing = T)
+  for (i in 1:length(sel)) {
+    for (j in 1:length(df.list)) {
+      if(sel[i] == df.list[[j]]$Freq[length(df.list[[j]]$Freq)]){
+        # print(df.list[[j]]$Freq[length(df.list[[j]]$Freq)])
+        leveler <- c(leveler,df.list[[j]]$Ques[1])
+        break
+      }
+    }
+  }
 
+
+  # main.df <- transform(main.df, Ques = reorder(Ques, -Freq))
+  
   # GGplot graphing
-  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=Ques, fill = Var1)) +
+  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Ques,levels = rev(leveler)),
+                                         fill = Var1)) +
     geom_bar(stat = "identity", position = "fill", width = c.width) +
     theme_economist(base_size = 14) +
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
@@ -183,8 +215,8 @@ rk <- function(qval, new.dat){
               position = position_fill(vjust=c.width), color = tex.col, size = geom_text_size) +
     labs(title = ti.tle,
          subtitle = subt) +
-    scale_y_discrete(breaks = unique(main.df$Ques),
-                     labels = ld.title) +
+    # scale_y_discrete(breaks = unique(main.df$Ques),
+    #                  labels = ld.title) +
     scale_x_continuous(labels = scales::percent) +
     ubc.theme() +
     theme(axis.text.x = element_text(size = 180))
@@ -192,6 +224,7 @@ rk <- function(qval, new.dat){
   print(plot.bar)
   
 }
+# rk("QN98",d.dat)
 
 # for mx questions
 mx <- function(qval, new.dat){
@@ -618,8 +651,9 @@ tb_rk <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
   rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
-  new.dat <- rc_complete(rc_list, new.dat)
   rc_list <- rc_eval("rk",rc_list)
+  new.dat <- rc_complete(rc_list, new.dat)
+  
   resp <- paste("Rank", rev(names(get(rc_list[1], new.dat) %>% attr('labels'))), sep = " ")
   mattt <- matrix(rep(1,(length(resp)+0)*(length(rc_list)+1)), ncol = length(resp)+0)
   
@@ -634,7 +668,7 @@ tb_rk <- function(qval, new.dat){
   i <- 1
   for(i in 1:dim(mattt)[1]){
     if(i != dim(mattt)[1]){
-      df.list[[i]] <- data.frame(table(get(rc_list[i], new.dat)))
+      df.list[[i]] <- data.frame(table(get(rc_list[i], new.dat)), Ques = c(i))
       ld <- NULL
       #Row labels
       if(unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label'))) != -1){
@@ -646,10 +680,12 @@ tb_rk <- function(qval, new.dat){
         ld <- get(qn, new.dat) %>% attr('label')
       }
       
+      df.list[[i]]$Ques <- ld
+      
       row_tot <- sum(df.list[[i]]$Freq)
       for(j in 1:dim(mattt)[2]){
         if(!is.na(df.list[[i]]$Freq[j])){
-          mattt[i,j] <- paste0(round(100*df.list[[i]]$Freq[j]/row_tot),"%")
+          mattt[i,j] <- round(100*df.list[[i]]$Freq[j]/row_tot) #paste0(round(100*df.list[[i]]$Freq[j]/row_tot),"%")
         }
         else{
           mattt[i,j] <- "NA"
@@ -668,11 +704,33 @@ tb_rk <- function(qval, new.dat){
   resp <- c(rev(resp))
   colnames(main.df) <- resp
   
+  
   if(new.dat$isi[1] == "Domestic"){
     main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1])
   }
   else if(new.dat$isi[1] == "ISI"){
     main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
+  }
+  main.df <- main.df[-c(dim(main.df)[1]),]
+  main.df <- main.df[with(main.df, order(-`Rank 1`)),]
+
+  if(new.dat$isi[1] == "Domestic"){
+    main.df <- main.df %>% add_row(`UBCO Domestic` = "Total", `Rank 1` = nrow(new.dat),
+                                   `Rank 2` = nrow(new.dat),
+                                   `Rank 3` = nrow(new.dat),
+                                   `Rank 4` = nrow(new.dat),
+                                   `Rank 5` = nrow(new.dat),
+                                   `Rank 6` = nrow(new.dat),
+                                   `Rank 7` = nrow(new.dat))
+  }
+  else if(new.dat$isi[1] == "ISI"){
+    main.df <- main.df %>% add_row(`UBCO International` = "Total", `Rank 1` = nrow(new.dat),
+                                   `Rank 2` = nrow(new.dat),
+                                   `Rank 3` = nrow(new.dat),
+                                   `Rank 4` = nrow(new.dat),
+                                   `Rank 5` = nrow(new.dat),
+                                   `Rank 6` = nrow(new.dat),
+                                   `Rank 7` = nrow(new.dat))
   }
   
   ft <- flextable(main.df) %>% theme_box()
@@ -688,7 +746,9 @@ tb_rk <- function(qval, new.dat){
     width(j = 1, width = 2.98, unit = "in") %>%
     color(j = 2:dim(mattt)[2]+1, color = "#A7A19D", part = "header") %>%
     color(j = 2:dim(mattt)[2]+1, color = "#A7A19D", part = "all")
+  
 }
+tb_rk("QN98",d.dat)
 
 tb_ms <- function(qval, new.dat){
   # Column names to read data

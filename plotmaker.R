@@ -748,7 +748,7 @@ tb_rk <- function(qval, new.dat){
     color(j = 2:dim(mattt)[2]+1, color = "#A7A19D", part = "all")
   
 }
-tb_rk("QN98",d.dat)
+# tb_rk("QN98",d.dat)
 
 tb_ms <- function(qval, new.dat){
   # Column names to read data
@@ -1089,10 +1089,13 @@ mc <- function(qval, new.dat){
   
   # Dataframe building
   main.df <- data.frame(rev(table(get(rc_list, new.dat))))
+  
   i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
   i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq))
   d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
   d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq))
+  
+  
   
   i.prop <- paste0(i.df$Freq,"%") 
   d.prop <- paste0(d.df$Freq,"%")
@@ -1124,9 +1127,12 @@ mc <- function(qval, new.dat){
     }
   }
   
+  d.df$Var1 <- axis.q
+  i.df$Var1 <- axis.q
+  
   main.df <- rbind(d.df,i.df)
   # levels(main.df) <- factor(axis.q)
-  # main.df$Ques <- as.factor(main.df$Ques)
+  # main.df$Ques <- factor(main.df$Ques)
   # main.df <- main.df[nrow(main.df):1,]
   
   tot <- sum(main.df$Freq) #row total
@@ -1134,11 +1140,12 @@ mc <- function(qval, new.dat){
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
   
-  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=Var1, fill = Ques)) +
+  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1, levels = rev(unique(Var1))),
+                                         fill = factor(Ques, levels = rev(unique(Ques))))) +
     geom_bar(stat = "identity", position = "dodge", width = 0.5) +
     theme_economist(base_size = 14) +
-    scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
-    scale_fill_manual(values = c("#579C2C","#FFC279"),
+    # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
+    scale_fill_manual(values = c("#FFC279","#579C2C"),
                       guide = guide_legend(reverse = TRUE,nrow = 2)) +
     geom_text(data = main.df, label = main.prop,
               position = position_dodge(width = 0.5), size = 60, hjust = -0.1) +
@@ -1151,6 +1158,8 @@ mc <- function(qval, new.dat){
   
   print(plot.bar)
 }
+
+# mc("reside",data.ok)
 
 # for mc.yn questions
 mc.yn <- function(qval, new.dat){
@@ -1283,7 +1292,7 @@ ms <- function(qval, new.dat){
   }
   
   
-  levels(main.df$Ques) <- c("Domestic","International")
+  # levels(main.df$Ques) <- c("Domestic","International")
   
   k <- 1
   nnull <- c()
@@ -1316,7 +1325,8 @@ ms <- function(qval, new.dat){
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
 
-  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1,levels = rev(unique(Var1))), fill = Ques)) +
+  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1,levels = rev(unique(Var1))),
+                                         fill = factor(Ques,levels = rev(unique(Ques))))) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
     # geom_col(width=2.5, position=position_dodge(5)) +
     theme_economist(base_size = 14) +
@@ -1412,7 +1422,8 @@ cs <- function(qval, new.dat){
   
   # factor(Var1,levels = rev(unique(Var1))) reorder(Var1, Freq)
   
-  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1,levels = rev(unique(Var1))), fill = Ques)) +
+  plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1,levels = rev(unique(Var1))),
+                                         fill = factor(Ques,levels = rev(unique(Ques))))) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
     # geom_col(width=2.5, position=position_dodge(5)) +
     theme_economist(base_size = 14) +
@@ -1579,7 +1590,7 @@ flip <- function(data) {
 }
 
 ubc.theme <- function(){
-  return(theme(text = element_text(family = "calibri"),
+  return(theme(text = element_text(family = "Calibri"),
                legend.position = c(0.15,0.98),
                legend.direction = "horizontal",
                legend.title = element_blank(),

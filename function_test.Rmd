@@ -18,6 +18,7 @@ library(pander)
 library(haven)
 library(flextable)
 source("plotmaker.R")
+font_import("Calibri")
 ```
 <!-- Reads and formats -->
 ```{R echo=FALSE}
@@ -28,11 +29,11 @@ d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 ```
 
 <!-- ```{R echo = FALSE, fig.height = 80} -->
-<!-- main.graph("QN34",data.ok) -->
+<!-- cs("QN34",data.ok) -->
 <!-- ``` -->
 
 ```{R qID-chunk, echo=FALSE}
-qIDs <- c("QN34")
+qIDs <- c("QN98","QN34","spRestriction")
 ```
 
 ```{R chunk-generator ,echo=FALSE}

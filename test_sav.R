@@ -18,20 +18,42 @@ data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY"
 
 str(data.ok)
 
-qval <- "QN48"
+
+qval <- "QN98"
 
 cnames <- colnames(data.ok)
-rc_list <- cnames[grepl(qval, cnames, fixed = T)]
-rc_list <- rc_eval("ms",rc_list)
+rc_list <- cnames[grepl(paste0(qval,"_"), cnames, fixed = T)]
+rc_list <- c(#cnames[grepl(paste0(qval,""), cnames, fixed = T)],
+             cnames[grepl(paste0(qval,"_"), cnames, fixed = T)],
+             cnames[grepl(paste0(qval,"c"), cnames, fixed = T)],
+             cnames[grepl(paste0(qval,"C"), cnames, fixed = T)],
+             cnames[grepl(paste0(qval,"s"), cnames, fixed = T)],
+             cnames[grepl(paste0(qval,"S"), cnames, fixed = T)])
+rc_list <- rc_eval("rk",rc_list)
 
+substr(rc_list[1],1,2)
+
+
+ckr <- substr(rc_list[1],1,2)
 for (i in 1:length(rc_list)) {
-  data.frame(table(get(rc_list[i], d.dat)), Ques = c("Domestic"))
-  data.frame(table(get(rc_list[i], i.dat)), Ques = c("International"))
+  if(substr(rc_list[i],1,2) == ckr){
+    print("YES")
+  }
+  else
+    print("No")
 }
+get(rc_list[1], data.ok) %>% attr('label')
 
-data.frame(table(get(rc_list[2], i.dat)))
-table(get(rc_list[2], i.dat))
+
+as.integer()
+as.integer(levels(data.frame(table(get(rc_list[1], d.dat)))$Var1)[as.integer(data.frame(table(get(rc_list[1], d.dat)))$Var1)])
+data.frame(table(get(rc_list[8], data.ok)))
+str(data.frame(table(get(rc_list[1], data.ok)))$Freq)
+data.frame(table(get(rc_list[1], d.dat)))$Var1
+table(get(rc_list[1], data.ok))
 nrow(table(get(rc_list[2], i.dat)))
+
+get_sum(rc_list)
 
 get(rc_list[6], d.dat)[d.dat$ExternalReference == "NUBC2021_ 10028"]
 
@@ -277,7 +299,7 @@ print(ft)
 data.ok$ms.spRestriction_1[data.ok$ExternalReference == "NUBC2021_ 983"] + 0
 data.ok$ms.[7]
 
-get(rc_list[1], d.dat)[d.dat$ExternalReference == "NUBC2021_ 9890"]
+get(rc_list[8], d.dat)[d.dat$ExternalReference == "NUBC2021_ 9919"]
 d.dat$ExternalReference
 ceiling(100*8/832)
 
@@ -296,3 +318,5 @@ str(dat)
 
 dat$V1 <- factor(dat$V1, levels = dat$V1)
 ggplot(dat,aes(x=V1,y=V2))+geom_bar(stat="identity")
+
+sort(c("Domestic","International"))

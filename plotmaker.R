@@ -230,7 +230,7 @@ rk <- function(qval, new.dat){
 mx <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- rev(cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
 
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   
@@ -281,35 +281,42 @@ mx <- function(qval, new.dat){
                    substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,63)),max)+1,nchar(ld)))
     }
     
-    ld.title <- c(ld.title, ld)
+
     
     # Dataframe building
-    df.list[[i]] <- data.frame(table(get(qn, new.dat)), Ques = c(i))
-    levels(df.list[[i]]) <- factor(resp)
-    df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
+    temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
     
-    # Geometry text prep
-    prop[[i]] <- round(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
-    
-    for(j in 1:length(prop[[i]])){
-      label_count_var <- label_count_var + 1
-      if(as.integer(prop[[i]][j])<5)
-        prop[[i]][j] = ''
-      else
-        prop[[i]][j] = paste0(prop[[i]][j], "%")
-    }
-    
-    # Color for geom text
-    if(label_count_var == label_count){
-      tex.col <- c(tex.col, tex.col.base)
+    if(dim(temp.df)[1] >= 5){
+      df.list[[i]] <- temp.df
+      ld.title <- c(ld.title, ld)
+      df.list[[i]]$Ques <- ld
+      
+      # Geometry text prep
+      prop[[i]] <- round(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq))
+      
+      for(j in 1:length(prop[[i]])){
+        label_count_var <- label_count_var + 1
+        if(as.integer(prop[[i]][j])<5)
+          prop[[i]][j] = ''
+        else
+          prop[[i]][j] = paste0(prop[[i]][j], "%")
+      }
+      
+      # Color for geom text
+      if(label_count_var == label_count){
+        tex.col <- c(tex.col, tex.col.base)
+      }
+      else{
+        tex.col <- c(tex.col, tex.col.base[1:label_count_var])
+      }
+      
+      # Main dataframe and geom text for plotting
+      main.prop <- c(main.prop, prop[[i]])
+      main.df <- rbind(main.df, df.list[[i]])
     }
     else{
-      tex.col <- c(tex.col, tex.col.base[1:label_count_var])
+      i <- i - 1
     }
-    
-    # Main dataframe and geom text for plotting
-    main.prop <- c(main.prop, prop[[i]])
-    main.df <- rbind(main.df, df.list[[i]])
   }
   
   # Subtitle building
@@ -334,16 +341,16 @@ mx <- function(qval, new.dat){
   }
   
   # GGplot graphing
-  plot.bar <- ggplot(data = main.df, aes(x=Ques, y=Freq, fill = Var1)) +
+  plot.bar <- ggplot(data = main.df, aes(x=factor(Ques, levels = rev(unique(Ques))), y=Freq, fill = Var1)) +
     geom_bar(stat = "identity", position = "fill", width = c.width) +
     theme_economist(base_size = 14) +
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
-    geom_text(data = main.df, aes(Ques, Freq, group = Var1), label = main.prop,
-              position = position_fill(vjust=0.5), color = tex.col, size = geom_text_size) +
+    # geom_text(data = main.df, aes(Ques, Freq, group = Var1), label = main.prop,
+    #           position = position_fill(vjust=c.width), color = tex.col, size = geom_text_size) +
     labs(title = ti.tle,
          subtitle = subt) +
-    scale_x_discrete(breaks = unique(main.df$Ques),
-                     labels = ld.title) +
+    # scale_x_discrete(breaks = unique(main.df$Ques),
+    #                  labels = ld.title) +
     ubc.theme() + 
     # theme(plot.subtitle = element_text(hjust = sidestep)) +
     coord_flip()
@@ -351,6 +358,7 @@ mx <- function(qval, new.dat){
   # Printing plot
   print(plot.bar)
 }
+# mx("QN105",i.dat)
 
 # for mx tri questions with only 3 response levels
 mx.tri <- function(qval, new.dat){

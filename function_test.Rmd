@@ -29,11 +29,11 @@ d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 ```
 
 <!-- ```{R echo = FALSE, fig.height = 80} -->
-<!-- cs("QN34",data.ok) -->
+<!-- mx("QN105",d.dat) -->
 <!-- ``` -->
 
 ```{R qID-chunk, echo=FALSE}
-qIDs <- c("QN98","QN34","spRestriction")
+qIDs <- c("QN105")
 ```
 
 ```{R chunk-generator ,echo=FALSE}

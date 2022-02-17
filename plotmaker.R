@@ -20,7 +20,7 @@ main.graph <- function(qval, new.dat){
     if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
        unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
        unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
-      print("1")
+      # print("1")
       mx(qval,new.dat)
       tb_mx(qval,new.dat)
     }
@@ -33,12 +33,12 @@ main.graph <- function(qval, new.dat){
         }
       }
       if(chk == 1){
-        print("2")
+        # print("2")
         mc.yn(qval, new.dat)
         tb_mc.yn(qval, new.dat)
       }
       else{
-        print("3")
+        # print("3")
         mc(qval, new.dat)
         tb_mc(qval, new.dat)
       }
@@ -49,29 +49,29 @@ main.graph <- function(qval, new.dat){
       if(unlist(gregexpr(pattern = 'agree', resp[1])) == -1&& 
          unlist(gregexpr(pattern = 'satisfied', resp[1])) == -1&&
          unlist(gregexpr(pattern = 'concerned', resp[1])) == -1){
-        print("4")
+        # print("4")
         mx.tri(qval,new.dat)
         tb_mx.tri(qval,new.dat)
       }else{
-        print("5")
+        # print("5")
         mx(qval,new.dat)
         tb_mx(qval,new.dat)
       }
     }
     else if(unlist(gregexpr(pattern = 'rk', rc_list[1])) != -1){
-      print("6")
+      # print("6")
       rk(qval,new.dat)
       tb_rk(qval,new.dat)
       # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
-      print("7")
+      # print("7")
       ms(qval,new.dat)
       tb_ms(qval,new.dat)
       # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
-      print("8")
+      # print("8")
       cs(qval,new.dat)
       tb_cs(qval,new.dat)
       # print("Function is being developed.")
@@ -233,6 +233,7 @@ mx <- function(qval, new.dat){
   rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
 
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  resp <- c(unique(resp)[length(unique(resp))],unique(resp)[1:length(unique(resp))-1])
   
   # Domestic/international titles and colors
   ti.tle <- NULL
@@ -255,7 +256,7 @@ mx <- function(qval, new.dat){
   main.prop <- NULL
   main.df<- data.frame()
   col <- rev(col)
-  tex.col.base <- rev(c("white","white","black","black","black","black"))
+  tex.col.base <- rev(c("black","white","white","black","black","black"))
   tex.col <- c()
   label_count <- length(tex.col)
   ld.title <- c()
@@ -290,17 +291,20 @@ mx <- function(qval, new.dat){
       df.list[[i]] <- temp.df
       ld.title <- c(ld.title, ld)
       df.list[[i]]$Ques <- ld
+      # df.list[[i]]
       
       # Geometry text prep
       prop[[i]] <- round(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq))
       
       for(j in 1:length(prop[[i]])){
         label_count_var <- label_count_var + 1
-        if(as.integer(prop[[i]][j])<5)
-          prop[[i]][j] = ''
+        if(prop[[i]][j]<=0)
+          prop[[i]][j] = paste0(prop[[i]][j], "%")
         else
           prop[[i]][j] = paste0(prop[[i]][j], "%")
       }
+      
+      # prop[[i]] <-
       
       # Color for geom text
       if(label_count_var == label_count){
@@ -311,7 +315,7 @@ mx <- function(qval, new.dat){
       }
       
       # Main dataframe and geom text for plotting
-      main.prop <- c(main.prop, prop[[i]])
+      main.prop <- c(main.prop, prop[[i]]) 
       main.df <- rbind(main.df, df.list[[i]])
     }
     else{
@@ -341,12 +345,14 @@ mx <- function(qval, new.dat){
   }
   
   # GGplot graphing
-  plot.bar <- ggplot(data = main.df, aes(x=factor(Ques, levels = rev(unique(Ques))), y=Freq, fill = Var1)) +
+  plot.bar <- ggplot(data = main.df, aes(x=factor(Ques, levels = rev(unique(Ques))), y=Freq,
+                                         fill = factor(Var1, levels = c(unique(main.df$Var1)[length(unique(main.df$Var1))],unique(main.df$Var1)[1:length(unique(main.df$Var1))-1])))) +
     geom_bar(stat = "identity", position = "fill", width = c.width) +
     theme_economist(base_size = 14) +
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
-    # geom_text(data = main.df, aes(Ques, Freq, group = Var1), label = main.prop,
-    #           position = position_fill(vjust=c.width), color = tex.col, size = geom_text_size) +
+    geom_text(data = main.df, aes(Ques, Freq, group = factor(Var1, levels = c(unique(main.df$Var1)[length(unique(main.df$Var1))],unique(main.df$Var1)[1:length(unique(main.df$Var1))-1]))),
+              label = main.prop, #paste0(round(100*Freq/sum(Freq)),"%"),
+              position = position_fill(vjust=c.width), color = tex.col, size = geom_text_size) +
     labs(title = ti.tle,
          subtitle = subt) +
     # scale_x_discrete(breaks = unique(main.df$Ques),
@@ -357,8 +363,10 @@ mx <- function(qval, new.dat){
   
   # Printing plot
   print(plot.bar)
+  # print(prop[[1]][1:(length(prop[[1]])-1)])
+  # print(c(unique(main.df$Var1)[length(unique(main.df$Var1))],unique(main.df$Var1)[1:length(unique(main.df$Var1))-1]))
 }
-# mx("QN105",i.dat)
+# mx("QN105",d.dat)
 
 # for mx tri questions with only 3 response levels
 mx.tri <- function(qval, new.dat){

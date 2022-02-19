@@ -1022,6 +1022,7 @@ tb_mc <- function(qval, new.dat){
   # print(main.df)
 }
 
+
 tb_mc.yn <- function(qval, new.dat){
   # Column names to read data
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
@@ -1032,8 +1033,8 @@ tb_mc.yn <- function(qval, new.dat){
   resp_b <- c()
   
   main.df <- data.frame(rev(table(get(rc_list, new.dat))))
-  i.df <- data.frame(rev(table(get(rc_list, i.dat))), Ques = c("International"))
-  d.df <- data.frame(rev(table(get(rc_list, d.dat))), Ques = c("Domestic"))
+  i.df <- data.frame((table(get(rc_list, i.dat))), Ques = c("International"))
+  d.df <- data.frame((table(get(rc_list, d.dat))), Ques = c("Domestic"))
   
   # Selecting valid choices from the data subset
   resp_b <- c()
@@ -1043,21 +1044,25 @@ tb_mc.yn <- function(qval, new.dat){
   
   axis.q <- c()
   if(0 %in% resp_b){
-    axis.q <- c(rev(resp),"Total")
+    axis.q <- c((resp),"Total")
   }else{
-    axis.q <- c(rev(resp[resp_b]),"Total")
+    axis.q <- c((resp[resp_b]),"Total")
   }
   
-  mattt <- matrix(rep(1,2*(length(resp_b)+1)), ncol = 2)
+  mattt <- matrix(rep(1,4*(length(resp_b)+1)), ncol = 4)
   
   for (j in 1:dim(mattt)[1]) {
     if(j == dim(mattt)[1]){
-      mattt[j,1] <- sum(d.df$Freq)
-      mattt[j,2] <- sum(i.df$Freq)
+      mattt[j,1] <- "100%"
+      mattt[j,2] <- sum(d.df$Freq)
+      mattt[j,3] <- "100%"
+      mattt[j,4] <- sum(i.df$Freq)
     }
     else{
-      mattt[j,1] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
-      mattt[j,2] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+      mattt[j,1] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+      mattt[j,2] <- d.df$Freq[j]
+      mattt[j,3] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
+      mattt[j,4] <- i.df$Freq[j]
     }
   }
   
@@ -1065,8 +1070,11 @@ tb_mc.yn <- function(qval, new.dat){
   main.df <- cbind(UBCO = axis.q, main.df)
   
   ft <- flextable(main.df) %>% theme_box() %>%
-    set_header_labels(X1="International",X2="Domestic") %>%
-    color(j = c("X1","X2"), color = "#A7A19D", part = "all") %>%
+    set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+    color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+    add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+    merge_h(part = "header") %>%
+    merge_v(part = "header") %>%
     color(j = "UBCO", color = "#A7A19D", part = "header") %>%
     fontsize(size = 6, part = "all") %>%
     align_text_col(align = "center", header = TRUE) %>%
@@ -1077,8 +1085,10 @@ tb_mc.yn <- function(qval, new.dat){
   ft %>% colformat_int(big.mark = "") %>%
     valign(valign = "center", part = "all") %>%
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
-    width(width = 5, unit = "in",j = "UBCO")
+    width(width = 3.5, unit = "in",j = "UBCO")
+  # print(main.df)
 }
+# tb_mc.yn("QN40",data.ok)
 
 # for mc questions
 mc <- function(qval, new.dat){
@@ -1095,7 +1105,6 @@ mc <- function(qval, new.dat){
   # Variable initialization
   df.list <- list()
   main.df <- NULL
-  prop <- list()
   main.prop <- c()
   main.df<- data.frame()
   tex.col <- c()
@@ -1158,13 +1167,13 @@ mc <- function(qval, new.dat){
   
   plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1, levels = rev(unique(Var1))),
                                          fill = factor(Ques, levels = rev(unique(Ques))))) +
-    geom_bar(stat = "identity", position = "dodge", width = 0.5) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.8) +
     theme_economist(base_size = 14) +
     # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
     scale_fill_manual(values = c("#FFC279","#579C2C"),
                       guide = guide_legend(reverse = TRUE,nrow = 2)) +
     geom_text(data = main.df, label = main.prop,
-              position = position_dodge(width = 0.5), size = 60, hjust = -0.1) +
+              position = position_dodge(width = 0.8), size = 60, hjust = -0.1) +
     labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
          subtitle = subt) +
     ubc.theme() +
@@ -1269,7 +1278,7 @@ ms <- function(qval, new.dat){
         }
       }
     }
-    ## International fracrtion
+    ## International fraction
     if(nrow(table(get(qn, i.dat))) == 0){
       tcv <- matrix(0)
       rownames(tcv) <- c(j)

@@ -3,16 +3,21 @@ main.graph <- function(qval, new.dat){
   # i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   # d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
-  rc_list <- cnames[grepl(paste0(qval,""), cnames, fixed = T)]
+  rc_list <- cnames[grepl(paste0(qval,"$"), cnames, fixed = F)]
   
-  if(length(rc_list) != 1){
-    rc_list <- rc_list <- c(cnames[grepl(paste0(qval,"_"), cnames, fixed = T)],
-                            cnames[grepl(paste0(qval,"c"), cnames, fixed = T)],
-                            cnames[grepl(paste0(qval,"C"), cnames, fixed = T)],
-                            cnames[grepl(paste0(qval,"s"), cnames, fixed = T)],
-                            cnames[grepl(paste0(qval,"S"), cnames, fixed = T)])
+  if(length(rc_list) == 0){
+    rc_list <- cnames[grepl(paste0(qval,""), cnames, fixed = T)]
   }
   
+  if(length(rc_list) != 1){
+    rc_list <- c(cnames[grepl(paste0(qval,"_"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"c"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"C"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"s"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"S"), cnames, fixed = T)])
+  }
+  
+  # print(rc_list)
 
   resp <- names(get(rc_list[1],data.ok) %>% attr('labels'))
   
@@ -964,13 +969,17 @@ tb_mc <- function(qval, new.dat){
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- (cnames[grepl(paste0(qval,"$"), cnames, fixed = F)])
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  rc_list <- rc_eval("mc",rc_list)
   resp_b <- c()
   
-  main.df <- data.frame(rev(table(get(rc_list, new.dat))))
+  main.df <- data.frame((table(get(rc_list, new.dat))))
   i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
   d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
+  
+  i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
+  d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
   
   resp_b <- c()
   for (qn in main.df$Var1) {
@@ -997,7 +1006,21 @@ tb_mc <- function(qval, new.dat){
   main.df <- data.frame(mattt)
   
   axis.q <- c()
-  axis.q <- c(rev(resp[resp_b]),"Distinct count of respondents")
+  if(0 %in% resp_b){
+    axis.q <- resp
+  }
+  else{
+    for (k in resp_b) {
+      if(k == 999){
+        axis.q <- c(axis.q, resp[length(resp)])
+      }
+      else{
+        axis.q <- c(axis.q, resp[k])
+      }
+    }
+    # axis.q <- (resp[resp_b])
+  }
+  axis.q <- c((axis.q),"Distinct count of respondents")
   
   main.df <- cbind(UBCO = axis.q, main.df)
   
@@ -1096,30 +1119,32 @@ mc <- function(qval, new.dat){
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- (cnames[grepl(paste0(qval,"$"), cnames, fixed = F)])
   rc_list <- rc_eval("mc",rc_list)
   
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
-  resp_b <- c()
+  resp.i <- names(get(rc_list[1], i.dat) %>% attr('labels'))
   
   # Variable initialization
   df.list <- list()
   main.df <- NULL
   main.prop <- c()
-  main.df<- data.frame()
   tex.col <- c()
   label_count <- length(tex.col)
   ld.title <- c()
   i <- 1
   
   # Dataframe building
-  main.df <- data.frame(rev(table(get(rc_list, new.dat))))
+  main.df <- data.frame((table(get(rc_list, new.dat))))
   
   i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
   i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq))
   d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
   d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq))
   
+
+  i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
+  d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
   
   
   i.prop <- paste0(i.df$Freq,"%") 
@@ -1132,13 +1157,26 @@ mc <- function(qval, new.dat){
   for (qn in main.df$Var1) {
     resp_b <- c(resp_b, as.numeric(qn))
   }
+
   
   axis.q <- c()
+  # axis.q.i <- c()
+  # axis.q.d <- c()
   if(0 %in% resp_b){
     axis.q <- resp
-  }else{
-    axis.q <- rev(resp[resp_b])
   }
+  else{
+    for (k in resp_b) {
+      if(k == 999){
+        axis.q <- c(axis.q, resp[length(resp)])
+      }
+      else{
+        axis.q <- c(axis.q, resp[k])
+      }
+    }
+    # axis.q <- (resp[resp_b])
+  }
+  
   
   for (j in 1:length(axis.q)) {
     if(nchar(axis.q[j])>40){
@@ -1151,20 +1189,20 @@ mc <- function(qval, new.dat){
                           substr(axis.q[j],sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)+1,nchar(axis.q[j])))
     }
   }
-  
+
   d.df$Var1 <- axis.q
   i.df$Var1 <- axis.q
-  
+
   main.df <- rbind(d.df,i.df)
   # levels(main.df) <- factor(axis.q)
   # main.df$Ques <- factor(main.df$Ques)
   # main.df <- main.df[nrow(main.df):1,]
-  
+
   tot <- sum(main.df$Freq) #row total
-  
+
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
-  
+
   plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1, levels = rev(unique(Var1))),
                                          fill = factor(Ques, levels = rev(unique(Ques))))) +
     geom_bar(stat = "identity", position = "dodge", width = 0.8) +
@@ -1180,11 +1218,15 @@ mc <- function(qval, new.dat){
     theme(legend.position = c(0.85,0.5)) +
     scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
     # coord_flip()
-  
+
+  # print(complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International"))))
+  # print(complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic"))))
+  # print(d.df$Var1 == i.df$Var1)
+  # print(main.df$Var1[length(main.df$Var1)])
+  # print(main.df$Var1)
   print(plot.bar)
 }
-
-# mc("reside",data.ok)
+# mc("housing",data.ok)
 
 # for mc.yn questions
 mc.yn <- function(qval, new.dat){

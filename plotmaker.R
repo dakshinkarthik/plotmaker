@@ -177,22 +177,22 @@ rk <- function(qval, new.dat){
   subt <- subt_builder(rc_list, new.dat)
 
   # Subtitle positioning and geom text size
-  geom_text_size <- NULL
-  c.width <- NULL
+  geom_text_size <- sizer(rc_list)[2]
+  c.width <- sizer(rc_list)[1]
 
-  if(length(rc_list) == 1){
-    geom_text_size <- 75
-    c.width <- 0.15
-  }else if(length(rc_list) <= 3){
-    geom_text_size <- 90
-    c.width <- 0.5
-  }else if(length(rc_list) <= 6){
-    geom_text_size <- 75
-    c.width <- 0.7
-  }else{
-    geom_text_size <- 50
-    c.width <- 0.5
-  }
+  # if(length(rc_list) == 1){
+  #   geom_text_size <- 75
+  #   c.width <- 0.15
+  # }else if(length(rc_list) <= 3){
+  #   geom_text_size <- 90
+  #   c.width <- 0.5
+  # }else if(length(rc_list) <= 6){
+  #   geom_text_size <- 75
+  #   c.width <- 0.7
+  # }else{
+  #   geom_text_size <- 50
+  #   c.width <- 0.5
+  # }
   
   # new.df <- data.frame()
   leveler <- c()
@@ -332,22 +332,22 @@ mx <- function(qval, new.dat){
   subt <- subt_builder(rc_list, new.dat)
   
   # Subtitle positioning and geom text size
-  geom_text_size <- NULL
-  c.width <- NULL
-  
-  if(length(rc_list) == 1){
-    geom_text_size <- 75
-    c.width <- 0.15
-  }else if(length(rc_list) <= 3){
-    geom_text_size <- 90
-    c.width <- 0.5
-  }else if(length(rc_list) <= 6){
-    geom_text_size <- 75
-    c.width <- 0.7
-  }else{
-    geom_text_size <- 50
-    c.width <- 0.5
-  }
+  geom_text_size <- sizer(rc_list)[2]
+  c.width <- sizer(rc_list)[1]
+  # 
+  # if(length(rc_list) == 1){
+  #   geom_text_size <- 75
+  #   c.width <- 0.15
+  # }else if(length(rc_list) <= 3){
+  #   geom_text_size <- 90
+  #   c.width <- 0.5
+  # }else if(length(rc_list) <= 6){
+  #   geom_text_size <- 75
+  #   c.width <- 0.7
+  # }else{
+  #   geom_text_size <- 50
+  #   c.width <- 0.5
+  # }
   
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=factor(Ques, levels = rev(unique(Ques))), y=Freq,
@@ -1202,6 +1202,10 @@ mc <- function(qval, new.dat){
 
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
+  
+  # sizing format
+  geom_text_size <- sizer(rc_list)[2]
+  c.width <- sizer(rc_list)[1]
 
   plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1, levels = rev(unique(Var1))),
                                          fill = factor(Ques, levels = rev(unique(Ques))))) +
@@ -1226,7 +1230,7 @@ mc <- function(qval, new.dat){
   # print(main.df$Var1)
   print(plot.bar)
 }
-# mc("housing",data.ok)
+mc("housing",data.ok)
 
 # for mc.yn questions
 mc.yn <- function(qval, new.dat){
@@ -1739,6 +1743,27 @@ rc_complete <- function(rc_list, new.dat){
   }
   if(chk == 0)
     return(new.dat)
+}
+
+sizer <- function(rc_list){
+  geom_text_size <- NULL
+  c.width <- NULL
+  
+  if(length(rc_list) == 1){
+    geom_text_size <- 75
+    c.width <- 0.15
+  }else if(length(rc_list) <= 3){
+    geom_text_size <- 90
+    c.width <- 0.5
+  }else if(length(rc_list) <= 6){
+    geom_text_size <- 75
+    c.width <- 0.7
+  }else{
+    geom_text_size <- 50
+    c.width <- 0.5
+  }
+  
+  return(c(c.width,geom_text_size))
 }
 
 

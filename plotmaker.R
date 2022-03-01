@@ -292,6 +292,19 @@ mx <- function(qval, new.dat){
     # Dataframe building
     temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
     
+    if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1){
+      temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0, Ques = c(i)))
+      # tex.col.base <- rev(c("black","white","white","black","black","black"))
+    }
+    else{
+      temp.df <- complete(temp.df, Var1 = factor(c(1:6,999),levels = c(1:6,999)), fill = list(Freq = 0, Ques = c(i)))
+      # tex.col.base <- rev(c("black","white","white","white","black","black","black"))
+    }
+    
+
+    
+    # temp.df <- complete(temp.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
+    
     if(dim(temp.df)[1] >= 5){
       df.list[[i]] <- temp.df
       ld.title <- c(ld.title, ld)
@@ -309,7 +322,6 @@ mx <- function(qval, new.dat){
           prop[[i]][j] = paste0(prop[[i]][j], "%")
       }
       
-      # prop[[i]] <-
       
       # Color for geom text
       if(label_count_var == label_count){
@@ -328,26 +340,14 @@ mx <- function(qval, new.dat){
     }
   }
   
+  
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
   
   # Subtitle positioning and geom text size
   geom_text_size <- sizer(rc_list)[2]
   c.width <- sizer(rc_list)[1]
-  # 
-  # if(length(rc_list) == 1){
-  #   geom_text_size <- 75
-  #   c.width <- 0.15
-  # }else if(length(rc_list) <= 3){
-  #   geom_text_size <- 90
-  #   c.width <- 0.5
-  # }else if(length(rc_list) <= 6){
-  #   geom_text_size <- 75
-  #   c.width <- 0.7
-  # }else{
-  #   geom_text_size <- 50
-  #   c.width <- 0.5
-  # }
+
   
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=factor(Ques, levels = rev(unique(Ques))), y=Freq,
@@ -366,12 +366,9 @@ mx <- function(qval, new.dat){
     # theme(plot.subtitle = element_text(hjust = sidestep)) +
     coord_flip()
   
-  # Printing plot
   print(plot.bar)
-  # print(prop[[1]][1:(length(prop[[1]])-1)])
-  # print(c(unique(main.df$Var1)[length(unique(main.df$Var1))],unique(main.df$Var1)[1:length(unique(main.df$Var1))-1]))
 }
-# mx("QN105",d.dat)
+# mx("QN100",d.dat)
 
 # for mx tri questions with only 3 response levels
 mx.tri <- function(qval, new.dat){
@@ -1204,18 +1201,18 @@ mc <- function(qval, new.dat){
   subt <- subt_builder(rc_list, new.dat)
   
   # sizing format
-  geom_text_size <- sizer(rc_list)[2]
-  c.width <- sizer(rc_list)[1]
+  geom_text_size <- sizer(main.df$Var1)[2]
+  c.width <- sizer(main.df$Var1)[1]
 
   plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1, levels = rev(unique(Var1))),
                                          fill = factor(Ques, levels = rev(unique(Ques))))) +
-    geom_bar(stat = "identity", position = "dodge", width = 0.8) +
+    geom_bar(stat = "identity", position = "dodge", width = c.width) +
     theme_economist(base_size = 14) +
     # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
     scale_fill_manual(values = c("#FFC279","#579C2C"),
                       guide = guide_legend(reverse = TRUE,nrow = 2)) +
     geom_text(data = main.df, label = main.prop,
-              position = position_dodge(width = 0.8), size = 60, hjust = -0.1) +
+              position = position_dodge(width = c.width), size = geom_text_size, hjust = -0.1) +
     labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
          subtitle = subt) +
     ubc.theme() +
@@ -1230,7 +1227,7 @@ mc <- function(qval, new.dat){
   # print(main.df$Var1)
   print(plot.bar)
 }
-mc("housing",data.ok)
+# mc("housing",data.ok)
 
 # for mc.yn questions
 mc.yn <- function(qval, new.dat){
@@ -1749,16 +1746,17 @@ sizer <- function(rc_list){
   geom_text_size <- NULL
   c.width <- NULL
   
-  if(length(rc_list) == 1){
+  if(length(rc_list) <= 2){
     geom_text_size <- 75
     c.width <- 0.15
   }else if(length(rc_list) <= 3){
     geom_text_size <- 90
-    c.width <- 0.5
-  }else if(length(rc_list) <= 6){
+    c.width <- 0.2
+  }else if(length(rc_list) <= 6){ # 
     geom_text_size <- 75
     c.width <- 0.7
-  }else{
+  }
+  else{
     geom_text_size <- 50
     c.width <- 0.5
   }

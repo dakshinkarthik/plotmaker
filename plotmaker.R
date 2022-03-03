@@ -240,6 +240,7 @@ mx <- function(qval, new.dat){
   rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
 
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  resp1 <- resp
   resp <- c(unique(resp)[length(unique(resp))],unique(resp)[1:length(unique(resp))-1])
   
   # Domestic/international titles and colors
@@ -343,6 +344,10 @@ mx <- function(qval, new.dat){
     }
   }
   
+  if(length(unique(main.df$Var1)) != length(resp)){
+    resp <- c("No opinion/Not applicable", resp)
+  }
+  
   
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
@@ -372,11 +377,16 @@ mx <- function(qval, new.dat){
     # theme(plot.subtitle = element_text(hjust = sidestep)) +
     coord_flip()
   
-  # print(c(prop[[1]][length(prop[[1]])],prop[[1]][1:(length(prop[[1]])-1)]))
-  # print(main.prop)
   print(plot.bar)
+  # print(c(prop[[1]][length(prop[[1]])],prop[[1]][1:(length(prop[[1]])-1)]))
+  # print(df.list)
+  # print(resp)
+  # print(resp1[])
+  # print(names(get(rc_list[1], new.dat) %>% attr('labels')))
+  # print(length(unique(main.df$Var1)))
+  # print(length(resp))
 }
-# mx("QN100",d.dat)
+# mx("QN65",d.dat)
 
 # for mx tri questions with only 3 response levels
 mx.tri <- function(qval, new.dat){

@@ -18,7 +18,7 @@ library(pander)
 library(haven)
 library(flextable)
 source("plotmaker.R")
-font_import("Calibri")
+# font_import("Calibri")
 ```
 <!-- Reads and formats -->
 ```{R echo=FALSE}
@@ -28,9 +28,11 @@ i.dat <- data.ok[which(data.ok$isi == "ISI"),]
 d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 ```
 
-<!-- ```{R echo = FALSE, fig.height = 80} -->
-<!-- mx("QN105",d.dat) -->
-<!-- ``` -->
+```{R echo = FALSE, fig.height = 80}
+source("plotmaker.R")
+main.graph("spRestriction",data.ok)
+main.graph("QN65",d.dat)
+```
 
 ```{R qID-chunk, echo=FALSE}
 qIDs <- c("QN105")
@@ -40,7 +42,19 @@ qIDs <- c("QN105")
 out = NULL
 cnames <- colnames(data.ok)
 for (i in qIDs) {
-    rc_list <- cnames[grepl(i, cnames, fixed = TRUE)]
+  rc_list <- cnames[grepl(paste0(qval,"$"), cnames, fixed = F)]
+  
+  if(length(rc_list) == 0){
+    rc_list <- cnames[grepl(paste0(qval,""), cnames, fixed = T)]
+  }
+  
+  if(length(rc_list) != 1){
+    rc_list <- c(cnames[grepl(paste0(qval,"_"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"c"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"C"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"s"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"S"), cnames, fixed = T)])
+  }
     if(length(rc_list) < 10){
       if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1 || unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
       knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n main.graph(\'",i,"\',data.ok)\n\n```")

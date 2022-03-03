@@ -19,10 +19,12 @@ main.graph <- function(qval, new.dat){
   
   # print(rc_list)
 
-  resp <- names(get(rc_list[1],data.ok) %>% attr('labels'))
+  resp <- names(get(rc_list[1],new.dat) %>% attr('labels'))
+  # print(names(get(rc_list[1],new.dat) %>% attr('label')))
   
   if(length(rc_list) == 1){
-    if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
+    if(#!is.null(resp)||
+       unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
        unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
        unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
       # print("1")
@@ -294,11 +296,11 @@ mx <- function(qval, new.dat){
     
     if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1){
       temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0, Ques = c(i)))
-      # tex.col.base <- rev(c("black","white","white","black","black","black"))
+      tex.col.base <- rev(c("black","white","white","black","black","black"))
     }
     else{
       temp.df <- complete(temp.df, Var1 = factor(c(1:6,999),levels = c(1:6,999)), fill = list(Freq = 0, Ques = c(i)))
-      # tex.col.base <- rev(c("black","white","white","white","black","black","black"))
+      tex.col.base <- rev(c("black","white","white","white","black","black","black"))
     }
     
 
@@ -313,6 +315,7 @@ mx <- function(qval, new.dat){
       
       # Geometry text prep
       prop[[i]] <- round(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq))
+      prop[[i]] <- c(prop[[i]][length(prop[[i]])],prop[[i]][1:(length(prop[[i]])-1)])
       
       for(j in 1:length(prop[[i]])){
         label_count_var <- label_count_var + 1
@@ -347,15 +350,18 @@ mx <- function(qval, new.dat){
   # Subtitle positioning and geom text size
   geom_text_size <- sizer(rc_list)[2]
   c.width <- sizer(rc_list)[1]
+  
+  leveler <- c(unique(main.df$Var1)[length(unique(main.df$Var1))],
+               unique(main.df$Var1)[1:(length(unique(main.df$Var1))-1)])
 
   
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=factor(Ques, levels = rev(unique(Ques))), y=Freq,
-                                         fill = factor(Var1, levels = c(unique(main.df$Var1)[length(unique(main.df$Var1))],unique(main.df$Var1)[1:length(unique(main.df$Var1))-1])))) +
+                                         fill = factor(Var1, levels = leveler))) +
     geom_bar(stat = "identity", position = "fill", width = c.width) +
     theme_economist(base_size = 14) +
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
-    geom_text(data = main.df, aes(Ques, Freq, group = factor(Var1, levels = c(unique(main.df$Var1)[length(unique(main.df$Var1))],unique(main.df$Var1)[1:length(unique(main.df$Var1))-1]))),
+    geom_text(data = main.df, aes(Ques, Freq, group = factor(Var1, levels = leveler)),
               label = main.prop, #paste0(round(100*Freq/sum(Freq)),"%"),
               position = position_fill(vjust=c.width), color = tex.col, size = geom_text_size) +
     labs(title = ti.tle,
@@ -366,6 +372,8 @@ mx <- function(qval, new.dat){
     # theme(plot.subtitle = element_text(hjust = sidestep)) +
     coord_flip()
   
+  # print(c(prop[[1]][length(prop[[1]])],prop[[1]][1:(length(prop[[1]])-1)]))
+  # print(main.prop)
   print(plot.bar)
 }
 # mx("QN100",d.dat)
@@ -1048,7 +1056,7 @@ tb_mc.yn <- function(qval, new.dat){
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- (cnames[grepl(paste0(qval,"$"), cnames, fixed = F)])
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   resp_b <- c()
   

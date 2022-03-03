@@ -30,30 +30,78 @@ d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 
 ```{R echo = FALSE, fig.height = 80}
 source("plotmaker.R")
-main.graph("spRestriction",data.ok)
+main.graph("housingCountry",data.ok)
 main.graph("QN65",d.dat)
 ```
 
 ```{R qID-chunk, echo=FALSE}
-qIDs <- c("QN105")
+qIDs <- c("reside",
+          "housing",
+          "housingCountry",
+          "QN28",
+          "QN100",
+          "QN104",
+          "QN105",
+          "mindset",
+          "interSupport",
+          "commSatisfy",
+          "commFreq",
+          "commAgree",
+          "QN30",
+          "QN94",
+          "acdEssential",
+          "acdEssentialcrs",
+          "QN980",
+          "QN98",
+          "QN111",
+          "commuteFreq",
+          "QN44",
+          "QN45",
+          "commuteerrand",
+          "wbFamdoc",
+          "wbMntsprt",
+          "wbNavigate",
+          "healthResource",
+          "QN65",
+          "QN34",
+          "QN37",
+          "QN40",
+          "QN41",
+          "QN35",
+          "QN36",
+          "covidFinance",
+          "spApply",
+          "spRestriction",
+          "QN48",
+          "QN50",
+          "QN52",
+          "QN53",
+          "QN54",
+          "QN55",
+          "QN66",
+          "QN67",
+          "QN56",
+          "QN57",
+          "QN59",
+          "daRsrc")
 ```
 
 ```{R chunk-generator ,echo=FALSE}
 out = NULL
 cnames <- colnames(data.ok)
 for (i in qIDs) {
-  rc_list <- cnames[grepl(paste0(qval,"$"), cnames, fixed = F)]
+  rc_list <- cnames[grepl(paste0(i,"$"), cnames, fixed = F)]
   
   if(length(rc_list) == 0){
-    rc_list <- cnames[grepl(paste0(qval,""), cnames, fixed = T)]
+    rc_list <- cnames[grepl(paste0(i,""), cnames, fixed = T)]
   }
   
   if(length(rc_list) != 1){
-    rc_list <- c(cnames[grepl(paste0(qval,"_"), cnames, fixed = T)],
-                 cnames[grepl(paste0(qval,"c"), cnames, fixed = T)],
-                 cnames[grepl(paste0(qval,"C"), cnames, fixed = T)],
-                 cnames[grepl(paste0(qval,"s"), cnames, fixed = T)],
-                 cnames[grepl(paste0(qval,"S"), cnames, fixed = T)])
+    rc_list <- c(cnames[grepl(paste0(i,"_"), cnames, fixed = T)],
+                 cnames[grepl(paste0(i,"c"), cnames, fixed = T)],
+                 cnames[grepl(paste0(i,"C"), cnames, fixed = T)],
+                 cnames[grepl(paste0(i,"s"), cnames, fixed = T)],
+                 cnames[grepl(paste0(i,"S"), cnames, fixed = T)])
   }
     if(length(rc_list) < 10){
       if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1 || unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){

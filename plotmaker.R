@@ -316,12 +316,13 @@ mx <- function(qval, new.dat){
       
       # Geometry text prep
       prop[[i]] <- round(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq))
-      prop[[i]] <- c(prop[[i]][length(prop[[i]])],prop[[i]][1:(length(prop[[i]])-1)])
+      # prop[[i]] <- c(prop[[i]][length(prop[[i]])],prop[[i]][1:(length(prop[[i]])-1)])
       
       for(j in 1:length(prop[[i]])){
         label_count_var <- label_count_var + 1
-        if(prop[[i]][j]<=0)
-          prop[[i]][j] = paste0(prop[[i]][j], "%")
+        if(prop[[i]][j]<=0){
+          prop[[i]][j] = ""  #paste0(prop[[i]][j], "%")
+        }
         else
           prop[[i]][j] = paste0(prop[[i]][j], "%")
       }
@@ -345,7 +346,7 @@ mx <- function(qval, new.dat){
   }
   
   if(length(unique(main.df$Var1)) != length(resp)){
-    resp <- c("No opinion/Not applicable", resp)
+    resp <- c("No opinion/Not applicable", resp1)
   }
   
   
@@ -381,7 +382,7 @@ mx <- function(qval, new.dat){
   # print(c(prop[[1]][length(prop[[1]])],prop[[1]][1:(length(prop[[1]])-1)]))
   # print(df.list)
   # print(resp)
-  # print(resp1[])
+  # print(c())
   # print(names(get(rc_list[1], new.dat) %>% attr('labels')))
   # print(length(unique(main.df$Var1)))
   # print(length(resp))
@@ -568,6 +569,9 @@ tb_mx <- function(qval, new.dat){
   cnames <- colnames(new.dat)
   rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  resp1 <- resp
+  resp <- c(unique(resp)[length(unique(resp))],unique(resp)[1:length(unique(resp))-1])
+  
   mattt <- matrix(rep(1,(length(resp)+0)*length(rc_list)), ncol = length(resp)+0)
   
   df.list <- list()
@@ -579,7 +583,20 @@ tb_mx <- function(qval, new.dat){
   
   i <- 1
   for (qn in rc_list) {
-    df.list[[i]] <- data.frame(table(get(qn, new.dat)))
+    
+    temp.df <- data.frame(table(get(qn, new.dat)))
+    
+    if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1){
+      temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0))
+      tex.col.base <- rev(c("black","white","white","black","black","black"))
+    }
+    else{
+      temp.df <- complete(temp.df, Var1 = factor(c(1:6,999),levels = c(1:6,999)), fill = list(Freq = 0))
+      tex.col.base <- rev(c("black","white","white","white","black","black","black"))
+    }
+    
+    
+    df.list[[i]] <- temp.df
     
     #Row labels
     if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
@@ -631,9 +648,9 @@ tb_mx <- function(qval, new.dat){
   
   main.df <- rev(data.frame(mattt))
   # main.df <- data.frame(mattt)
-  is_conc <- unlist(gregexpr(pattern = 'concerned', resp[1]))
-  is_agr <- unlist(gregexpr(pattern = 'agree', resp[1]))
-  is_satis <- unlist(gregexpr(pattern = 'satisfied', resp[1]))
+  is_conc <- unlist(gregexpr(pattern = 'concerned', resp[2]))
+  is_agr <- unlist(gregexpr(pattern = 'agree', resp[2]))
+  is_satis <- unlist(gregexpr(pattern = 'satisfied', resp[2]))
   
   resp <- rev(resp)
   colnames(main.df) <- c(resp)
@@ -650,19 +667,19 @@ tb_mx <- function(qval, new.dat){
   }
   
   if(is_conc != -1){
-    main.df <- main.df %>% add_column(`Very concerned/Concerned` = c_vc, .after = resp[1]) %>%
+    main.df <- main.df %>% add_column(`Very concerned/Concerned` = c_vc, .before = resp[1]) %>%
       add_column(`Including somewhat concerned` = c_vc_sc, .after = "Very concerned/Concerned") %>%
       add_column(Total = row_tot)
     c.width <- 0.65
     ft.size <- 6
   }else if(is_agr != -1){
-    main.df <- main.df %>% add_column(`Strongly agree/\nAgree` = c_vc, .after = resp[1]) %>%
+    main.df <- main.df %>% add_column(`Strongly agree/\nAgree` = c_vc, .before = resp[1]) %>%
       add_column(`Including somewhat agree` = c_vc_sc, .after = "Strongly agree/\nAgree") %>%
       add_column(Total = row_tot)
     c.width <- 0.59
     ft.size <- 5.5
   }else if(is_satis != -1){
-    main.df <- main.df %>% add_column(`Very satisfied/\nSatisfied` = c_vc, .after = resp[1]) %>%
+    main.df <- main.df %>% add_column(`Very satisfied/\nSatisfied` = c_vc, .before = resp[1]) %>%
       add_column(`Including somewhat satisfied` = c_vc_sc, .after = "Very satisfied/\nSatisfied") %>%
       add_column(Total = row_tot)
     c.width <- 0.59
@@ -678,8 +695,8 @@ tb_mx <- function(qval, new.dat){
     valign(valign = "center", part = "all") %>%
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
     width(width = c.width, unit = "in") %>%
-    color(color = "#A7A19D", part = "header") %>%
-    color(j = -2:dim(mattt)[2]+4, color = "#A7A19D", part = "body")
+    color(color = "#A7A19D", part = "header") #%>%
+    # color(j = -2:dim(mattt)[2]+4, color = "#A7A19D", part = "body")
   
 }
 

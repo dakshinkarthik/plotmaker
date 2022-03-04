@@ -3,19 +3,7 @@ main.graph <- function(qval, new.dat){
   # i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   # d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
-  rc_list <- cnames[grepl(paste0(qval,"$"), cnames, fixed = F)]
-  
-  if(length(rc_list) == 0){
-    rc_list <- cnames[grepl(paste0(qval,""), cnames, fixed = T)]
-  }
-  
-  if(length(rc_list) != 1){
-    rc_list <- c(cnames[grepl(paste0(qval,"_"), cnames, fixed = T)],
-                 cnames[grepl(paste0(qval,"c"), cnames, fixed = T)],
-                 cnames[grepl(paste0(qval,"C"), cnames, fixed = T)],
-                 cnames[grepl(paste0(qval,"s"), cnames, fixed = T)],
-                 cnames[grepl(paste0(qval,"S"), cnames, fixed = T)])
-  }
+  rc_list <- rc_list.get(qval, new.dat)
   
   # print(rc_list)
 
@@ -90,10 +78,12 @@ main.graph <- function(qval, new.dat){
 rk <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  rc_list <- rc_list.get(qval, new.dat)  #cnames[grepl(qval, cnames, fixed = TRUE)]
+  # print(rc_list)
+  new.dat <- rc_complete(rc_list, new.dat, 28)
   rc_list <- rc_eval("rk",rc_list)
-  new.dat <- rc_complete(rc_list, new.dat)
-
+  # print(new.dat)
+  
   ti.tle <- NULL
   if(new.dat$isi[1] == "Domestic"){
     col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
@@ -152,7 +142,8 @@ rk <- function(qval, new.dat){
     sel <- c(sel,df.list[[i]]$Freq[length(df.list[[i]]$Freq)])
     
     # Geometry text prep
-    prop[[i]] <- round((100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
+    prop[[i]] <- round(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq))
+    # round(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq))
 
     for(j in 1:length(prop[[i]])){
       label_count_var <- label_count_var + 1
@@ -181,36 +172,18 @@ rk <- function(qval, new.dat){
   # Subtitle positioning and geom text size
   geom_text_size <- sizer(rc_list)[2]
   c.width <- sizer(rc_list)[1]
-
-  # if(length(rc_list) == 1){
-  #   geom_text_size <- 75
-  #   c.width <- 0.15
-  # }else if(length(rc_list) <= 3){
-  #   geom_text_size <- 90
-  #   c.width <- 0.5
-  # }else if(length(rc_list) <= 6){
-  #   geom_text_size <- 75
-  #   c.width <- 0.7
-  # }else{
-  #   geom_text_size <- 50
-  #   c.width <- 0.5
-  # }
   
-  # new.df <- data.frame()
   leveler <- c()
   sel <- sort(sel,decreasing = T)
   for (i in 1:length(sel)) {
     for (j in 1:length(df.list)) {
       if(sel[i] == df.list[[j]]$Freq[length(df.list[[j]]$Freq)]){
-        # print(df.list[[j]]$Freq[length(df.list[[j]]$Freq)])
         leveler <- c(leveler,df.list[[j]]$Ques[1])
         break
       }
     }
   }
 
-
-  # main.df <- transform(main.df, Ques = reorder(Ques, -Freq))
   
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Ques,levels = rev(leveler)),
@@ -237,7 +210,7 @@ rk <- function(qval, new.dat){
 mx <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- rc_list.get(qval, new.dat)
 
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   resp1 <- resp
@@ -1654,24 +1627,70 @@ subt_builder <- function(rc_list, new.dat){
   subt_to <- unlist(gregexpr(pattern ='To', get(rc_list[1], new.dat) %>% attr('label')))
   subt_where <- unlist(gregexpr(pattern ='Where', get(rc_list[1], new.dat) %>% attr('label')))
   subt_hyp <- unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label')))
+  subt_are <- unlist(gregexpr(pattern ='Are', get(rc_list[1], new.dat) %>% attr('label')))
+  end_apply <- unlist(gregexpr(pattern ='apply', get(rc_list[1], new.dat) %>% attr('label')))
   
-  if(subt_how != -1){
-    subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_how,
-                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
-  }else if(subt_to != -1){
-    subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_to,
-                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
-  }else if(subt_where != -1){
-    subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_to,
-                   unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
-  }else if(subt_hyp != -1){
-    subt <-  substr(get(rc_list[1], new.dat) %>% attr('label'),1,
-                    unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label')))-1)
+  if(end_apply == -1){
+    if(subt_how != -1){
+      subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_how,
+                     unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
+      # print(1)
+    }else if(subt_to != -1){
+      subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_to,
+                     unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
+      # print(2)
+    }else if(subt_where != -1){
+      subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_where,
+                     unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
+      # print(3)
+    }else if(subt_are != -1){
+      subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_are,
+                     unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
+      # print(4)
+    }else if(subt_hyp != -1){
+      subt <-  substr(get(rc_list[1], new.dat) %>% attr('label'),1,
+                      unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label')))-1)
+      # print(5)
+    }
+    else if(subt_how == -1 || subt_to == -1 || subt_where == -1 || subt_hyp == -1 || subt_are == -1){
+      subt <- get(rc_list[1], new.dat) %>% attr('label')
+      # print(6)
+    }else{
+      subt <- "Unidentified subtitle format"
+    }
   }
-  else if(subt_how == -1 || subt_to == -1 || subt_where == -1 || subt_hyp == -1){
-    subt <- get(rc_list[1], new.dat) %>% attr('label')
-  }else{
-    subt <- "Unidentified subtitle format"
+  else{
+    if(subt_how != -1){
+      subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_how,
+                     end_apply+5)
+      # print(7)
+    }else if(subt_to != -1){
+      subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_to,
+                     end_apply+5)
+      # print(8)
+    }else if(subt_where != -1){
+      subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_where,
+                     end_apply+5)
+      # print(9)
+    }else if(subt_are != -1){
+      subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_are,
+                     end_apply+5)
+      # print(10)
+    }else if(subt_hyp != -1){
+      subt <-  substr(get(rc_list[1], new.dat) %>% attr('label'),1,
+                      unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label')))-1)
+      # print(11)
+    }
+    # else if(subt_how == -1 || subt_to == -1 || subt_where == -1 || subt_hyp == -1 || subt_are == -1){
+    #   subt <- get(rc_list[1], new.dat) %>% attr('label')
+    # }
+    else if(end_apply != -1){
+      subt <-  substr(get(rc_list[1], new.dat) %>% attr('label'),1,
+                      end_apply)
+      # print(12)
+    }else{
+      subt <- "Unidentified subtitle format"
+    }
   }
   
   if(nchar(subt)>58){
@@ -1765,12 +1784,12 @@ get_sum <-  function(rc_list){
   return(rc_list[bl])
 }
 
-rc_complete <- function(rc_list, new.dat){
+rc_complete <- function(rc_list, new.dat, comp_val = 1){
   chk <- 0
   for (j in 1:length(rc_list)) {
     if(unlist(gregexpr(pattern = "complete", rc_list[j])) != -1){
       chk <- 1
-      return(new.dat[which(get(rc_list[j], new.dat) == 1),])
+      return(new.dat[which(get(rc_list[j], new.dat) == comp_val),])
     }
   }
   if(chk == 0)
@@ -1797,6 +1816,24 @@ sizer <- function(rc_list){
   }
   
   return(c(c.width,geom_text_size))
+}
+
+rc_list.get <- function(qval, new.dat){
+  cnames <- colnames(new.dat)
+  rc_list <- cnames[grepl(paste0(qval,"$"), cnames, fixed = F)]
+  
+  if(length(rc_list) == 0){
+    rc_list <- cnames[grepl(paste0(qval,""), cnames, fixed = T)]
+  }
+  
+  if(length(rc_list) != 1){
+    rc_list <- c(cnames[grepl(paste0(qval,"_"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"c"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"C"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"s"), cnames, fixed = T)],
+                 cnames[grepl(paste0(qval,"S"), cnames, fixed = T)])
+  }
+  return(rc_list)
 }
 
 

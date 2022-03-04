@@ -9,7 +9,8 @@ nubc2021joined <- read_sav("./data/nubc2021com.sav")
 data.ok <- nubc2021joined
 
 data.ok$mc.QN30 %>% attr('labels')
-get("mx.QN65_1",data.ok) %>% attr('labels')
+get("mc.QN35",data.ok) %>% attr('label')
+subt_builder("mc.QN35",d.dat)
 data.ok$campusName 
 
 data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY"
@@ -19,11 +20,11 @@ data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY"
 str(data.ok)
 
 
-qval <- "healthResource"
+qval <- "QN98"
 
 cnames <- colnames(data.ok)
 rc_list <- cnames[grepl(paste0(qval,""), cnames, fixed = T)]
-rc_list <- c(cnames[grepl(paste0(qval,""), cnames, fixed = T)],
+rc_list <- c(#cnames[grepl(paste0(qval,""), cnames, fixed = T)],
              cnames[grepl(paste0(qval,"_"), cnames, fixed = T)],
              cnames[grepl(paste0(qval,"c"), cnames, fixed = T)],
              cnames[grepl(paste0(qval,"C"), cnames, fixed = T)],
@@ -50,7 +51,8 @@ as.integer(levels(data.frame(table(get(rc_list[1], d.dat)))$Var1)[as.integer(dat
 data.frame(table(get(rc_list[8], data.ok)))
 str(data.frame(table(get(rc_list[1], data.ok)))$Freq)
 data.frame(table(get(rc_list[1], d.dat)))$Var1
-table(get(rc_list[1], data.ok))
+
+table(get("rk.QN98complete", data.ok))
 nrow(table(get(rc_list[2], i.dat)))
 
 get_sum(rc_list)
@@ -320,3 +322,5 @@ dat$V1 <- factor(dat$V1, levels = dat$V1)
 ggplot(dat,aes(x=V1,y=V2))+geom_bar(stat="identity")
 
 sort(c("Domestic","International"))
+
+data.ok$rk.QN98complete

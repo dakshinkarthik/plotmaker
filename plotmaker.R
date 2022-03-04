@@ -219,7 +219,7 @@ rk <- function(qval, new.dat){
     theme_economist(base_size = 14) +
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
     geom_text(data = main.df, aes(Freq, Ques, group = Var1), label = main.prop,
-              position = position_fill(vjust=c.width), color = tex.col, size = geom_text_size) +
+              position = position_fill(vjust=0.5), color = tex.col, size = geom_text_size) +
     labs(title = ti.tle,
          subtitle = subt) +
     # scale_y_discrete(breaks = unique(main.df$Ques),
@@ -364,12 +364,12 @@ mx <- function(qval, new.dat){
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=factor(Ques, levels = rev(unique(Ques))), y=Freq,
                                          fill = factor(Var1, levels = leveler))) +
-    geom_bar(stat = "identity", position = "fill", width = c.width) +
+    geom_bar(stat = "identity", position = "fill", width = c.width) + #, width = c.width
     theme_economist(base_size = 14) +
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
     geom_text(data = main.df, aes(Ques, Freq, group = factor(Var1, levels = leveler)),
               label = main.prop, #paste0(round(100*Freq/sum(Freq)),"%"),
-              position = position_fill(vjust=c.width), color = tex.col, size = geom_text_size) +
+              position = position_fill(vjust=0.5), color = tex.col, size = geom_text_size) + #vjust=c.width
     labs(title = ti.tle,
          subtitle = subt) +
     # scale_x_discrete(breaks = unique(main.df$Ques),
@@ -382,7 +382,7 @@ mx <- function(qval, new.dat){
   # print(c(prop[[1]][length(prop[[1]])],prop[[1]][1:(length(prop[[1]])-1)]))
   # print(df.list)
   # print(resp)
-  # print(c())
+  # print(leveler)
   # print(names(get(rc_list[1], new.dat) %>% attr('labels')))
   # print(length(unique(main.df$Var1)))
   # print(length(resp))

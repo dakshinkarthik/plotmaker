@@ -22,7 +22,7 @@ source("plotmaker.R")
 ```
 <!-- Reads and formats -->
 ```{R echo=FALSE}
-nubc2021joined <- read_sav("data/nubc2021_v2.sav")
+nubc2021joined <- read_sav("data/nubc2021_v4.sav")
 data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Okanagan"),]
 i.dat <- data.ok[which(data.ok$isi == "ISI"),]
 d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
@@ -30,8 +30,8 @@ d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 
 ```{R echo = FALSE, fig.height = 80}
 source("plotmaker.R")
-main.graph("housingCountry",data.ok)
-main.graph("QN65",d.dat)
+main.graph("QN28",data.ok)
+main.graph("QN100",d.dat)
 ```
 
 ```{R qID-chunk, echo=FALSE}

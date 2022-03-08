@@ -29,9 +29,9 @@ d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 ```
 
 ```{R echo = FALSE, fig.height = 80}
-source("plotmaker.R")
-main.graph("QN28",data.ok)
-main.graph("QN100",d.dat)
+# source("plotmaker.R")
+main.graph("QN58",data.ok)
+main.graph("QN105",i.dat)
 ```
 
 ```{R qID-chunk, echo=FALSE}
@@ -70,6 +70,7 @@ qIDs <- c("reside",
           "QN35",
           "QN36",
           "covidFinance",
+          "covidTuition",
           "spApply",
           "spRestriction",
           "QN48",
@@ -82,6 +83,7 @@ qIDs <- c("reside",
           "QN67",
           "QN56",
           "QN57",
+          "QN58",
           "QN59",
           "daRsrc")
 ```
@@ -103,34 +105,61 @@ for (i in qIDs) {
                  cnames[grepl(paste0(i,"s"), cnames, fixed = T)],
                  cnames[grepl(paste0(i,"S"), cnames, fixed = T)])
   }
-    if(length(rc_list) < 10){
-      if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1 || unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
-      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n main.graph(\'",i,"\',data.ok)\n\n```")
+  resp <- names(get(rc_list[1],data.ok) %>% attr('labels'))
+  if(length(rc_list) < 10){
+    if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1 || 
+       unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
+       knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                               main.graph(\'",i,"\',data.ok)\n\n```")
       out = c(out, knit_expanded)
-      }
-      else if(length(rc_list) != 1){
-      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
-      out = c(out, knit_expanded)
-      }
-      else{
-      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n main.graph(\'",i,"\',data.ok)\n\n```")
-      out = c(out, knit_expanded)
-      }
     }
-   else{
-     if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1 || unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
-      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n main.graph(\'",i,"\',data.ok)\n\n```")
-      out = c(out, knit_expanded)
+    else if(unlist(gregexpr(pattern = 'mc', rc_list[1])) != -1 &&
+        (unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
+         unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
+         unlist(gregexpr(pattern = 'concerned', resp[1])) != -1||
+         unlist(gregexpr(pattern = 'impact', resp[1])) != -1)){
+            knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                                    main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
+            out = c(out, knit_expanded)
     }
     else if(length(rc_list) != 1){
-      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
-      out = c(out, knit_expanded)
+        knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                                main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
+        out = c(out, knit_expanded)
     }
     else{
-      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n main.graph(\'",i,"\',data.ok)\n\n```")
+      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                              main.graph(\'",i,"\',data.ok)\n\n```")
       out = c(out, knit_expanded)
     }
    }
+   else{
+     if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1 || 
+        unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
+          knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n
+                                  main.graph(\'",i,"\',data.ok)\n\n```")
+          out = c(out, knit_expanded)
+     }
+     else if(unlist(gregexpr(pattern = 'mc', rc_list[1])) != -1 &&
+            (unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
+            unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
+            unlist(gregexpr(pattern = 'concerned', resp[1])) != -1)
+            unlist(gregexpr(pattern = 'impact', resp[1])) != -1){
+            knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n
+                                    main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
+            out = c(out, knit_expanded)
+    }
+   else if(length(rc_list) != 1){
+       knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n
+                               main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
+      out = c(out, knit_expanded)
+   }
+   else{
+      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n
+                              main.graph(\'",i,"\',data.ok)\n\n```")
+      out = c(out, knit_expanded)
+   }
+  }
 }
 ```
 

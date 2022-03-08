@@ -14,10 +14,11 @@ main.graph <- function(qval, new.dat){
     if(#!is.null(resp)||
        unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
        unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
-       unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
+       unlist(gregexpr(pattern = 'concerned', resp[1])) != -1||
+       unlist(gregexpr(pattern = 'impact', resp[1])) != -1){
       # print("1")
       mx(qval,new.dat)
-      tb_mx(qval,new.dat)
+      # tb_mx(qval,new.dat)
     }
     else{
       chk <- 0
@@ -30,12 +31,12 @@ main.graph <- function(qval, new.dat){
       if(chk == 1){
         # print("2")
         mc.yn(qval, new.dat)
-        tb_mc.yn(qval, new.dat)
+        # tb_mc.yn(qval, new.dat)
       }
       else{
         # print("3")
         mc(qval, new.dat)
-        tb_mc(qval, new.dat)
+        # tb_mc(qval, new.dat)
       }
     }
   }
@@ -46,29 +47,29 @@ main.graph <- function(qval, new.dat){
          unlist(gregexpr(pattern = 'concerned', resp[1])) == -1){
         # print("4")
         mx.tri(qval,new.dat)
-        tb_mx.tri(qval,new.dat)
+        # tb_mx.tri(qval,new.dat)
       }else{
         # print("5")
         mx(qval,new.dat)
-        tb_mx(qval,new.dat)
+        # tb_mx(qval,new.dat)
       }
     }
     else if(unlist(gregexpr(pattern = 'rk', rc_list[1])) != -1){
       # print("6")
       rk(qval,new.dat)
-      tb_rk(qval,new.dat)
+      # tb_rk(qval,new.dat)
       # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
       # print("7")
       ms(qval,new.dat)
-      tb_ms(qval,new.dat)
+      # tb_ms(qval,new.dat)
       # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
       # print("8")
       cs(qval,new.dat)
-      tb_cs(qval,new.dat)
+      # tb_cs(qval,new.dat)
       # print("Function is being developed.")
     }
   }
@@ -268,7 +269,8 @@ mx <- function(qval, new.dat){
     # Dataframe building
     temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
     
-    if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1){
+    if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1 ||
+       unlist(gregexpr(pattern = 'impact', resp[length(resp)])) != -1){
       temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0, Ques = c(i)))
       tex.col.base <- rev(c("black","white","white","black","black","black"))
     }
@@ -1124,7 +1126,7 @@ mc <- function(qval, new.dat){
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(paste0(qval,"$"), cnames, fixed = F)])
+  rc_list <- rc_list.get(qval, new.dat)
   rc_list <- rc_eval("mc",rc_list)
   
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
@@ -1171,15 +1173,21 @@ mc <- function(qval, new.dat){
     axis.q <- resp
   }
   else{
+    i <- 0
     for (k in resp_b) {
+      i <- i + 1
       if(k == 999){
         axis.q <- c(axis.q, resp[length(resp)])
       }
       else{
-        axis.q <- c(axis.q, resp[k])
+        if(is.na(resp[k])){
+          axis.q <- c(axis.q, resp[i])
+        }
+        else{
+          axis.q <- c(axis.q, resp[k])
+        }
       }
     }
-    # axis.q <- (resp[resp_b])
   }
   
   
@@ -1199,15 +1207,12 @@ mc <- function(qval, new.dat){
   i.df$Var1 <- axis.q
 
   main.df <- rbind(d.df,i.df)
-  # levels(main.df) <- factor(axis.q)
-  # main.df$Ques <- factor(main.df$Ques)
-  # main.df <- main.df[nrow(main.df):1,]
 
   tot <- sum(main.df$Freq) #row total
 
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
-  
+
   # sizing format
   geom_text_size <- sizer(main.df$Var1)[2]
   c.width <- sizer(main.df$Var1)[1]
@@ -1228,14 +1233,9 @@ mc <- function(qval, new.dat){
     scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
     # coord_flip()
 
-  # print(complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International"))))
-  # print(complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic"))))
-  # print(d.df$Var1 == i.df$Var1)
-  # print(main.df$Var1[length(main.df$Var1)])
-  # print(main.df$Var1)
   print(plot.bar)
 }
-# mc("housing",data.ok)
+# mc("QN58",data.ok)
 
 # for mc.yn questions
 mc.yn <- function(qval, new.dat){
@@ -1723,7 +1723,7 @@ ubc.theme <- function(){
                legend.spacing.y = unit(1, "cm"),
                legend.box.spacing = unit(2, "cm"),
                plot.background = element_rect(colour = "grey", fill = NA, size = 6),
-               plot.subtitle = element_text(colour = "#54504C", size = 170),
+               plot.subtitle = element_text(colour = "#54504C", size = 170, hjust = 0.5),
                plot.title.position = "plot",
                plot.title = element_text(color = "#2B73C2", size = 175, hjust = 0.5),
                axis.line = element_blank(),

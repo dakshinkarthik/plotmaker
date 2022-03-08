@@ -8,8 +8,11 @@ library(surveytoolbox)
 nubc2021joined <- read_sav("./data/nubc2021com.sav")
 data.ok <- nubc2021joined
 
+
+i.dat$mc.QN58
+
 data.ok$mc.QN30 %>% attr('labels')
-get("mc.QN35",data.ok) %>% attr('label')
+get("mc.QN58",data.ok) %>% attr('label')
 subt_builder("mc.QN35",d.dat)
 data.ok$campusName 
 
@@ -323,4 +326,4 @@ ggplot(dat,aes(x=V1,y=V2))+geom_bar(stat="identity")
 
 sort(c("Domestic","International"))
 
-data.ok$rk.QN98complete
+data.ok$intmajorNew

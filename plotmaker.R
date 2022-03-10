@@ -18,7 +18,7 @@ main.graph <- function(qval, new.dat){
        unlist(gregexpr(pattern = 'impact', resp[1])) != -1){
       # print("1")
       mx(qval,new.dat)
-      # tb_mx(qval,new.dat)
+      tb_mx(qval,new.dat)
     }
     else{
       chk <- 0
@@ -31,12 +31,12 @@ main.graph <- function(qval, new.dat){
       if(chk == 1){
         # print("2")
         mc.yn(qval, new.dat)
-        # tb_mc.yn(qval, new.dat)
+        tb_mc.yn(qval, new.dat)
       }
       else{
         # print("3")
         mc(qval, new.dat)
-        # tb_mc(qval, new.dat)
+        tb_mc(qval, new.dat)
       }
     }
   }
@@ -44,32 +44,33 @@ main.graph <- function(qval, new.dat){
     if(unlist(gregexpr(pattern = 'mx', rc_list[1])) != -1){
       if(unlist(gregexpr(pattern = 'agree', resp[1])) == -1&& 
          unlist(gregexpr(pattern = 'satisfied', resp[1])) == -1&&
-         unlist(gregexpr(pattern = 'concerned', resp[1])) == -1){
+         unlist(gregexpr(pattern = 'concerned', resp[1])) == -1&&
+         unlist(gregexpr(pattern = 'impact', resp[1])) == -1){
         # print("4")
         mx.tri(qval,new.dat)
-        # tb_mx.tri(qval,new.dat)
+        tb_mx.tri(qval,new.dat)
       }else{
         # print("5")
         mx(qval,new.dat)
-        # tb_mx(qval,new.dat)
+        tb_mx(qval,new.dat)
       }
     }
     else if(unlist(gregexpr(pattern = 'rk', rc_list[1])) != -1){
       # print("6")
       rk(qval,new.dat)
-      # tb_rk(qval,new.dat)
+      tb_rk(qval,new.dat)
       # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
       # print("7")
       ms(qval,new.dat)
-      # tb_ms(qval,new.dat)
+      tb_ms(qval,new.dat)
       # print("Function is being developed.")
     }
     else if(unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
       # print("8")
       cs(qval,new.dat)
-      # tb_cs(qval,new.dat)
+      tb_cs(qval,new.dat)
       # print("Function is being developed.")
     }
   }
@@ -79,11 +80,9 @@ main.graph <- function(qval, new.dat){
 rk <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- rc_list.get(qval, new.dat)  #cnames[grepl(qval, cnames, fixed = TRUE)]
-  # print(rc_list)
+  rc_list <- rc_list.get(qval, new.dat)  
   new.dat <- rc_complete(rc_list, new.dat, 28)
   rc_list <- rc_eval("rk",rc_list)
-  # print(new.dat)
   
   ti.tle <- NULL
   if(new.dat$isi[1] == "Domestic"){
@@ -561,13 +560,14 @@ tb_mx <- function(qval, new.dat){
     
     temp.df <- data.frame(table(get(qn, new.dat)))
     
-    if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1){
+    if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1 ||
+       unlist(gregexpr(pattern = 'impact', resp[length(resp)])) != -1){
       temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0))
-      tex.col.base <- rev(c("black","white","white","black","black","black"))
+      # tex.col.base <- rev(c("black","white","white","black","black","black"))
     }
     else{
       temp.df <- complete(temp.df, Var1 = factor(c(1:6,999),levels = c(1:6,999)), fill = list(Freq = 0))
-      tex.col.base <- rev(c("black","white","white","white","black","black","black"))
+      # tex.col.base <- rev(c("black","white","white","white","black","black","black"))
     }
     
     
@@ -588,11 +588,13 @@ tb_mx <- function(qval, new.dat){
     #To calculate the cumulative top 2 and 3 response levels
     c_vc.sum <- 0
     c_vc_sc.sum <- 0
+    # print(resp)
     for (j in 1:length(resp)+0) {
 
       if(!is.na(df.list[[i]]$Freq[j])){
         mattt[i,j] <- paste0(round(100*df.list[[i]]$Freq[j]/row_tot[i]),"%")
-        if(unlist(gregexpr(pattern = 'concerned', resp[1])) != -1){
+        if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1 ||
+           unlist(gregexpr(pattern = 'impact', resp[length(resp)])) != -1){
           if(j==3){
             c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
           }
@@ -601,8 +603,8 @@ tb_mx <- function(qval, new.dat){
             c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
           }
         }
-        else if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1 || 
-                unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1){
+        else if(unlist(gregexpr(pattern = 'agree', resp[length(resp)])) != -1 || 
+                unlist(gregexpr(pattern = 'satisfied', resp[length(resp)])) != -1){
           if(j==4){
             c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
           }
@@ -611,36 +613,41 @@ tb_mx <- function(qval, new.dat){
             c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
           }
         }
+
       }
       else
         mattt[i,j] <- "NA"
     }
+    # print(c_vc.sum)
+    # print(c_vc_sc.sum)
     ld.main <- c(ld.main, ld)
     c_vc <- c(c_vc, paste0(round(100*c_vc.sum/row_tot[i]),"%"))
     c_vc_sc <- c(c_vc_sc, paste0(round(100*c_vc_sc.sum/row_tot[i]),"%"))
     i <- i + 1
   }
+
   
   main.df <- rev(data.frame(mattt))
+  main.df <- cbind(main.df[,2:dim(main.df)[2]],main.df[,1])
   # main.df <- data.frame(mattt)
   is_conc <- unlist(gregexpr(pattern = 'concerned', resp[2]))
   is_agr <- unlist(gregexpr(pattern = 'agree', resp[2]))
   is_satis <- unlist(gregexpr(pattern = 'satisfied', resp[2]))
-  
+
   resp <- rev(resp)
   colnames(main.df) <- c(resp)
   c.width <- 1
   ft.size <- 6
   
   # main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1])
-  
+
   if(new.dat$isi[1] == "Domestic"){
     main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1])
   }
   else if(new.dat$isi[1] == "ISI"){
     main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
   }
-  
+
   if(is_conc != -1){
     main.df <- main.df %>% add_column(`Very concerned/Concerned` = c_vc, .before = resp[1]) %>%
       add_column(`Including somewhat concerned` = c_vc_sc, .after = "Very concerned/Concerned") %>%
@@ -660,7 +667,7 @@ tb_mx <- function(qval, new.dat){
     c.width <- 0.59
     ft.size <- 5.5
   }
-
+  # 
   ft <- flextable(main.df) %>% theme_box()
   ft <- fontsize(ft, size = ft.size, part = "all")
   set_table_properties(ft, layout = "autofit")
@@ -670,17 +677,20 @@ tb_mx <- function(qval, new.dat){
     valign(valign = "center", part = "all") %>%
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
     width(width = c.width, unit = "in") %>%
-    color(color = "#A7A19D", part = "header") #%>%
-    # color(j = -2:dim(mattt)[2]+4, color = "#A7A19D", part = "body")
-  
+    color(color = "#A7A19D", part = "header") %>%
+    color(j = -2:dim(mattt)[2]+4, color = "#A7A19D", part = "body")
+
+  # print(main.df)
+  # print(resp)
 }
+# tb_mx("QN105",i.dat)
 
 tb_rk <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  rc_list <- rc_list.get(qval, new.dat)  
+  new.dat <- rc_complete(rc_list, new.dat, 28)
   rc_list <- rc_eval("rk",rc_list)
-  new.dat <- rc_complete(rc_list, new.dat)
   
   resp <- paste("Rank", rev(names(get(rc_list[1], new.dat) %>% attr('labels'))), sep = " ")
   mattt <- matrix(rep(1,(length(resp)+0)*(length(rc_list)+1)), ncol = length(resp)+0)
@@ -761,6 +771,12 @@ tb_rk <- function(qval, new.dat){
                                    `Rank 7` = nrow(new.dat))
   }
   
+  for(k in 1:dim(main.df)[1]-1){
+    for(j in 2:dim(main.df)[2]){
+      main.df[k,j] <- paste0(main.df[k,j],"%")
+    }
+  }
+  
   ft <- flextable(main.df) %>% theme_box()
   ft <- fontsize(ft, size = 5.5, part = "all")
   set_table_properties(ft, layout = "autofit")
@@ -774,7 +790,8 @@ tb_rk <- function(qval, new.dat){
     width(j = 1, width = 2.98, unit = "in") %>%
     color(j = 2:dim(mattt)[2]+1, color = "#A7A19D", part = "header") %>%
     color(j = 2:dim(mattt)[2]+1, color = "#A7A19D", part = "all")
-  
+  # print(paste0(main.df[1:dim(main.df)[1],2:dim(main.df)[2]]),"%")
+  # print(main.df)
 }
 # tb_rk("QN98",d.dat)
 
@@ -1017,15 +1034,21 @@ tb_mc <- function(qval, new.dat){
     axis.q <- resp
   }
   else{
+    i <- 0
     for (k in resp_b) {
+      i <- i + 1
       if(k == 999){
         axis.q <- c(axis.q, resp[length(resp)])
       }
       else{
-        axis.q <- c(axis.q, resp[k])
+        if(is.na(resp[k])){
+          axis.q <- c(axis.q, resp[i])
+        }
+        else{
+          axis.q <- c(axis.q, resp[k])
+        }
       }
     }
-    # axis.q <- (resp[resp_b])
   }
   axis.q <- c((axis.q),"Distinct count of respondents")
   

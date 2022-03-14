@@ -1,33 +1,38 @@
-main.graph <- function(qval, new.dat){
-  # Column names to read data
-  # i.dat <- new.dat[which(new.dat$isi == "ISI"),]
-  # d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
-  cnames <- colnames(new.dat)
-  rc_list <- rc_list.get(qval, new.dat)
-  
-  # print(rc_list)
+#---------------------Graph and Table functions---------------------
 
-  resp <- names(get(rc_list[1],new.dat) %>% attr('labels'))
-  # print(names(get(rc_list[1],new.dat) %>% attr('label')))
+
+# The main function that accepts calls from the markdown file
+main.graph <- function(qval, new.dat){
   
-  if(length(rc_list) == 1){
-    if(#!is.null(resp)||
-       unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
+  # Column names to read data
+  cnames <- colnames(new.dat) # Gets column names(question IDs) from the dataset
+  rc_list <- rc_list.get(qval, new.dat) # Subset of field names based on input parameters
+
+  # Response levels which is used for determining the appropriate further function call
+  resp <- names(get(rc_list[1],new.dat) %>% attr('labels')) 
+  
+  if(length(rc_list) == 1){ # To check for mc questions (Normal bar graph)
+    # The following if() tests for singular mx type question (stacked bar graph) based on responses
+    if(unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
        unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
        unlist(gregexpr(pattern = 'concerned', resp[1])) != -1||
        unlist(gregexpr(pattern = 'impact', resp[1])) != -1){
       # print("1")
-      mx(qval,new.dat)
+      # Each qID from the markdown file gets a single call to an appropriate graph function and a table function
+      mx(qval,new.dat) 
       tb_mx(qval,new.dat)
     }
     else{
-      chk <- 0
+      chk <- 0 # Local check variable for 'Yes/No' response levels
+      # mc() questions with Yes/No responses have slightly different tables than a regular mc question.
       for (j in 1:length(resp)) {
+        # This if statement checks for 'Yes' in the response levels
         if(unlist(gregexpr(pattern = 'Yes', resp[j])) != -1){
           chk <- 1
           break
         }
       }
+      # if chk == 1 then it has 'Yes/No' in the response levels
       if(chk == 1){
         # print("2")
         mc.yn(qval, new.dat)
@@ -40,13 +45,20 @@ main.graph <- function(qval, new.dat){
       }
     }
   }
+  # Other question types have more than 1 sub question
   else{
+    # Check for mx question type based on question identifiers
     if(unlist(gregexpr(pattern = 'mx', rc_list[1])) != -1){
+      # mx question type checked based on response levels.
+      # There is an exception in one of the mx questions where the graph was grouped in levels of 3.
+      # This question has response levels that do not match the other mx question response levels
       if(unlist(gregexpr(pattern = 'agree', resp[1])) == -1&& 
          unlist(gregexpr(pattern = 'satisfied', resp[1])) == -1&&
          unlist(gregexpr(pattern = 'concerned', resp[1])) == -1&&
          unlist(gregexpr(pattern = 'impact', resp[1])) == -1){
         # print("4")
+        # This function call and table call is for mx questions with only 3 response levels that are different 
+        # from the usual mx response levels
         mx.tri(qval,new.dat)
         tb_mx.tri(qval,new.dat)
       }else{
@@ -55,36 +67,40 @@ main.graph <- function(qval, new.dat){
         tb_mx(qval,new.dat)
       }
     }
+    # Checks for rk question type
     else if(unlist(gregexpr(pattern = 'rk', rc_list[1])) != -1){
       # print("6")
       rk(qval,new.dat)
       tb_rk(qval,new.dat)
-      # print("Function is being developed.")
     }
+    # Checks for ms question type
     else if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
       # print("7")
       ms(qval,new.dat)
       tb_ms(qval,new.dat)
-      # print("Function is being developed.")
     }
+    # Checks for cs question types
     else if(unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
       # print("8")
       cs(qval,new.dat)
       tb_cs(qval,new.dat)
-      # print("Function is being developed.")
     }
   }
 }
 
-# for rk questions
+# Graph function for rk question type
 rk <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
   rc_list <- rc_list.get(qval, new.dat)  
-  new.dat <- rc_complete(rc_list, new.dat, 28)
-  rc_list <- rc_eval("rk",rc_list)
+  # input dataset is subsetted based on sum/complete field value
+  # 28 is a parameter here because there is only one rk question in the dataset that requires 28 as a validating factor
+  # Future code can be changed to accommodate a dynamic parameter value
+  new.dat <- rc_complete(rc_list, new.dat, 28) 
+  rc_list <- rc_eval("rk",rc_list) # Checks if all the sub questions selected belong to the qID
   
   ti.tle <- NULL
+  # The following if-statements check for domestic/international data and assigns the correct title and color scheme for the graph
   if(new.dat$isi[1] == "Domestic"){
     col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
     ti.tle <- "Domestic Direct-Entry Undergraduate Students, UBC Okanagan"
@@ -97,19 +113,22 @@ rk <- function(qval, new.dat){
     col <- c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF")
     ti.tle <- "Direct-Entry Undergraduate Students, UBC Okanagan"
   }
-
+  
+  # 'Rank' is pasted with the numerical response levels to be on the legend 
   resp <- paste("Rank", rev(names(get(rc_list[1], new.dat) %>% attr('labels'))), sep = " ")
 
   # Variable initialization
-  df.list <- list()
-  prop <- list()
-  main.prop <- NULL
-  main.df<- data.frame()
-  col <- rev(col)
-  tex.col.base <- rev(c("white","white","white","black","black","black","black"))
-  tex.col <- c()
-  label_count <- length(tex.col)
-  ld.title <- c()
+  df.list <- list() # Each sub question and its responses are stored in a list of dataframes
+  prop <- list() # Each sub question's frequency of response are stored as a list of props
+  main.prop <- NULL # The list of props is added together to make one vector of props for all the sub-questions
+  main.df<- data.frame() # The list of dataframes is concatenated into one main dataframe
+  col <- rev(col) # Order of the color vectors reversed for aesthetic purposes in ggplot
+  # Base color codes for the props(for geom_text)
+  tex.col.base <- rev(c("white","white","white","black","black","black","black")) 
+  # mx questions have differing number of response levels.
+  tex.col <- c() # To store the correct number of color codes for prop labels
+  label_count <- length(tex.col) # To keep track of number of response levels
+  ld.title <- c() # Stores question labels for displaying on axis
   sel <- c()
   i <- 0
 
@@ -117,34 +136,34 @@ rk <- function(qval, new.dat){
   for (qn in rc_list) {
     label_count_var <- 0
     i <- i + 1
+    # mx question labels have ' - ' in them. This serves as a separator to extract sub-question labels.
     if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
       ld <- substr(get(qn, new.dat) %>% attr('label'),
                    unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
                    nchar(get(qn, new.dat) %>% attr('label')))
     }
-    else{
+    else{ # in case ' - ' is missing
       ld <- get(qn, new.dat) %>% attr('label')
     }
 
-    if(nchar(ld)>63){
+    if(nchar(ld)>63){ # adds new line to labels based on its length
       ld <- paste0(substr(ld,1,sapply(gregexpr(pattern = " ", substr(ld,1,63)),max)), "\n ",
                    substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,63)),max)+1,nchar(ld)))
     }
 
     ld.title <- c(ld.title, ld)
 
-    # Dataframe building
+    # Dataframe building for each sub question
     df.list[[i]] <- data.frame(rev(table(get(qn, new.dat))), Ques = c(i))
-    # levels(df.list[[i]]) <- factor(resp)
-    df.list[[i]]$Ques <- ld
+    df.list[[i]]$Ques <- ld # Question labels added into the dataframe directly
 
-    
+    # Stores the first rank of the sub questions for formatting the ggplot later
     sel <- c(sel,df.list[[i]]$Freq[length(df.list[[i]]$Freq)])
     
     # Geometry text prep
     prop[[i]] <- round(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq))
-    # round(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq))
 
+    # Geom text has a no character if < 5, else '%' is pasted to it 
     for(j in 1:length(prop[[i]])){
       label_count_var <- label_count_var + 1
       if(as.integer(prop[[i]][j])<5)
@@ -152,7 +171,7 @@ rk <- function(qval, new.dat){
       else
         prop[[i]][j] = paste0(prop[[i]][j], "%")
     }
-    # Color for geom text
+    # Number of Color codes for geom text is determined based on the count of prop text
     if(label_count_var == label_count){
       tex.col <- c(tex.col, tex.col.base)
     }
@@ -160,7 +179,7 @@ rk <- function(qval, new.dat){
       tex.col <- c(tex.col, tex.col.base[1:label_count_var])
     }
 
-    # Main dataframe and geom text for plotting
+    # Main dataframe and geom text for plotting made by combining data from the list
     main.prop <- c(main.prop, prop[[i]])
     main.df <- rbind(main.df, df.list[[i]])
 
@@ -170,36 +189,42 @@ rk <- function(qval, new.dat){
   subt <- subt_builder(rc_list, new.dat)
 
   # Subtitle positioning and geom text size
-  geom_text_size <- sizer(rc_list)[2]
+  geom_text_size <- sizer(rc_list)[2] # sizer computes and returns size for geom_text and column width
   c.width <- sizer(rc_list)[1]
-  
+
   leveler <- c()
-  sel <- sort(sel,decreasing = T)
+  # Questions displayed based on decreasing rank 1 scores
+  sel <- sort(sel,decreasing = T) # From earlier, this used as a metric to set 'leveler' for ggplot
   for (i in 1:length(sel)) {
     for (j in 1:length(df.list)) {
+      # leveler is made up of question labels based on the order of first ranks in sel 
       if(sel[i] == df.list[[j]]$Freq[length(df.list[[j]]$Freq)]){
         leveler <- c(leveler,df.list[[j]]$Ques[1])
         break
       }
     }
   }
-
   
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Ques,levels = rev(leveler)),
                                          fill = Var1)) +
+    # leveler is used to set levels for the factor on y-axis
     geom_bar(stat = "identity", position = "fill", width = c.width) +
     theme_economist(base_size = 14) +
+    # resp is passed to legend labels
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
+    # main.prop is passed to geom_text label. Aesthetic needs to match the main aesthetic
     geom_text(data = main.df, aes(Freq, Ques, group = Var1), label = main.prop,
               position = position_fill(vjust=0.5), color = tex.col, size = geom_text_size) +
     labs(title = ti.tle,
          subtitle = subt) +
+    # Initially, y-axis labels were manually set; 
+    # but after adding question labels to the dataframe it did not seem neccessary
     # scale_y_discrete(breaks = unique(main.df$Ques),
     #                  labels = ld.title) +
-    scale_x_continuous(labels = scales::percent) +
-    ubc.theme() +
-    theme(axis.text.x = element_text(size = 180))
+    scale_x_continuous(labels = scales::percent) + # Sets the scale to percentage
+    ubc.theme() + # custom formatting function for the report
+    theme(axis.text.x = element_text(size = 180)) # specific elements of the theme formatted here
 
   print(plot.bar)
   
@@ -212,8 +237,10 @@ mx <- function(qval, new.dat){
   cnames <- colnames(new.dat)
   rc_list <- rc_list.get(qval, new.dat)
 
+  # Reading in response levels
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
-  resp1 <- resp
+  resp1 <- resp # resp1 is used later to solve dataset inconsistencies
+  # resp is reordered to match the order of frequency of responses in the graphs on the reports that were sent out
   resp <- c(unique(resp)[length(unique(resp))],unique(resp)[1:length(unique(resp))-1])
   
   # Domestic/international titles and colors
@@ -268,6 +295,8 @@ mx <- function(qval, new.dat){
     # Dataframe building
     temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
     
+    # The type of response levels of mx questions are either 6 or 7 in number
+    # In case of dataset responses missing, complete() is used to fix these inconsistencies
     if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1 ||
        unlist(gregexpr(pattern = 'impact', resp[length(resp)])) != -1){
       temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0, Ques = c(i)))
@@ -278,24 +307,19 @@ mx <- function(qval, new.dat){
       tex.col.base <- rev(c("black","white","white","white","black","black","black"))
     }
     
-
-    
-    # temp.df <- complete(temp.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
     
     if(dim(temp.df)[1] >= 5){
       df.list[[i]] <- temp.df
       ld.title <- c(ld.title, ld)
       df.list[[i]]$Ques <- ld
-      # df.list[[i]]
       
       # Geometry text prep
       prop[[i]] <- round(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq))
-      # prop[[i]] <- c(prop[[i]][length(prop[[i]])],prop[[i]][1:(length(prop[[i]])-1)])
       
       for(j in 1:length(prop[[i]])){
         label_count_var <- label_count_var + 1
         if(prop[[i]][j]<=0){
-          prop[[i]][j] = ""  #paste0(prop[[i]][j], "%")
+          prop[[i]][j] = ""
         }
         else
           prop[[i]][j] = paste0(prop[[i]][j], "%")
@@ -319,6 +343,8 @@ mx <- function(qval, new.dat){
     }
   }
   
+  # some questions did not have "No opinion/NA"; resp1 preserves the order of responses
+  # "No opinion/Not applicable" is added if missing
   if(length(unique(main.df$Var1)) != length(resp)){
     resp <- c("No opinion/Not applicable", resp1)
   }
@@ -338,28 +364,20 @@ mx <- function(qval, new.dat){
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=factor(Ques, levels = rev(unique(Ques))), y=Freq,
                                          fill = factor(Var1, levels = leveler))) +
-    geom_bar(stat = "identity", position = "fill", width = c.width) + #, width = c.width
+    geom_bar(stat = "identity", position = "fill", width = c.width) + 
     theme_economist(base_size = 14) +
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
     geom_text(data = main.df, aes(Ques, Freq, group = factor(Var1, levels = leveler)),
-              label = main.prop, #paste0(round(100*Freq/sum(Freq)),"%"),
-              position = position_fill(vjust=0.5), color = tex.col, size = geom_text_size) + #vjust=c.width
+              label = main.prop,
+              position = position_fill(vjust=0.5), color = tex.col, size = geom_text_size) + 
     labs(title = ti.tle,
          subtitle = subt) +
     # scale_x_discrete(breaks = unique(main.df$Ques),
     #                  labels = ld.title) +
     ubc.theme() + 
-    # theme(plot.subtitle = element_text(hjust = sidestep)) +
-    coord_flip()
+    coord_flip() # this function was originally built with questions on the x-axis; hence coord_flip() is used
   
   print(plot.bar)
-  # print(c(prop[[1]][length(prop[[1]])],prop[[1]][1:(length(prop[[1]])-1)]))
-  # print(df.list)
-  # print(resp)
-  # print(leveler)
-  # print(names(get(rc_list[1], new.dat) %>% attr('labels')))
-  # print(length(unique(main.df$Var1)))
-  # print(length(resp))
 }
 # mx("QN65",d.dat)
 
@@ -367,9 +385,10 @@ mx <- function(qval, new.dat){
 mx.tri <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- rc_list.get(qval,new.dat)
   rc_list <- rc_eval("mx",rc_list)
   
+  # getting response levels
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   
   # Domestic/international titles and colors
@@ -422,7 +441,6 @@ mx.tri <- function(qval, new.dat){
     
     # Dataframe building
     df.list[[i]] <- data.frame(table(get(qn, new.dat)), Ques = c(i))
-    levels(df.list[[i]]) <- factor(resp)
     df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
     
     # Geometry text prep
@@ -453,6 +471,7 @@ mx.tri <- function(qval, new.dat){
     scale_x_discrete(breaks = unique(main.df$Ques),
                      labels = ld.title) +
     ubc.theme() +
+    # This function needs special formatting because it is different from the normal mx graph
     theme(axis.text.x = element_text(family = "serif", size = 180),
           axis.text.y = element_blank(),
           legend.position = c(0.5,0.75),
@@ -462,16 +481,20 @@ mx.tri <- function(qval, new.dat){
   
   # Printing plot
   print(plot.bar)
-  
-  # tb_mx.tri(qval, new.dat)
 }
-
+# table function for mx.tri question type
 tb_mx.tri <- function(qval, new.dat){
+  # column names for data reads
   cnames <- colnames(new.dat)
   rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  
+  # Reading in response levels
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  # Matrix is used for easier structuring of data in the table
+  # No. of columns = resp, No. of rows = no. of questions
   mattt <- matrix(rep(1,(length(resp)+0)*length(rc_list)), ncol = length(resp)+0)
   
+  # Variable initialization
   df.list <- list()
   main.df<- data.frame()
   ld.main <- c()
@@ -479,6 +502,7 @@ tb_mx.tri <- function(qval, new.dat){
   
   i <- 1
   for (qn in rc_list) {
+    # dataframe building
     df.list[[i]] <- data.frame(table(get(qn, new.dat)))
     
     #Row labels
@@ -491,6 +515,7 @@ tb_mx.tri <- function(qval, new.dat){
       ld <- get(qn, new.dat) %>% attr('label')
     }
     
+    # Row total to compute and store percentage
     row_tot <- c(row_tot, sum(df.list[[i]]$Freq))
     
     for (j in 1:length(resp)+0) {
@@ -505,16 +530,15 @@ tb_mx.tri <- function(qval, new.dat){
     i <- i + 1
   }
   
+  # matrix converted to dataframe
   main.df <- data.frame(mattt)
   
   resp <- (resp)
-  colnames(main.df) <- c(resp)
+  colnames(main.df) <- c(resp) # column names assigned to columns 
   c.width <- 1.3
   ft.size <- 6
   
-  # main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1]) %>%
-  #   add_column(Total = row_tot)
-  
+  # Setting table headers for domestic/international data splits; also adds the row totals to the df
   if(new.dat$isi[1] == "Domestic"){
     main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1]) %>%
       add_column(Total = row_tot)
@@ -524,30 +548,36 @@ tb_mx.tri <- function(qval, new.dat){
       add_column(Total = row_tot)
   }
   
-  ft <- flextable(main.df) %>% theme_box()
-  ft <- fontsize(ft, size = ft.size, part = "all")
-  set_table_properties(ft, layout = "autofit")
-  ft <- align_text_col(ft, align = "center", header = TRUE) %>%
-    align_nottext_col(align = "center", header = TRUE)
-  ft %>% colformat_int(big.mark = "") %>%
-    valign(valign = "center", part = "all") %>%
+  # flextable object created from df
+  ft <- flextable(main.df) %>% theme_box() # theme_box() adds a box with borders to the table
+  ft <- fontsize(ft, size = ft.size, part = "all") # setting font size
+  set_table_properties(ft, layout = "autofit") # automatically sets proportion of spacing based on contents
+  ft <- align_text_col(ft, align = "center", header = TRUE) %>% # text alignment for characters
+    align_nottext_col(align = "center", header = TRUE) # text alingment for non-characters(numbers)
+  ft %>% colformat_int(big.mark = "") %>% # Removing separators in numbers
+    valign(valign = "center", part = "all") %>% # vertical alignment of contents
     # bg(bg = "grey", part = "all") %>%
+    # Adding border and color to the border
     border(border = fp_border_default(color = "#A7A19D", width = 0.8), part = "all") %>%
-    width(width = c.width, unit = "in") %>%
-    color(color = "#A7A19D", part = "header") %>%
-    color(j = 0:dim(mattt)[2]+2, color = "#A7A19D", part = "body")
+    width(width = c.width, unit = "in") %>% # cell width
+    color(color = "#A7A19D", part = "header") %>% # text color for the header
+    color(j = 0:dim(mattt)[2]+2, color = "#A7A19D", part = "body") # text color for the body
   
 }
 
 tb_mx <- function(qval, new.dat){
+  # column names for data reads
   cnames <- colnames(new.dat)
-  rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  rc_list <- rc_list.get(qval,new.dat)
+  # reading response levels
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   resp1 <- resp
   resp <- c(unique(resp)[length(unique(resp))],unique(resp)[1:length(unique(resp))-1])
   
+  # matrix definition
   mattt <- matrix(rep(1,(length(resp)+0)*length(rc_list)), ncol = length(resp)+0)
   
+  # variable initialization
   df.list <- list()
   main.df<- data.frame()
   ld.main <- c()
@@ -557,7 +587,7 @@ tb_mx <- function(qval, new.dat){
   
   i <- 1
   for (qn in rc_list) {
-    
+    # dataframe building
     temp.df <- data.frame(table(get(qn, new.dat)))
     
     if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1 ||
@@ -583,32 +613,33 @@ tb_mx <- function(qval, new.dat){
       ld <- get(qn, new.dat) %>% attr('label')
     }
 
-    
+    # to compute and store row totals
     row_tot <- c(row_tot, sum(df.list[[i]]$Freq))
+    
     #To calculate the cumulative top 2 and 3 response levels
-    c_vc.sum <- 0
-    c_vc_sc.sum <- 0
-    # print(resp)
+    c_vc.sum <- 0 # top 2 levels
+    c_vc_sc.sum <- 0 # top 3 levels
+
     for (j in 1:length(resp)+0) {
 
       if(!is.na(df.list[[i]]$Freq[j])){
-        mattt[i,j] <- paste0(round(100*df.list[[i]]$Freq[j]/row_tot[i]),"%")
+        mattt[i,j] <- paste0(round(100*df.list[[i]]$Freq[j]/row_tot[i]),"%") # data added to matrix 
         if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1 ||
            unlist(gregexpr(pattern = 'impact', resp[length(resp)])) != -1){
-          if(j==3){
+          if(j==3){ # top 3 levels sum total starts here
             c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
           }
-          if(j>=4 && j<=5){
+          if(j>=4 && j<=5){ # top 3 calculation continues here; top 2 levels sum start here
             c_vc.sum <- c_vc.sum + df.list[[i]]$Freq[j]
             c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
           }
-        }
+        } # calculations for different response levels need different start points for sum calculation
         else if(unlist(gregexpr(pattern = 'agree', resp[length(resp)])) != -1 || 
                 unlist(gregexpr(pattern = 'satisfied', resp[length(resp)])) != -1){
-          if(j==4){
+          if(j==4){ # top 3 levels sum total starts here
             c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
           }
-          if(j>=5 && j<=6){
+          if(j>=5 && j<=6){ # top 3 calculation continues here; top 2 levels sum start here
             c_vc.sum <- c_vc.sum + df.list[[i]]$Freq[j]
             c_vc_sc.sum <- c_vc_sc.sum + df.list[[i]]$Freq[j]
           }
@@ -618,9 +649,8 @@ tb_mx <- function(qval, new.dat){
       else
         mattt[i,j] <- "NA"
     }
-    # print(c_vc.sum)
-    # print(c_vc_sc.sum)
     ld.main <- c(ld.main, ld)
+    # sums are stored
     c_vc <- c(c_vc, paste0(round(100*c_vc.sum/row_tot[i]),"%"))
     c_vc_sc <- c(c_vc_sc, paste0(round(100*c_vc_sc.sum/row_tot[i]),"%"))
     i <- i + 1

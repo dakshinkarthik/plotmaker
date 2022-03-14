@@ -656,20 +656,21 @@ tb_mx <- function(qval, new.dat){
     i <- i + 1
   }
 
-  
-  main.df <- rev(data.frame(mattt))
-  main.df <- cbind(main.df[,2:dim(main.df)[2]],main.df[,1])
-  # main.df <- data.frame(mattt)
+  main.df <- rev(data.frame(mattt)) # reording columns because the response levels are in the reverse order
+  main.df <- cbind(main.df[,2:dim(main.df)[2]],main.df[,1]) # reordering response level 999 to the end of the columns
+
+  # identifier variables to add appropriate cumulative title names in the table
   is_conc <- unlist(gregexpr(pattern = 'concerned', resp[2]))
   is_agr <- unlist(gregexpr(pattern = 'agree', resp[2]))
   is_satis <- unlist(gregexpr(pattern = 'satisfied', resp[2]))
+  is_impact <- unlist(gregexpr(pattern = 'impact', resp[2]))
 
   resp <- rev(resp)
   colnames(main.df) <- c(resp)
   c.width <- 1
   ft.size <- 6
   
-  # main.df <- main.df %>% add_column(UBCO = ld.main, .before = resp[1])
+
 
   if(new.dat$isi[1] == "Domestic"){
     main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1])
@@ -677,7 +678,8 @@ tb_mx <- function(qval, new.dat){
   else if(new.dat$isi[1] == "ISI"){
     main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
   }
-
+  
+  # the identifier variables are used here to identify and set the correct cumulative column names; row total column is also added to the table
   if(is_conc != -1){
     main.df <- main.df %>% add_column(`Very concerned/Concerned` = c_vc, .before = resp[1]) %>%
       add_column(`Including somewhat concerned` = c_vc_sc, .after = "Very concerned/Concerned") %>%
@@ -697,7 +699,15 @@ tb_mx <- function(qval, new.dat){
     c.width <- 0.59
     ft.size <- 5.5
   }
-  # 
+  else if(is_impact != -1){
+    main.df <- main.df %>% add_column(`Very significant impact/\nSignificant impact` = c_vc, .before = resp[1]) %>%
+      add_column(`Including moderate impact` = c_vc_sc, .after = "Very significant impact/\nSignificant impact") %>%
+      add_column(Total = row_tot)
+    c.width <- 0.59
+    ft.size <- 5.5
+  }
+  
+  # flextable object creation and format
   ft <- flextable(main.df) %>% theme_box()
   ft <- fontsize(ft, size = ft.size, part = "all")
   set_table_properties(ft, layout = "autofit")
@@ -710,8 +720,6 @@ tb_mx <- function(qval, new.dat){
     color(color = "#A7A19D", part = "header") %>%
     color(j = -2:dim(mattt)[2]+4, color = "#A7A19D", part = "body")
 
-  # print(main.df)
-  # print(resp)
 }
 # tb_mx("QN105",i.dat)
 
@@ -722,7 +730,9 @@ tb_rk <- function(qval, new.dat){
   new.dat <- rc_complete(rc_list, new.dat, 28)
   rc_list <- rc_eval("rk",rc_list)
   
+  # Reading response numeric levels and pasting "Rank" to it
   resp <- paste("Rank", rev(names(get(rc_list[1], new.dat) %>% attr('labels'))), sep = " ")
+  # matrix initialization (no. of rows = rc_list, no. of columns = resp)
   mattt <- matrix(rep(1,(length(resp)+0)*(length(rc_list)+1)), ncol = length(resp)+0)
   
   # Variable initialization
@@ -733,12 +743,15 @@ tb_rk <- function(qval, new.dat){
   ld.main <- c()
 
   
-  i <- 1
+  i <- 1 # loop counter
   for(i in 1:dim(mattt)[1]){
     if(i != dim(mattt)[1]){
+      # df building
       df.list[[i]] <- data.frame(table(get(rc_list[i], new.dat)), Ques = c(i))
+      
+      
+      #Row labels and fornatting
       ld <- NULL
-      #Row labels
       if(unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label'))) != -1){
         ld <- substr(get(rc_list[i], data.ok) %>% attr('label'),
                      unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label')))+3,
@@ -748,12 +761,14 @@ tb_rk <- function(qval, new.dat){
         ld <- get(qn, new.dat) %>% attr('label')
       }
       
+      # adding question label to df
       df.list[[i]]$Ques <- ld
       
+      # row total to compute percentage
       row_tot <- sum(df.list[[i]]$Freq)
       for(j in 1:dim(mattt)[2]){
         if(!is.na(df.list[[i]]$Freq[j])){
-          mattt[i,j] <- round(100*df.list[[i]]$Freq[j]/row_tot) #paste0(round(100*df.list[[i]]$Freq[j]/row_tot),"%")
+          mattt[i,j] <- round(100*df.list[[i]]$Freq[j]/row_tot) 
         }
         else{
           mattt[i,j] <- "NA"

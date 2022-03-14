@@ -732,7 +732,7 @@ tb_rk <- function(qval, new.dat){
   
   # Reading response numeric levels and pasting "Rank" to it
   resp <- paste("Rank", rev(names(get(rc_list[1], new.dat) %>% attr('labels'))), sep = " ")
-  # matrix initialization (no. of rows = rc_list, no. of columns = resp)
+  # matrix initialization (no. of rows = rc_list+1, no. of columns = resp); one extra row to accommodate column totals
   mattt <- matrix(rep(1,(length(resp)+0)*(length(rc_list)+1)), ncol = length(resp)+0)
   
   # Variable initialization
@@ -745,7 +745,7 @@ tb_rk <- function(qval, new.dat){
   
   i <- 1 # loop counter
   for(i in 1:dim(mattt)[1]){
-    if(i != dim(mattt)[1]){
+    if(i != dim(mattt)[1]){ # sums and question label retrieval done only for question rows
       # df building
       df.list[[i]] <- data.frame(table(get(rc_list[i], new.dat)), Ques = c(i))
       
@@ -767,36 +767,44 @@ tb_rk <- function(qval, new.dat){
       # row total to compute percentage
       row_tot <- sum(df.list[[i]]$Freq)
       for(j in 1:dim(mattt)[2]){
-        if(!is.na(df.list[[i]]$Freq[j])){
+        if(!is.na(df.list[[i]]$Freq[j])){ # to catch NAs in the responses
           mattt[i,j] <- round(100*df.list[[i]]$Freq[j]/row_tot) 
         }
         else{
           mattt[i,j] <- "NA"
         }
       }
+      # Question labels stored for the questions column
       ld.main <- c(ld.main, ld)
     }
     else{
-      for(j in 1:dim(mattt)[2]){
+      for(j in 1:dim(mattt)[2]){ # final row gets only student total
         mattt[i,j] <- nrow(new.dat)
       }
     }
   }
+  # "Total" added to question labels
   ld.main <- c(ld.main,"Total")
+  # matrix to df conversion
   main.df <- data.frame(mattt)
+  # response levels vector reversed to match the data
   resp <- c(rev(resp))
   colnames(main.df) <- resp
   
-  
+  # adding question columns for domestic/international students
   if(new.dat$isi[1] == "Domestic"){
     main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1])
   }
   else if(new.dat$isi[1] == "ISI"){
     main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
   }
+
+  # removing an duplicate "Total" row as a result of how the df was built
   main.df <- main.df[-c(dim(main.df)[1]),]
+  # reordering rows with decreasing Rank 1 scores
   main.df <- main.df[with(main.df, order(-`Rank 1`)),]
 
+  # adding questions column for domestic/international students
   if(new.dat$isi[1] == "Domestic"){
     main.df <- main.df %>% add_row(`UBCO Domestic` = "Total", `Rank 1` = nrow(new.dat),
                                    `Rank 2` = nrow(new.dat),
@@ -816,12 +824,14 @@ tb_rk <- function(qval, new.dat){
                                    `Rank 7` = nrow(new.dat))
   }
   
+  # pasting % to all cells except the last row
   for(k in 1:dim(main.df)[1]-1){
     for(j in 2:dim(main.df)[2]){
       main.df[k,j] <- paste0(main.df[k,j],"%")
     }
   }
   
+  # creating a flextable object and formatting it
   ft <- flextable(main.df) %>% theme_box()
   ft <- fontsize(ft, size = 5.5, part = "all")
   set_table_properties(ft, layout = "autofit")
@@ -845,7 +855,7 @@ tb_ms <- function(qval, new.dat){
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- rc_list.get(qval,new.dat)
   rc_list <- rc_eval("ms",rc_list)
   
   # Variable initialization
@@ -865,13 +875,13 @@ tb_ms <- function(qval, new.dat){
   axis.c <- NULL
   
 
-  
+  # variables to store distinct count of domestic and international students
   i.dc <- 0
   d.dc <- 0
-  for (stu in i.dat$ExternalReference) {
+  for (stu in i.dat$ExternalReference) { # distinct count calculation for international students
     for (qn in rc_list) {
       if(!is.na(get(qn, i.dat)[i.dat$ExternalReference == stu])){
-        if((get(qn, i.dat)[i.dat$ExternalReference == stu] + 0) == 1){
+        if((get(qn, i.dat)[i.dat$ExternalReference == stu] + 0) == 1){ # 0 is added to the data read from the dataset to coerce a conversion to numerical type
           i.dc <- i.dc + 1
           break
         }
@@ -879,10 +889,10 @@ tb_ms <- function(qval, new.dat){
     }
   }
   
-  for (stu in d.dat$ExternalReference) {
+  for (stu in d.dat$ExternalReference) { # distinct count calculation for domestic students
     for(qn in rc_list){
       if(!is.na(get(qn, d.dat)[d.dat$ExternalReference == stu])){
-        if((get(qn, d.dat)[d.dat$ExternalReference == stu] + 0) == 1){
+        if((get(qn, d.dat)[d.dat$ExternalReference == stu] + 0) == 1){ # 0 is added to the data read from the dataset to coerce a conversion to numerical type
           d.dc <- d.dc + 1
           break
         }
@@ -890,49 +900,48 @@ tb_ms <- function(qval, new.dat){
     }
   }
   
-  i <- 1
-  j <- 1
+  # Loop counters for domestic and international
+  i <- 1 # domestic loop counter
+  j <- 1 # international loop counter
   
   for (qn in rc_list) {
-    # Dataframe building
+    # Dataframe building ****NOTE****: The code for df building here was created before I learnt the existence of the complete() function. This code should be modifiable to use complete() and reduce code.
     ## Domestic fraction
-    axis.c <- names(get(qn, new.dat) %>% attr('labels'))
-    axis.q <- c(axis.q,axis.c)
-    if(nrow(table(get(qn, d.dat))) == 0){
-      tcv <- matrix(0)
-      rownames(tcv) <- c(i)
-      tcv <- as.table(tcv)
-      colnames(tcv) <- c("")
-      tdf <- data.frame(tcv)
-      tdf <- data.frame(Var1 = tdf$Var1, Freq = tdf$Freq, Ques = c("Domestic"))
-      d.df.list[[i]] <- tdf
-      d.df.list[[i]]$Var1 <- c(axis.c)
+    axis.c <- names(get(qn, new.dat) %>% attr('labels')) # getting question label
+    axis.q <- c(axis.q,axis.c) # storing question label
+    if(nrow(table(get(qn, d.dat))) == 0){ # checks for missing responses for a singular question
+      tcv <- matrix(0) # dummy matrix
+      rownames(tcv) <- c(i) # dummy column name
+      tcv <- as.table(tcv) # converted to a table
+      colnames(tcv) <- c("") # column name removed; column name could be removed from a matrix only through converting it to a table
+      tdf <- data.frame(tcv) # conversion to df
+      tdf <- data.frame(Var1 = tdf$Var1, Freq = tdf$Freq, Ques = c("Domestic")) # manually adding 0 to missing response frequencies and formatting the df to meet requirements
+      d.df.list[[i]] <- tdf # added to domestic df list
+      d.df.list[[i]]$Var1 <- c(axis.c) # question label added to df
       main.df <- rbind(main.df,d.df.list[[i]])
     }
-    else{
-      tdf <- data.frame(table(get(qn, d.dat)), Ques = c("Domestic"))
-      d.df.list[[i]] <- tdf
-      if(dim(d.df.list[[i]])[1] != 1){
-        # d.df.list[[i]][2,]$Freq <- round((100*d.df.list[[i]][2,]$Freq/d.dc))
+    else{ # normal response case
+      tdf <- data.frame(table(get(qn, d.dat)), Ques = c("Domestic")) # df creation
+      d.df.list[[i]] <- tdf # added to domestic df list 
+      if(dim(d.df.list[[i]])[1] != 1){ # If there is > 1 response level, we take only the second level('1' - Yes)
         d.df.list[[i]]$Var1 <- c(axis.c)
         main.df <- rbind(main.df,d.df.list[[i]][2,])
       }
       else{
-        if(d.df.list[[i]]$Var1 == 0){
-          # i <- i - 1
+        if(d.df.list[[i]]$Var1 == 0){ # if there is only 1 level and if it is 0 ('No'), a new df is created and with the same question label and the frequency is set to 0, assuming it be '1'(Yes)
           d.df.list[[i]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("Domestic"))
           main.df <- rbind(main.df,d.df.list[[i]])
         }
-        else{
-          # d.df.list[[i]]$Freq <- round((100*d.df.list[[i]]$Freq/d.dc))
+        else{ 
           d.df.list[[i]]$Var1 <- c(axis.c)
           main.df <- rbind(main.df,d.df.list[[i]])
         }
       }
     }
-    ## International fracrtion
-    if(nrow(table(get(qn, i.dat))) == 0){
-      tcv <- matrix(0)
+    ## International fraction
+    # Similar df building reasoning for international fraction
+    if(nrow(table(get(qn, i.dat))) == 0){ # checks for missing responses for a singular question
+      tcv <- matrix(0) 
       rownames(tcv) <- c(j)
       tcv <- as.table(tcv)
       colnames(tcv) <- c("")
@@ -946,18 +955,15 @@ tb_ms <- function(qval, new.dat){
       tdf <- data.frame(table(get(qn, i.dat)), Ques = c("International"))
       i.df.list[[j]] <- tdf
       if(dim(i.df.list[[j]])[1] != 1){
-        # i.df.list[[j]][2,]$Freq <- round((100*i.df.list[[j]][2,]$Freq/i.dc))
         i.df.list[[j]]$Var1 <- c(axis.c)
         main.df <- rbind(main.df,i.df.list[[j]][2,])
       }
       else{
         if(i.df.list[[j]]$Var1 == 0){
-          # j <- j - 1
           i.df.list[[j]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("International"))
           main.df <- rbind(main.df,i.df.list[[j]])
         }
         else{
-          # i.df.list[[j]]$Freq <- round((100*i.df.list[[j]]$Freq/i.dc))
           i.df.list[[j]]$Var1 <- c(axis.c)
           main.df <- rbind(main.df,i.df.list[[j]])
         }
@@ -968,10 +974,9 @@ tb_ms <- function(qval, new.dat){
     j <- j + 1
   }
   
-  l <- 1
-  nnull <- c()
+  l <- 1 # loop counter
+  nnull <- c() # vector to store indices of rows with Freq = 0
   for (qn in 1:dim(main.df)[1]) {
-    # print(k)
     if(l < dim(main.df)[1]){
       if(main.df$Freq[l] == 0 & main.df$Freq[l+1] == 0){
         nnull <- c(nnull,l,l+1)
@@ -984,8 +989,9 @@ tb_ms <- function(qval, new.dat){
     main.df <- main.df[-nnull,]
   }
 
-
-  mattt <- matrix(rep(1,((dim(main.df)[1]/2)+1)*4), ncol = 4)
+  # matrix with all 1s; no. of columns = 4 because the columns consist only of 2 percentage fields and 2 count fields.
+  # no. of rows is divided by 2 two because the df contains both domestic and international data.
+  mattt <- matrix(rep(1,((dim(main.df)[1]/2)+1)*4), ncol = 4) 
   
   k <- 1
   for (m in 1:dim(mattt)[1]) {

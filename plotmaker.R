@@ -1221,8 +1221,8 @@ mc <- function(qval, new.dat){
   rc_list <- rc_list.get(qval, new.dat)
   rc_list <- rc_eval("mc",rc_list)
   
+  # response levels
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
-  resp.i <- names(get(rc_list[1], i.dat) %>% attr('labels'))
   
   # Variable initialization
   df.list <- list()
@@ -1237,27 +1237,27 @@ mc <- function(qval, new.dat){
   main.df <- data.frame((table(get(rc_list, new.dat))))
   
   i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
-  i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq))
+  i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq)) # counts replaced with its respective percentage value
   d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
-  d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq))
+  d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq)) # counts replaced with its respective percentage value
   
-
+  # to fill in missing responses using the common df as reference
   i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
   d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
   
-  
+  # prop variables set up for geom_text
   i.prop <- paste0(i.df$Freq,"%") 
   d.prop <- paste0(d.df$Freq,"%")
   main.prop <- c(d.prop,i.prop)
 
   
-  # Selecting valid choices from the data subset
+  # Selecting valid choices from the data subset as numerical levels
   resp_b <- c()
   for (qn in main.df$Var1) {
     resp_b <- c(resp_b, as.numeric(qn))
   }
 
-  
+  # selecting valid question labels; same reasoning from the tb_mc() function
   axis.q <- c()
   # axis.q.i <- c()
   # axis.q.d <- c()
@@ -1282,7 +1282,7 @@ mc <- function(qval, new.dat){
     }
   }
   
-  
+  # adding new line to selected question labels based on their character lengths
   for (j in 1:length(axis.q)) {
     if(nchar(axis.q[j])>40){
       axis.q[j] <- paste0(substr(axis.q[j],1,sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)), "\n ",
@@ -1295,12 +1295,12 @@ mc <- function(qval, new.dat){
     }
   }
 
+  # integrating the selected question labels into the dfs
   d.df$Var1 <- axis.q
   i.df$Var1 <- axis.q
 
+  # domestic df and international df combined horizontally (by rows)
   main.df <- rbind(d.df,i.df)
-
-  tot <- sum(main.df$Freq) #row total
 
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
@@ -1313,7 +1313,7 @@ mc <- function(qval, new.dat){
                                          fill = factor(Ques, levels = rev(unique(Ques))))) +
     geom_bar(stat = "identity", position = "dodge", width = c.width) +
     theme_economist(base_size = 14) +
-    # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
+    # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) + ## This was commented out because question labels were integrated directly into the df
     scale_fill_manual(values = c("#FFC279","#579C2C"),
                       guide = guide_legend(reverse = TRUE,nrow = 2)) +
     geom_text(data = main.df, label = main.prop,
@@ -1322,7 +1322,7 @@ mc <- function(qval, new.dat){
          subtitle = subt) +
     ubc.theme() +
     theme(legend.position = c(0.85,0.5)) +
-    scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
+    scale_x_continuous(limits = c(0, 2 * max(main.df$Freq))) # setting x-axis boundaries
     # coord_flip()
 
   print(plot.bar)
@@ -1331,21 +1331,23 @@ mc <- function(qval, new.dat){
 
 # for mc.yn questions
 mc.yn <- function(qval, new.dat){
-  mc(qval,new.dat)
+  mc(qval,new.dat) # function call to mc() because the type of graphs for mc and mc.yn questions are the same, and their responses are similarly structured in the dataset
 }
 
 # for ms questions
-ms <- function(qval, new.dat){
-  # Column names to read data
+ms <- function(qval, new.dat){ # code is similar to the tb_ms() function and shares the same reasoning
+  # splitting data by domestic/international
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- rc_list.get(qval,new.dat)
   rc_list <- rc_eval("ms",rc_list)
 
+  # computing distinct count
   i.dc <- 0
   d.dc <- 0
-  for (stu in i.dat$ExternalReference) {
+  for (stu in i.dat$ExternalReference) { # international distinct count
     for (qn in rc_list) {
       if(!is.na(get(qn, i.dat)[i.dat$ExternalReference == stu])){
         if((get(qn, i.dat)[i.dat$ExternalReference == stu] + 0) == 1){
@@ -1356,7 +1358,7 @@ ms <- function(qval, new.dat){
     }
   }
   
-  for (stu in d.dat$ExternalReference) {
+  for (stu in d.dat$ExternalReference) { # domestic distinct count
     for(qn in rc_list){
       if(!is.na(get(qn, d.dat)[d.dat$ExternalReference == stu])){
         if((get(qn, d.dat)[d.dat$ExternalReference == stu] + 0) == 1){
@@ -1386,7 +1388,7 @@ ms <- function(qval, new.dat){
   i <- 1
   j <- 1
   for (qn in rc_list) {
-    # Dataframe building
+    # Dataframe building ---- dfs are built exactly the same way as it was done in tb_ms()
     ## Domestic fraction
     axis.c <- names(get(qn, new.dat) %>% attr('labels'))
     if(nrow(table(get(qn, d.dat))) == 0){
@@ -1410,7 +1412,6 @@ ms <- function(qval, new.dat){
       }
       else{
         if(d.df.list[[i]]$Var1 == 0){
-          # i <- i - 1
           d.df.list[[i]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("Domestic"))
           main.df <- rbind(main.df,d.df.list[[i]])
         }
@@ -1443,7 +1444,6 @@ ms <- function(qval, new.dat){
       }
       else{
         if(i.df.list[[j]]$Var1 == 0){
-          # j <- j - 1
           i.df.list[[j]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("International"))
           main.df <- rbind(main.df,i.df.list[[j]])
         }
@@ -1459,18 +1459,13 @@ ms <- function(qval, new.dat){
     j <- j + 1
   }
   
-  
-  # levels(main.df$Ques) <- c("Domestic","International")
-  
+  # to remove response levels where both domestic and international are 0 (empty)
   k <- 1
   nnull <- c()
   for (qn in 1:dim(main.df)[1]) {
-    # print(k)
     if(k < dim(main.df)[1]){
-      if(main.df$Freq[k] == 0 & main.df$Freq[k+1] == 0){
+      if(main.df$Freq[k] == 0 & main.df$Freq[k+1] == 0){ # data in the df is ordered domestic,international,domestic,... by question
         nnull <- c(nnull,k,k+1)
-        # print(main.df$Freq[k])
-        # print(main.df$Freq[k+1])
       }
     }
     k <- k + 2
@@ -1480,6 +1475,7 @@ ms <- function(qval, new.dat){
     main.df <- main.df[-nnull,]
   }
   
+  # pasting '%' to the prop data
   for (frq in 1:length(main.df$Freq)){
     if(main.df$Freq < 1){
       main.prop <- c(main.prop,"")
@@ -1496,9 +1492,7 @@ ms <- function(qval, new.dat){
   plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1,levels = rev(unique(Var1))),
                                          fill = factor(Ques,levels = rev(unique(Ques))))) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
-    # geom_col(width=2.5, position=position_dodge(5)) +
     theme_economist(base_size = 14) +
-    # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
     scale_fill_manual(values = c("#FFC279","#579C2C"),
                       guide = guide_legend(reverse = TRUE,nrow = 2)) +
     geom_text(data = main.df, label = main.prop,
@@ -1507,27 +1501,25 @@ ms <- function(qval, new.dat){
          subtitle = subt) +
     ubc.theme() +
     theme(legend.position = c(0.85,0.5)) +
-    scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
+    scale_x_continuous(limits = c(0, 2 * max(main.df$Freq))) # setting x-axis bound limits
   
-  
-  # print(new.df)
-  # print(str(main.df$Var1))
   print(plot.bar)
 }
 # ms("spRestriction",data.ok)
 
 cs <- function(qval, new.dat){
-  # Column names to read data
+  # splitting data by domestic/international
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
-  sum.field <- get_sum(rc_list)
+  rc_list <- rc_list.get(qval,new.dat)
+  sum.field <- get_sum(rc_list) # gets the current question's sum field
   rc_list <- rc_eval("cs",rc_list)
   
   ld.title <- c()
   
-  
+  # distinct count computed exactly like it was for ms() and tb_ms(), except that 'sum.field' is used as a basis to check if a student's scores add up to 100
   i.dc <- 0
   d.dc <- 0
   for (stu in i.dat$ExternalReference) {
@@ -1546,29 +1538,32 @@ cs <- function(qval, new.dat){
     }
   }
   
+  
   i.perq <- c()
   d.perq <- c()
   for (i in 1:length(rc_list)) {
     resl.d <- 0
     resl.i <- 0
+    # df building
     df.d <- data.frame(table(get(rc_list[i], d.dat)))
     df.i <- data.frame(table(get(rc_list[i], i.dat)))
-    for (j in 1:length(df.d$Freq)) {
-      df_v <- as.integer(levels(df.d$Var1)[as.integer(df.d$Var1)])[j]
-      df_f <- df.d$Freq[j]
-      resl.d <- resl.d + (df_v*df_f)
+    # total for each response level for each sub-question/option is computed by multiplying the score value with the frequency of its responses 
+    for (j in 1:length(df.d$Freq)) { # domestic sum calculation
+      df_v <- as.integer(levels(df.d$Var1)[as.integer(df.d$Var1)])[j] # each score level drawn by indexing the numerical level column in the df
+      df_f <- df.d$Freq[j] # corresponding frequency 
+      resl.d <- resl.d + (df_v*df_f) # sum is stored
     }
-    for (j in 1:length(df.i$Freq)) {
-      df_v <- as.integer(levels(df.i$Var1)[as.integer(df.i$Var1)])[j]
-      df_f <- df.i$Freq[j]
-      resl.i <- resl.i + (df_v*df_f)
+    for (j in 1:length(df.i$Freq)) { # international sum calculation
+      df_v <- as.integer(levels(df.i$Var1)[as.integer(df.i$Var1)])[j] # each score level drawn by indexing the numerical level column in the df
+      df_f <- df.i$Freq[j] # corresponding frequency 
+      resl.i <- resl.i + (df_v*df_f) # sum is stored
     }
-    # resl.vc <- c(resl.vc,resl)
+    # sum computed in every iteration is stored in 2 separate vectors
     d.perq <- c(d.perq,resl.d)
     i.perq <- c(i.perq,resl.i)
     
 
-    # print(names(get(rc_list[i], data.ok) %>% attr('labels')))
+    # question label extraction
     if(unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label'))) != -1){
       ld <- substr(get(rc_list[i], new.dat) %>% attr('label'),
                    unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label')))+3,
@@ -1581,6 +1576,7 @@ cs <- function(qval, new.dat){
     ld.title <- c(ld.title, ld)
     
   }
+  # df is remade to accommodate question labels and the percent scores computed from the sum and distinct count
   df.d <- data.frame(Var1 = ld.title, Freq = round(d.perq/d.dc), Ques = c("Domestic"))
   df.i <- data.frame(Var1 = ld.title, Freq = round(i.perq/i.dc), Ques = c("International"))
   main.df <- rbind(df.d,df.i)
@@ -1588,14 +1584,11 @@ cs <- function(qval, new.dat){
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
   
-  # factor(Var1,levels = rev(unique(Var1))) reorder(Var1, Freq)
   
   plot.bar <- ggplot(data = main.df, aes(x=Freq, y=factor(Var1,levels = rev(unique(Var1))),
                                          fill = factor(Ques,levels = rev(unique(Ques))))) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
-    # geom_col(width=2.5, position=position_dodge(5)) +
     theme_economist(base_size = 14) +
-    # scale_y_discrete(breaks = levels(main.df$Var1), labels = axis.q) +
     scale_fill_manual(values = c("#FFC279","#579C2C"),
                       guide = guide_legend(reverse = TRUE,nrow = 2)) +
     geom_text(data = main.df, label = paste0(main.df$Freq,"%"),
@@ -1606,25 +1599,24 @@ cs <- function(qval, new.dat){
     theme(legend.position = c(0.85,0.5)) +
     scale_x_continuous(limits = c(0, 2 * max(main.df$Freq)))
   
-  # print(df.d)
-  # print(main.df)
   print(plot.bar)
   
 }
 # cs("QN34",data.ok)
 
-tb_cs <- function(qval, new.dat){
-  # Column names to read data
+tb_cs <- function(qval, new.dat){ # shares the same code from cs() for df building, differing only in the end result (table)
+  # splitting data by domestic/international
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(qval, cnames, fixed = TRUE)])
+  rc_list <- rc_list.get(qval,new.dat)
   sum.field <- get_sum(rc_list)
   rc_list <- rc_eval("cs",rc_list)
-  
+  # variable intialization
   ld.title <- c()
   
-  
+  # distinct count computation
   i.dc <- 0
   d.dc <- 0
   for (stu in i.dat$ExternalReference) {
@@ -1643,6 +1635,7 @@ tb_cs <- function(qval, new.dat){
     }
   }
   
+  #df building
   i.perq <- c()
   d.perq <- c()
   for (i in 1:length(rc_list)) {
@@ -1650,6 +1643,7 @@ tb_cs <- function(qval, new.dat){
     resl.i <- 0
     df.d <- data.frame(table(get(rc_list[i], d.dat)))
     df.i <- data.frame(table(get(rc_list[i], i.dat)))
+    # sum computation
     for (j in 1:length(df.d$Freq)) {
       df_v <- as.integer(levels(df.d$Var1)[as.integer(df.d$Var1)])[j]
       df_f <- df.d$Freq[j]
@@ -1660,12 +1654,11 @@ tb_cs <- function(qval, new.dat){
       df_f <- df.i$Freq[j]
       resl.i <- resl.i + (df_v*df_f)
     }
-    # resl.vc <- c(resl.vc,resl)
+
     d.perq <- c(d.perq,resl.d)
     i.perq <- c(i.perq,resl.i)
     
     
-    # print(names(get(rc_list[i], data.ok) %>% attr('labels')))
     if(unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label'))) != -1){
       ld <- substr(get(rc_list[i], new.dat) %>% attr('label'),
                    unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label')))+3,
@@ -1678,21 +1671,16 @@ tb_cs <- function(qval, new.dat){
     ld.title <- c(ld.title, ld)
     
   }
+  # df is remade to accommodate question labels and the percent scores computed from the sum and distinct count
   df.d <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(d.perq/d.dc), Ques = c("Domestic"))
   df.i <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(i.perq/i.dc), Ques = c("International"))
 
   
-  # mattt <- matrix(rep(1,length(rc_list)*2), ncol = 2)
-  # 
-  # for (i in 1:dim(mattt)[1]) {
-  #   mattt[i,1] <- paste0(df.d$Freq[i],"%")
-  #   mattt[i,2] <- paste0(df.i$Freq[i],"%")
-  # }
-  # main.df <- data.frame(mattt)
   main.df <- data.frame(UBCO = c(ld.title,"Total number of respondents"),
                         Domestic = c(paste0(df.d$Freq,"%"),d.dc),
                         International = c(paste0(df.i$Freq,"%"),i.dc))
   
+  # flextable object creation
   ft <- flextable(main.df) %>% theme_box() %>%
     color(j = c("Domestic","International"), color = "#A7A19D", part = "all") %>%
     color(j = "UBCO", color = "#A7A19D", part = "header") %>%
@@ -1708,74 +1696,72 @@ tb_cs <- function(qval, new.dat){
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
     width(width = 5, unit = "in",j = "UBCO")
   
-  # print(main.df)
 }
 # tb_cs("QN34",data.ok)
 #-----------------------------------HELPER FUNCTIONS----------------------------------------
 
 subt_builder <- function(rc_list, new.dat){
+  # gets question labels from the first sub-question; first index is used arbitrarily to ensure questions only with one sub-question to avoid out-of-bounds error
   subt <- get(rc_list[1], new.dat) %>% attr('label')
-  subt_how <- unlist(gregexpr(pattern ='How', get(rc_list[1], new.dat) %>% attr('label')))
-  subt_to <- unlist(gregexpr(pattern ='To', get(rc_list[1], new.dat) %>% attr('label')))
-  subt_where <- unlist(gregexpr(pattern ='Where', get(rc_list[1], new.dat) %>% attr('label')))
-  subt_hyp <- unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label')))
-  subt_are <- unlist(gregexpr(pattern ='Are', get(rc_list[1], new.dat) %>% attr('label')))
-  end_apply <- unlist(gregexpr(pattern ='apply', get(rc_list[1], new.dat) %>% attr('label')))
+  # keyword identifiers for different kinds of question
+  subt_how <- unlist(gregexpr(pattern ='How', get(rc_list[1], new.dat) %>% attr('label'))) # checks for 'How'
+  subt_to <- unlist(gregexpr(pattern ='To', get(rc_list[1], new.dat) %>% attr('label'))) # checks for 'To'
+  subt_where <- unlist(gregexpr(pattern ='Where', get(rc_list[1], new.dat) %>% attr('label'))) # checks for 'Where'
+  subt_hyp <- unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label'))) # checks for ' - '; most sub-questions have their main question's label followed by ' - ' and then the sub-question label
+  subt_are <- unlist(gregexpr(pattern ='Are', get(rc_list[1], new.dat) %>% attr('label'))) # checks for 'Are'
+  end_apply <- unlist(gregexpr(pattern ='apply', get(rc_list[1], new.dat) %>% attr('label'))) # checks for 'apply'; this is used to check the ends of a label unlike the other keyword identifiers which are aimed to check the front of the label
   
-  if(end_apply == -1){
-    if(subt_how != -1){
+  if(end_apply == -1){ # if the question label does not have 'apply'
+    if(subt_how != -1){ # checks with an assumption that the label has a '?' in it
       subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_how,
                      unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
       # print(1)
-    }else if(subt_to != -1){
+    }else if(subt_to != -1){ # checks with an assumption that the label has a '?' in it
       subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_to,
                      unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
       # print(2)
-    }else if(subt_where != -1){
+    }else if(subt_where != -1){ # checks with an assumption that the label has a '?' in it
       subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_where,
                      unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
       # print(3)
-    }else if(subt_are != -1){
+    }else if(subt_are != -1){ # checks with an assumption that the label has a '?' in it
       subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_are,
                      unlist(gregexpr(pattern ='\\?', get(rc_list[1], new.dat) %>% attr('label'))))
       # print(4)
-    }else if(subt_hyp != -1){
+    }else if(subt_hyp != -1){ # checks with an assumption that the required label ends at the final index of the question string
       subt <-  substr(get(rc_list[1], new.dat) %>% attr('label'),1,
                       unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label')))-1)
       # print(5)
     }
-    else if(subt_how == -1 || subt_to == -1 || subt_where == -1 || subt_hyp == -1 || subt_are == -1){
+    else if(subt_how == -1 || subt_to == -1 || subt_where == -1 || subt_hyp == -1 || subt_are == -1){ # if none of the conditions are met a simple read is made
       subt <- get(rc_list[1], new.dat) %>% attr('label')
       # print(6)
     }else{
       subt <- "Unidentified subtitle format"
     }
   }
-  else{
+  else{ # if the question label has 'apply' at the end
     if(subt_how != -1){
       subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_how,
-                     end_apply+5)
+                     end_apply+5) # 5 is added to the substring end-index to take into account of the length of 'apply'
       # print(7)
     }else if(subt_to != -1){
       subt <- substr(get(rc_list[1], new.dat) %>% attr('label'),subt_to,
-                     end_apply+5)
+                     end_apply+5) # 5 is added to the substring end-index to take into account of the length of 'apply'
       # print(8)
     }else if(subt_where != -1){
       subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_where,
-                     end_apply+5)
+                     end_apply+5) # 5 is added to the substring end-index to take into account of the length of 'apply'
       # print(9)
     }else if(subt_are != -1){
       subt <- substr(get(rc_list[1], data.ok) %>% attr('label'),subt_are,
-                     end_apply+5)
+                     end_apply+5) # 5 is added to the substring end-index to take into account of the length of 'apply'
       # print(10)
     }else if(subt_hyp != -1){
       subt <-  substr(get(rc_list[1], new.dat) %>% attr('label'),1,
                       unlist(gregexpr(pattern =' - ', get(rc_list[1], new.dat) %>% attr('label')))-1)
       # print(11)
     }
-    # else if(subt_how == -1 || subt_to == -1 || subt_where == -1 || subt_hyp == -1 || subt_are == -1){
-    #   subt <- get(rc_list[1], new.dat) %>% attr('label')
-    # }
     else if(end_apply != -1){
       subt <-  substr(get(rc_list[1], new.dat) %>% attr('label'),1,
                       end_apply)
@@ -1785,6 +1771,7 @@ subt_builder <- function(rc_list, new.dat){
     }
   }
   
+  # new line added to labels based on their lengths
   if(nchar(subt)>58){
     subt <- paste0(substr(subt,1,sapply(gregexpr(pattern = " ", substr(subt,1,58)),max)), "\n ",
                  substr(subt,sapply(gregexpr(pattern = " ", substr(subt,1,58)),max)+1,nchar(subt)))
@@ -1793,17 +1780,17 @@ subt_builder <- function(rc_list, new.dat){
   return(subt)
 }
 
-addline_format <- function(x,...){
+addline_format <- function(x,...){ # miscellaneous function
   gsub('\\s',' ',x)
-}
+} 
 
-flip <- function(data) {
+flip <- function(data) { # miscellaneous function
   new <- data[rev(rownames(data)), ]
   rownames(new) <- NULL
   new
-}
+} 
 
-ubc.theme <- function(){
+ubc.theme <- function(){ # returns ggplot formatting when called with ggplot
   return(theme(text = element_text(family = "Calibri"),
                legend.position = c(0.15,0.98),
                legend.direction = "horizontal",
@@ -1826,7 +1813,7 @@ ubc.theme <- function(){
                axis.title.y = element_blank()))
 }
 
-rc_eval <- function(eval.st,rc_list){
+rc_eval <- function(eval.st,rc_list){ # function that helps in checking for question identifiers and removing 'complete' and 'sum' fields from the list of sub-questions
   bl <- c()
   for (j in 1:length(rc_list)) {
     if(unlist(gregexpr(pattern = eval.st, rc_list[j])) != -1){
@@ -1848,7 +1835,7 @@ rc_eval <- function(eval.st,rc_list){
   return(rc_list[bl])
 }
 
-get_complete <- function(rc_list){
+get_complete <- function(rc_list){ # returns only the 'complete' field from a list of sub-questions
   bl <- c()
   for(j in 1:length(rc_list)){
     if(unlist(gregexpr(pattern = "Complete", rc_list[j])) != -1 ||
@@ -1862,7 +1849,7 @@ get_complete <- function(rc_list){
   return(rc_list[bl])
 }
 
-get_sum <-  function(rc_list){
+get_sum <-  function(rc_list){ # returns only the 'sum' field from a list of sub-questions
   bl <- c()
   for(j in 1:length(rc_list)){
     if(unlist(gregexpr(pattern = "Sum", rc_list[j])) != -1 ||
@@ -1876,7 +1863,7 @@ get_sum <-  function(rc_list){
   return(rc_list[bl])
 }
 
-rc_complete <- function(rc_list, new.dat, comp_val = 1){
+rc_complete <- function(rc_list, new.dat, comp_val = 1){ # returns a subset of the data passed to the function by 
   chk <- 0
   for (j in 1:length(rc_list)) {
     if(unlist(gregexpr(pattern = "complete", rc_list[j])) != -1){

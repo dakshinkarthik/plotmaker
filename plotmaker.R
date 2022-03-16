@@ -482,6 +482,7 @@ mx.tri <- function(qval, new.dat){
   # Printing plot
   print(plot.bar)
 }
+
 # table function for mx.tri question type
 tb_mx.tri <- function(qval, new.dat){
   # column names for data reads
@@ -565,6 +566,7 @@ tb_mx.tri <- function(qval, new.dat){
   
 }
 
+# table function for mx question type
 tb_mx <- function(qval, new.dat){
   # column names for data reads
   cnames <- colnames(new.dat)
@@ -723,6 +725,7 @@ tb_mx <- function(qval, new.dat){
 }
 # tb_mx("QN105",i.dat)
 
+# table function for rk question type
 tb_rk <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
@@ -850,10 +853,12 @@ tb_rk <- function(qval, new.dat){
 }
 # tb_rk("QN98",d.dat)
 
+# table function for ms question
 tb_ms <- function(qval, new.dat){
-  # Column names to read data
+  # splitting data by domestic/international
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
   cnames <- colnames(new.dat)
   rc_list <- rc_list.get(qval,new.dat)
   rc_list <- rc_eval("ms",rc_list)
@@ -993,37 +998,38 @@ tb_ms <- function(qval, new.dat){
   # no. of rows is divided by 2 two because the df contains both domestic and international data.
   mattt <- matrix(rep(1,((dim(main.df)[1]/2)+1)*4), ncol = 4) 
   
-  k <- 1
+  k <- 1 # loop counter; 'k' is incremented by 2 to accommodate both domestic and international data from the df
   for (m in 1:dim(mattt)[1]) {
-    if(k < dim(main.df)[1]){
-      mattt[m,1] <- paste0(round(100*main.df$Freq[k]/d.dc),"%")
-      mattt[m,2] <- main.df$Freq[k]
-      mattt[m,3] <- paste0(round(100*main.df$Freq[k+1]/i.dc),"%")
-      mattt[m,4] <- main.df$Freq[k+1]
+    if(k < dim(main.df)[1]){ # all rows except the last
+      mattt[m,1] <- paste0(round(100*main.df$Freq[k]/d.dc),"%") # Domestic data
+      mattt[m,2] <- main.df$Freq[k] # Domestic data
+      mattt[m,3] <- paste0(round(100*main.df$Freq[k+1]/i.dc),"%") # international data
+      mattt[m,4] <- main.df$Freq[k+1] # international data
     }
-    else{
+    else{ # only the for the last row
       mattt[m,1] <- "100%"
       mattt[m,2] <- d.dc
       mattt[m,3] <- "100%"
       mattt[m,4] <- i.dc
     }
-    k <- k + 2
+    k <- k + 2 # data in the df is ordered as domestic,international,domestic...; hence k = k + 2
   }
 
-  axis.q <- unique(main.df$Var1)
+  axis.q <- unique(main.df$Var1) # gets a single copy of all the questions from the df
 
-  main.df <- data.frame(mattt)
-  main.df <- cbind(UBCO = c(axis.q,"Distinct count of Respondents"), main.df)
+  main.df <- data.frame(mattt) # matrix to df conversion
+  main.df <- cbind(UBCO = c(axis.q,"Distinct count of Respondents"), main.df) # adding questions column to the df along with 'Distinct count'
 
+  # flextable object creation
   ft <- flextable(main.df) %>% theme_box() %>%
-    set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
-    add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
-    merge_h(part = "header") %>%
-    merge_v(part = "header") %>%
-    color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
-    color(j = "UBCO", color = "#A7A19D", part = "header") %>%
+    set_header_labels(X1="%",X2="n",X3="%",X4="n") %>% # setting header labels to their appropriate columns
+    add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>% # adding a super heading
+    merge_h(part = "header") %>% # merge horizontal column names (merges 'UBCO')
+    merge_v(part = "header") %>% # merges vertical column names (merges Domestic together and merges international together)
+    color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>% # column header colors
+    color(j = "UBCO", color = "#A7A19D", part = "header") %>% # question column header colors
     # color(j = "Domestic", part = "header", color = "#54504C") %>%
-    fontsize(size = 6, part = "all") %>%
+    fontsize(size = 6, part = "all") %>% # font size
     align_text_col(align = "center", header = TRUE) %>%
     align_nottext_col(align = "center", header = TRUE)
 
@@ -1031,46 +1037,52 @@ tb_ms <- function(qval, new.dat){
 
   ft %>% colformat_int(big.mark = "") %>%
     valign(valign = "center", part = "all") %>%
-    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
-    width(width = 3.5, unit = "in",j = "UBCO")
+    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>% # border color
+    width(width = 3.5, unit = "in",j = "UBCO") # cell width
   
-  # print(main.df)
-  # print(is.null(nnull))
 }
 # tb_ms("QN59",data.ok)
 
+# table function for mc question
 tb_mc <- function(qval, new.dat){
-  # Column names to read data
+  # splitting data by domestic/international
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(paste0(qval,"$"), cnames, fixed = F)])
-  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  rc_list <- rc_list.get(qval,new.dat)
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels')) # reading response levels
   rc_list <- rc_eval("mc",rc_list)
-  resp_b <- c()
   
+  resp_b <- c() # vector to store valid response levels
+  
+  # df initialization and definition
   main.df <- data.frame((table(get(rc_list, new.dat))))
-  i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
-  d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
+  i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International")) # international df
+  d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic")) # domestic df
   
+  # to fix missing responses levels
   i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
   d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
   
+  # stores valid numerical response levels
   resp_b <- c()
   for (qn in main.df$Var1) {
     resp_b <- c(resp_b, as.numeric(qn))
   }
   
+  # matrix intialization; no. of rows = no. of valid response levels, no. of columns = 4 (2 % columns, 2 count columns)
   mattt <- matrix(rep(1,4*(length(resp_b)+1)), ncol = 4)
   
+  # matrix definition
   for (j in 1:(dim(mattt)[1])) {
-    if(j == dim(mattt)[1]){
+    if(j == dim(mattt)[1]){ # last row
       mattt[j,1] <- "100%"
       mattt[j,2] <- sum(d.df$Freq)
       mattt[j,3] <- "100%"
       mattt[j,4] <- sum(i.df$Freq)
     }
-    else{
+    else{ # other rows
       mattt[j,1] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
       mattt[j,2] <- d.df$Freq[j] 
       mattt[j,3] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
@@ -1078,21 +1090,24 @@ tb_mc <- function(qval, new.dat){
     }
   }
 
+  # matrix to df conversion
   main.df <- data.frame(mattt)
   
   axis.q <- c()
-  if(0 %in% resp_b){
+  ## to select valid question labels
+  if(0 %in% resp_b){ # 0 is a numerical level only for yes(1)/no(0) mc questions
     axis.q <- resp
   }
-  else{
-    i <- 0
-    for (k in resp_b) {
+  else{ # for other mc questions
+    i <- 0 # because some numerical levels are not always sequential, a fake counter('i') that keeps track of vector indices is used
+    for (k in resp_b) { 
       i <- i + 1
-      if(k == 999){
+      if(k == 999){ # '999' is always associated with "NA/No opinion" and is positioned towards the end of the responses for all questions
         axis.q <- c(axis.q, resp[length(resp)])
       }
       else{
-        if(is.na(resp[k])){
+        # if the numerical level is not synchronous with question the vector index, there is no data to read at that index; hence 'i' is used
+        if(is.na(resp[k])){ 
           axis.q <- c(axis.q, resp[i])
         }
         else{
@@ -1101,6 +1116,7 @@ tb_mc <- function(qval, new.dat){
       }
     }
   }
+  # 'distinct count' added to the valid question vector
   axis.q <- c((axis.q),"Distinct count of respondents")
   
   main.df <- cbind(UBCO = axis.q, main.df)
@@ -1123,16 +1139,17 @@ tb_mc <- function(qval, new.dat){
     valign(valign = "center", part = "all") %>%
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
     width(width = 3.5, unit = "in",j = "UBCO")
-  # print(main.df)
 }
 
-
+# table function for mc.yn question type 
+# code is identical to tb_mc() varying only in the number of columns on the table
 tb_mc.yn <- function(qval, new.dat){
-  # Column names to read data
+
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
   cnames <- colnames(new.dat)
-  rc_list <- (cnames[grepl(paste0(qval,"$"), cnames, fixed = F)])
+  rc_list <- rc_list.get(qval,new.dat)
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   resp_b <- c()
   
@@ -1196,9 +1213,10 @@ tb_mc.yn <- function(qval, new.dat){
 
 # for mc questions
 mc <- function(qval, new.dat){
-  # Column names to read data
+  # splitting data by domestic/international
   i.dat <- new.dat[which(new.dat$isi == "ISI"),]
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
   cnames <- colnames(new.dat)
   rc_list <- rc_list.get(qval, new.dat)
   rc_list <- rc_eval("mc",rc_list)

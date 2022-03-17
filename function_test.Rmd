@@ -143,8 +143,8 @@ for (i in qIDs) {
      else if(unlist(gregexpr(pattern = 'mc', rc_list[1])) != -1 &&
             (unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
             unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
-            unlist(gregexpr(pattern = 'concerned', resp[1])) != -1)
-            unlist(gregexpr(pattern = 'impact', resp[1])) != -1){
+            unlist(gregexpr(pattern = 'concerned', resp[1])) != -1||
+            unlist(gregexpr(pattern = 'impact', resp[1])) != -1)){
             knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n
                                     main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
             out = c(out, knit_expanded)

@@ -263,7 +263,7 @@ mx <- function(qval, new.dat){
   prop <- list()
   main.prop <- NULL
   main.df<- data.frame()
-  col <- rev(col)
+  col <- rev(col)  
   tex.col.base <- rev(c("black","white","white","black","black","black"))
   tex.col <- c()
   label_count <- length(tex.col)
@@ -342,6 +342,17 @@ mx <- function(qval, new.dat){
       i <- i - 1
     }
   }
+  
+
+  
+  # for (k in 1:length(main.prop)) {
+  #   if(main.prop[k]<5){
+  #     print(main.prop[k])
+  #     main.prop[k] <- paste0(main.prop[k],"%")
+  #   }
+  #   else
+  #     main.prop[k] <- ""
+  # }
   
   # some questions did not have "No opinion/NA"; resp1 preserves the order of responses
   # "No opinion/Not applicable" is added if missing
@@ -719,6 +730,8 @@ tb_mx <- function(qval, new.dat){
     valign(valign = "center", part = "all") %>%
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
     width(width = c.width, unit = "in") %>%
+    width(width = 0.4, unit = "in", j = dim(mattt)[2]+4) %>%
+    width(width = 0.75, unit = "in", j = 1) %>%
     color(color = "#A7A19D", part = "header") %>%
     color(j = -2:dim(mattt)[2]+4, color = "#A7A19D", part = "body")
 

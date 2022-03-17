@@ -1699,7 +1699,7 @@ tb_cs <- function(qval, new.dat){ # shares the same code from cs() for df buildi
 }
 # tb_cs("QN34",data.ok)
 #-----------------------------------HELPER FUNCTIONS----------------------------------------
-
+# helps with building subtitle for graphs
 subt_builder <- function(rc_list, new.dat){
   # gets question labels from the first sub-question; first index is used arbitrarily to ensure questions only with one sub-question to avoid out-of-bounds error
   subt <- get(rc_list[1], new.dat) %>% attr('label')
@@ -1780,17 +1780,20 @@ subt_builder <- function(rc_list, new.dat){
   return(subt)
 }
 
-addline_format <- function(x,...){ # miscellaneous function
+# miscellaneous function
+addline_format <- function(x,...){ 
   gsub('\\s',' ',x)
 } 
 
-flip <- function(data) { # miscellaneous function
+# miscellaneous function
+flip <- function(data) { 
   new <- data[rev(rownames(data)), ]
   rownames(new) <- NULL
   new
 } 
 
-ubc.theme <- function(){ # returns ggplot formatting when called with ggplot
+# returns ggplot formatting when called with ggplot
+ubc.theme <- function(){ 
   return(theme(text = element_text(family = "Calibri"),
                legend.position = c(0.15,0.98),
                legend.direction = "horizontal",
@@ -1813,7 +1816,8 @@ ubc.theme <- function(){ # returns ggplot formatting when called with ggplot
                axis.title.y = element_blank()))
 }
 
-rc_eval <- function(eval.st,rc_list){ # function that helps in checking for question identifiers and removing 'complete' and 'sum' fields from the list of sub-questions
+# function that helps in checking for question identifiers and removing 'complete' and 'sum' fields from the list of sub-questions
+rc_eval <- function(eval.st,rc_list){ 
   bl <- c()
   for (j in 1:length(rc_list)) {
     if(unlist(gregexpr(pattern = eval.st, rc_list[j])) != -1){
@@ -1835,7 +1839,8 @@ rc_eval <- function(eval.st,rc_list){ # function that helps in checking for ques
   return(rc_list[bl])
 }
 
-get_complete <- function(rc_list){ # returns only the 'complete' field from a list of sub-questions
+# returns only the 'complete' field from a list of sub-questions
+get_complete <- function(rc_list){ 
   bl <- c()
   for(j in 1:length(rc_list)){
     if(unlist(gregexpr(pattern = "Complete", rc_list[j])) != -1 ||
@@ -1849,7 +1854,8 @@ get_complete <- function(rc_list){ # returns only the 'complete' field from a li
   return(rc_list[bl])
 }
 
-get_sum <-  function(rc_list){ # returns only the 'sum' field from a list of sub-questions
+# returns only the 'sum' field from a list of sub-questions
+get_sum <-  function(rc_list){ 
   bl <- c()
   for(j in 1:length(rc_list)){
     if(unlist(gregexpr(pattern = "Sum", rc_list[j])) != -1 ||
@@ -1863,7 +1869,8 @@ get_sum <-  function(rc_list){ # returns only the 'sum' field from a list of sub
   return(rc_list[bl])
 }
 
-rc_complete <- function(rc_list, new.dat, comp_val = 1){ # returns a subset of the data passed to the function by 
+# used by rk() and tb_rk()
+rc_complete <- function(rc_list, new.dat, comp_val = 1){ # returns a subset of the data passed to the function by checking for equality between 'comp_val' and the complete field
   chk <- 0
   for (j in 1:length(rc_list)) {
     if(unlist(gregexpr(pattern = "complete", rc_list[j])) != -1){
@@ -1875,6 +1882,7 @@ rc_complete <- function(rc_list, new.dat, comp_val = 1){ # returns a subset of t
     return(new.dat)
 }
 
+# returns the size of column width of bars and text size for geom_text based on the number of questions/sub-questions
 sizer <- function(rc_list){
   geom_text_size <- NULL
   c.width <- NULL
@@ -1897,6 +1905,7 @@ sizer <- function(rc_list){
   return(c(c.width,geom_text_size))
 }
 
+# helps to retrieve questions/sub-questions based on input qID
 rc_list.get <- function(qval, new.dat){
   cnames <- colnames(new.dat)
   rc_list <- cnames[grepl(paste0(qval,"$"), cnames, fixed = F)]

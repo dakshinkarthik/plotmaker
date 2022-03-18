@@ -166,7 +166,7 @@ rk <- function(qval, new.dat){
     # Geom text has a no character if < 5, else '%' is pasted to it 
     for(j in 1:length(prop[[i]])){
       label_count_var <- label_count_var + 1
-      if(as.integer(prop[[i]][j])<5)
+      if(as.numeric(prop[[i]][j])<5)
         prop[[i]][j] = ''
       else
         prop[[i]][j] = paste0(prop[[i]][j], "%")
@@ -285,6 +285,9 @@ mx <- function(qval, new.dat){
       ld <- get(qn, new.dat) %>% attr('label')
     }
     
+    # incase of region values in question labels
+    ld <- region.get(ld,new.dat)
+    
     if(nchar(ld)>63){
       ld <- paste0(substr(ld,1,sapply(gregexpr(pattern = " ", substr(ld,1,63)),max)), "\n ",
                    substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,63)),max)+1,nchar(ld)))
@@ -319,7 +322,6 @@ mx <- function(qval, new.dat){
       for(j in 1:length(prop[[i]])){
         label_count_var <- label_count_var + 1
         if(as.numeric(prop[[i]][j])<5){
-          # print(prop[[i]][j])
           prop[[i]][j] = ""
         }
         else
@@ -344,18 +346,8 @@ mx <- function(qval, new.dat){
     }
   }
   
-
   
-  # for (k in 1:length(main.prop)) {
-  #   if(main.prop[k]<5){
-  #     print(main.prop[k])
-  #     main.prop[k] <- paste0(main.prop[k],"%")
-  #   }
-  #   else
-  #     main.prop[k] <- ""
-  # }
-  
-  # some questions did not have "No opinion/NA"; resp1 preserves the order of responses
+  # some questions did not have "No opinion/NA"; resp1 preserves the original values of resp
   # "No opinion/Not applicable" is added if missing
   if(length(unique(main.df$Var1)) != length(resp)){
     resp <- c("No opinion/Not applicable", resp1)
@@ -391,7 +383,7 @@ mx <- function(qval, new.dat){
   
   print(plot.bar)
 }
-# mx("QN65",d.dat)
+# mx("QN100",d.dat)
 
 # for mx tri questions with only 3 response levels
 mx.tri <- function(qval, new.dat){
@@ -1296,8 +1288,10 @@ mc <- function(qval, new.dat){
     }
   }
   
+  
   # adding new line to selected question labels based on their character lengths
   for (j in 1:length(axis.q)) {
+    axis.q[j] <- region.get(axis.q[j],new.dat) # modifies question labels to display the correct region (removes brackets and field names and replaces it with the 'Okanagan' or 'Vancouver')
     if(nchar(axis.q[j])>40){
       axis.q[j] <- paste0(substr(axis.q[j],1,sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)), "\n ",
                           substr(axis.q[j],sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)+1,
@@ -1341,7 +1335,7 @@ mc <- function(qval, new.dat){
 
   print(plot.bar)
 }
-# mc("QN58",data.ok)
+# mc("housing",data.ok)
 
 # for mc.yn questions
 mc.yn <- function(qval, new.dat){
@@ -1940,4 +1934,27 @@ rc_list.get <- function(qval, new.dat){
   return(rc_list)
 }
 
-
+# returns question labels with their corresponding regions in case they are not correctly displayed
+region.get <- function(ld,new.dat){
+  # print(unlist(gregexpr(pattern = "Field-campusName", ld)))
+  if((unlist(gregexpr(pattern = 'Field-campusName', ld)) != -1)){
+    f.pos <- unlist(gregexpr(pattern = 'Field-campusName', ld))
+    if(new.dat$campusName[1] == "Okanagan"){
+      return(paste(substr(ld,1,f.pos-2),"Okanagan",sep = ""))
+    }
+    else if(new.dat$campusName[1] == "Vancouver"){
+      return(paste(substr(ld,1,f.pos-2),"Vancouver",sep = ""))
+    }
+  }
+  else if((unlist(gregexpr(pattern = 'campusRegion', ld)) != -1)){
+    f.pos <- unlist(gregexpr(pattern = 'campusRegion', ld))
+    if(new.dat$campusName[1] == "Okanagan"){
+      return(paste(substr(ld,1,f.pos-13),"Okanagan region",sep = ""))
+    }
+    else if(new.dat$campusName[1] == "Vancouver"){
+      return(paste(substr(ld,1,f.pos-13),"Vancouver region",sep = ""))
+    }
+  }
+  else
+    return(ld)
+}

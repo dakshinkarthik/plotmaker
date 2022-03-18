@@ -318,7 +318,8 @@ mx <- function(qval, new.dat){
       
       for(j in 1:length(prop[[i]])){
         label_count_var <- label_count_var + 1
-        if(prop[[i]][j]<=0){
+        if(as.numeric(prop[[i]][j])<5){
+          # print(prop[[i]][j])
           prop[[i]][j] = ""
         }
         else
@@ -1811,6 +1812,8 @@ ubc.theme <- function(){
                legend.position = c(0.15,0.98),
                legend.direction = "horizontal",
                legend.title = element_blank(),
+               legend.title.align = 0.5,
+               legend.text.align = 0.5,
                legend.key.height = unit(2, 'cm'),
                legend.key.width = unit(4, 'cm'),
                legend.text = element_text(size = 160),

@@ -730,7 +730,7 @@ tb_mx <- function(qval, new.dat){
     valign(valign = "center", part = "all") %>%
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
     width(width = c.width, unit = "in") %>%
-    width(width = 0.4, unit = "in", j = dim(mattt)[2]+4) %>%
+    width(width = 0.42, unit = "in", j = dim(mattt)[2]+4) %>%
     width(width = 0.75, unit = "in", j = 1) %>%
     color(color = "#A7A19D", part = "header") %>%
     color(j = -2:dim(mattt)[2]+4, color = "#A7A19D", part = "body")

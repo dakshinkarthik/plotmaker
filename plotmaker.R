@@ -268,6 +268,7 @@ mx <- function(qval, new.dat){
   tex.col <- c()
   label_count <- length(tex.col)
   ld.title <- c()
+  ld.title.max <- 0 # used as a metric for aligning legend; length of the question with the highest character count is stored
   i <- 0
   
 
@@ -313,6 +314,10 @@ mx <- function(qval, new.dat){
     
     if(dim(temp.df)[1] >= 5){
       df.list[[i]] <- temp.df
+      
+      if(nchar(ld)>ld.title.max){ # to find the question label with highest character count
+        ld.title.max <- nchar(ld)
+      }
       ld.title <- c(ld.title, ld)
       df.list[[i]]$Ques <- ld
       
@@ -361,8 +366,36 @@ mx <- function(qval, new.dat){
   geom_text_size <- sizer(rc_list)[2]
   c.width <- sizer(rc_list)[1]
   
+  # defines the order of questions on the ggplot
   leveler <- c(unique(main.df$Var1)[length(unique(main.df$Var1))],
                unique(main.df$Var1)[1:(length(unique(main.df$Var1))-1)])
+  
+  # legend alignment based on length of question label with the largest character count
+  legend.pos.x <- 0.15
+  if(ld.title.max < 35){
+    legend.pos.x <- 0.15 + ((ld.title.max)/240)
+  }
+  else if(ld.title.max < 50){
+    legend.pos.x <- 0.15 + ((ld.title.max)/460)
+  }
+  else if(ld.title.max < 60){
+    legend.pos.x <- 0.15 + ((ld.title.max)/500)
+  }
+  else if(ld.title.max <= 100){
+    legend.pos.x <- 0.15 + ((ld.title.max)/750)
+  }
+  else if(ld.title.max > 150){
+    legend.pos.x <- 0.15 - ((ld.title.max)/400)
+  }
+  else if(ld.title.max > 120){
+    legend.pos.x <- 0.15 - ((ld.title.max)/1400)
+  }
+  else if(ld.title.max > 100){
+    legend.pos.x <- 0.15 - ((ld.title.max)/350)
+  }
+
+  
+  
 
   
   # GGplot graphing
@@ -379,9 +412,12 @@ mx <- function(qval, new.dat){
     # scale_x_discrete(breaks = unique(main.df$Ques),
     #                  labels = ld.title) +
     ubc.theme() + 
+    theme(legend.position = c(legend.pos.x,0.98)) +
     coord_flip() # this function was originally built with questions on the x-axis; hence coord_flip() is used
   
   print(plot.bar)
+  # print(ld.title.max)
+  # print(legend.pos.x)
 }
 # mx("QN100",d.dat)
 
@@ -1399,6 +1435,7 @@ ms <- function(qval, new.dat){ # code is similar to the tb_ms() function and sha
     # Dataframe building ---- dfs are built exactly the same way as it was done in tb_ms()
     ## Domestic fraction
     axis.c <- names(get(qn, new.dat) %>% attr('labels'))
+    axis.c <- region.get(axis.c,new.dat)
     if(nrow(table(get(qn, d.dat))) == 0){
       tcv <- matrix(0)
       rownames(tcv) <- c(i)
@@ -1772,7 +1809,7 @@ subt_builder <- function(rc_list, new.dat){
     }
     else if(end_apply != -1){
       subt <-  substr(get(rc_list[1], new.dat) %>% attr('label'),1,
-                      end_apply)
+                      end_apply+5)
       # print(12)
     }else{
       subt <- "Unidentified subtitle format"
@@ -1805,9 +1842,10 @@ ubc.theme <- function(){
   return(theme(text = element_text(family = "Calibri"),
                legend.position = c(0.15,0.98),
                legend.direction = "horizontal",
-               legend.title = element_blank(),
-               legend.title.align = 0.5,
-               legend.text.align = 0.5,
+               legend.justification = "center",
+               # legend.title = element_blank(),
+               # legend.title.align = 0.5,
+               # legend.text.align = 1,
                legend.key.height = unit(2, 'cm'),
                legend.key.width = unit(4, 'cm'),
                legend.text = element_text(size = 160),
@@ -1955,6 +1993,16 @@ region.get <- function(ld,new.dat){
       return(paste(substr(ld,1,f.pos-13),"Vancouver region",sep = ""))
     }
   }
+  else if((unlist(gregexpr(pattern = 'campusName', ld)) != -1)){
+    f.pos <- unlist(gregexpr(pattern = 'campusName', ld))
+    if(new.dat$campusName[1] == "Okanagan"){
+      return(paste(substr(ld,1,f.pos-13),"Okanagan",substr(ld,f.pos+11,nchar(ld)),sep = ""))
+    }
+    else if(new.dat$campusName[1] == "Vancouver"){
+      return(paste(substr(ld,1,f.pos-13),"Vancouver",sep = ""))
+    }
+  }
+  
   else
     return(ld)
 }

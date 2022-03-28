@@ -99,19 +99,19 @@ rk <- function(qval, new.dat){
   new.dat <- rc_complete(rc_list, new.dat, 28) 
   rc_list <- rc_eval("rk",rc_list) # Checks if all the sub questions selected belong to the qID
   
-  ti.tle <- NULL
+  ti.tle <- title_builder(param_list)
   # The following if-statements check for domestic/international data and assigns the correct title and color scheme for the graph
   if(new.dat$isi[1] == "Domestic"){
     col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
-    ti.tle <- "Domestic Direct-Entry Undergraduate Students, UBC Okanagan"
+    ti.tle <- paste("Domestic",ti.tle,sep = " ")
   }
   else if(new.dat$isi[1] == "ISI"){
     col <- c("#A1600A", "#C37918", "#D38622", "#FF940A", "#FFA55D", "#FFB377", "#FFD5A0")
-    ti.tle <- "International Direct-Entry Undergraduate Students, UBC Okanagan"
+    ti.tle <- paste("International",ti.tle,sep = " ")
   }
   else{
     col <- c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF")
-    ti.tle <- "Direct-Entry Undergraduate Students, UBC Okanagan"
+    ti.tle <- ti.tle
   }
   
   # 'Rank' is pasted with the numerical response levels to be on the legend 
@@ -154,7 +154,9 @@ rk <- function(qval, new.dat){
     ld.title <- c(ld.title, ld)
 
     # Dataframe building for each sub question
-    df.list[[i]] <- data.frame(rev(table(get(qn, new.dat))), Ques = c(i))
+    temp.df <- data.frame(rev(table(get(qn, new.dat))), Ques = c(i))
+    temp.df <- complete(temp.df, Var1 = factor(c(7:1),levels = c(7:1)), fill = list(Freq = 0, Ques = c(i)))
+    df.list[[i]] <- temp.df
     df.list[[i]]$Ques <- ld # Question labels added into the dataframe directly
 
     # Stores the first rank of the sub questions for formatting the ggplot later
@@ -194,11 +196,14 @@ rk <- function(qval, new.dat){
 
   leveler <- c()
   # Questions displayed based on decreasing rank 1 scores
+  print(sel)
   sel <- sort(sel,decreasing = T) # From earlier, this used as a metric to set 'leveler' for ggplot
+  track <- c() # to keep track of row index of df.list to avoid repetition of levels
   for (i in 1:length(sel)) {
     for (j in 1:length(df.list)) {
       # leveler is made up of question labels based on the order of first ranks in sel 
-      if(sel[i] == df.list[[j]]$Freq[length(df.list[[j]]$Freq)]){
+      if(sel[i] == df.list[[j]]$Freq[length(df.list[[j]]$Freq)] & !(j %in% track)){
+        track <- c(track,j)
         leveler <- c(leveler,df.list[[j]]$Ques[1])
         break
       }
@@ -218,16 +223,18 @@ rk <- function(qval, new.dat){
               position = position_fill(vjust=0.5), color = tex.col, size = geom_text_size) +
     labs(title = ti.tle,
          subtitle = subt) +
-    # Initially, y-axis labels were manually set; 
+    # Initially, y-axis labels were manually set;
     # but after adding question labels to the dataframe it did not seem neccessary
     # scale_y_discrete(breaks = unique(main.df$Ques),
     #                  labels = ld.title) +
     scale_x_continuous(labels = scales::percent) + # Sets the scale to percentage
     ubc.theme() + # custom formatting function for the report
     theme(axis.text.x = element_text(size = 180)) # specific elements of the theme formatted here
-
-  print(plot.bar)
   
+  print(plot.bar)
+  # print(df.list)
+  # print(leveler)
+  # print(sel)
 }
 # rk("QN98",d.dat)
 
@@ -244,18 +251,18 @@ mx <- function(qval, new.dat){
   resp <- c(unique(resp)[length(unique(resp))],unique(resp)[1:length(unique(resp))-1])
   
   # Domestic/international titles and colors
-  ti.tle <- NULL
+  ti.tle <- title_builder(param_list)
   if(new.dat$isi[1] == "Domestic"){
     col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
-    ti.tle <- "Domestic Direct-Entry Undergraduate Students, UBC Okanagan"
+    ti.tle <- paste("Domestic",ti.tle,sep = " ")
   }
   else if(new.dat$isi[1] == "ISI"){
     col <- c("#A1600A", "#C37918", "#D38622", "#FF940A", "#FFA55D", "#FFB377", "#FFD5A0")
-    ti.tle <- "International Direct-Entry Undergraduate Students, UBC Okanagan"
+    ti.tle <- paste("International",ti.tle,sep = " ")
   }
   else{
     col <- c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF")
-    ti.tle <- "Direct-Entry Undergraduate Students, UBC Okanagan"
+    ti.tle <- ti.tle
   }
   
   # Variable initialization
@@ -416,8 +423,8 @@ mx <- function(qval, new.dat){
     coord_flip() # this function was originally built with questions on the x-axis; hence coord_flip() is used
   
   print(plot.bar)
-  # print(ld.title.max)
-  # print(legend.pos.x)
+  # print(ti.tle)
+  # print(param_list)
 }
 # mx("QN100",d.dat)
 
@@ -432,18 +439,18 @@ mx.tri <- function(qval, new.dat){
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   
   # Domestic/international titles and colors
-  ti.tle <- NULL
+  ti.tle <- title_builder(param_list)
   if(new.dat$isi[1] == "Domestic"){
     col <- c("#3C5A2A","#498325","#89C265")
-    ti.tle <- "Domestic Direct-Entry Undergraduate Students, UBC Okanagan"
+    ti.tle <- ti.tle <- paste("Domestic",ti.tle,sep = " ")
   }
   else if(new.dat$isi[1] == "ISI"){
     col <- c("#894E09","#BC7521","#FAB484")
-    ti.tle <- "International Direct-Entry Undergraduate Students, UBC Okanagan"
+    ti.tle <- ti.tle <- paste("International",ti.tle,sep = " ")
   }
   else{
     col <- c("#3C5A2A","#498325","#89C265")
-    ti.tle <- "Direct-Entry Undergraduate Students, UBC Okanagan"
+    ti.tle <- ti.tle
   }
   
   # Variable initialization
@@ -480,8 +487,10 @@ mx.tri <- function(qval, new.dat){
     ld.title <- c(ld.title, ld)
     
     # Dataframe building
-    df.list[[i]] <- data.frame(table(get(qn, new.dat)), Ques = c(i))
-    df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
+    temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
+    temp.df <- complete(temp.df, Var1 = factor(c(1:3),levels = c(1:3)), fill = list(Freq = 0, Ques = c(i)))
+    df.list[[i]] <- temp.df
+    # df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
     
     # Geometry text prep
     prop[[i]] <- round(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
@@ -522,6 +531,7 @@ mx.tri <- function(qval, new.dat){
   # Printing plot
   print(plot.bar)
 }
+# main.graph("commFreq",d.dat)
 
 # table function for mx.tri question type
 tb_mx.tri <- function(qval, new.dat){
@@ -544,7 +554,9 @@ tb_mx.tri <- function(qval, new.dat){
   i <- 1
   for (qn in rc_list) {
     # dataframe building
-    df.list[[i]] <- data.frame(table(get(qn, new.dat)))
+    temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
+    temp.df <- complete(temp.df, Var1 = factor(c(1:3),levels = c(1:3)), fill = list(Freq = 0, Ques = c(i)))
+    df.list[[i]] <- temp.df
     
     #Row labels
     if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
@@ -792,8 +804,10 @@ tb_rk <- function(qval, new.dat){
   for(i in 1:dim(mattt)[1]){
     if(i != dim(mattt)[1]){ # sums and question label retrieval done only for question rows
       # df building
-      df.list[[i]] <- data.frame(table(get(rc_list[i], new.dat)), Ques = c(i))
-      
+      # df.list[[i]] <- data.frame(table(get(rc_list[i], new.dat)), Ques = c(i))
+      temp.df <- data.frame(rev(table(get(rc_list[i], new.dat))), Ques = c(i))
+      temp.df <- complete(temp.df, Var1 = factor(c(7:1),levels = c(7:1)), fill = list(Freq = 0, Ques = c(i)))
+      df.list[[i]] <- temp.df
       
       #Row labels and fornatting
       ld <- NULL
@@ -1362,7 +1376,7 @@ mc <- function(qval, new.dat){
                       guide = guide_legend(reverse = TRUE,nrow = 2)) +
     geom_text(data = main.df, label = main.prop,
               position = position_dodge(width = c.width), size = geom_text_size, hjust = -0.1) +
-    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+    labs(title = title_builder(param_list),
          subtitle = subt) +
     ubc.theme() +
     theme(legend.position = c(0.85,0.5)) +
@@ -1522,12 +1536,7 @@ ms <- function(qval, new.dat){ # code is similar to the tb_ms() function and sha
   
   # pasting '%' to the prop data
   for (frq in 1:length(main.df$Freq)){
-    if(main.df$Freq < 1){
-      main.prop <- c(main.prop,"")
-    }
-    else{
-      main.prop <-  c(main.prop,paste0(main.df$Freq[frq],"%"))
-    }
+    main.prop <-  c(main.prop,paste0(main.df$Freq[frq],"%"))
   }
 
   
@@ -1542,13 +1551,15 @@ ms <- function(qval, new.dat){ # code is similar to the tb_ms() function and sha
                       guide = guide_legend(reverse = TRUE,nrow = 2)) +
     geom_text(data = main.df, label = main.prop,
               position = position_dodge(width = 0.8), size = 60, hjust = -0.1) +
-    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+    labs(title = title_builder(param_list),
          subtitle = subt) +
     ubc.theme() +
     theme(legend.position = c(0.85,0.5)) +
     scale_x_continuous(limits = c(0, 2 * max(main.df$Freq))) # setting x-axis bound limits
   
   print(plot.bar)
+  print(main.prop)
+  print(main.df$Freq)
 }
 # ms("spRestriction",data.ok)
 
@@ -1638,7 +1649,7 @@ cs <- function(qval, new.dat){
                       guide = guide_legend(reverse = TRUE,nrow = 2)) +
     geom_text(data = main.df, label = paste0(main.df$Freq,"%"),
               position = position_dodge(width = 0.8), size = 60, hjust = -0.1) +
-    labs(title = "Direct-Entry Undergraduate Students, UBC Okanagan",
+    labs(title = title_builder(param_list),
          subtitle = subt) +
     ubc.theme() +
     theme(legend.position = c(0.85,0.5)) +
@@ -1824,6 +1835,38 @@ subt_builder <- function(rc_list, new.dat){
   
   return(subt)
 }
+
+title_builder <- function(param_list){
+  param_index <- c("Entry type","Gender Orientation","Sexuality","Gender","Ethnicity","Campus")
+  base.t <- "Undergraduate"
+  if(param_list[1] != "ALL"){
+    base.t <- paste(param_list[1],base.t,sep = " ")
+  }
+  if(param_list[2] != "ALL" & param_list[2] != "No Answer"){
+    base.t <- paste(base.t,paste0(param_list[2],"-gendered"),sep = " ")
+  }else if(param_list[2] == "No Answer"){
+    base.t <- paste(base.t,"(Gender orientation not chosen)",sep = " ")
+  }
+  if(param_list[3] != "ALL" & param_list[3] != "No Answer"){
+    base.t <- paste(base.t,param_list[3],sep = " ")
+  }else if(param_list[3] == "No Answer"){
+    base.t <- paste(base.t,"(Sexuality not chosen)",sep = " ")
+  }
+  if(param_list[4] != "ALL" & param_list[4] != "No Answer"){
+    base.t <- paste(base.t,param_list[4],sep = " ")
+  }else if(param_list[4] == "No Answer"){
+    base.t <- paste(base.t,"(Gender not chosen)",sep = " ")
+  }
+  if(param_list[5] != "ALL" & param_list[5] != "No Answer"){
+    base.t <- paste(base.t,param_list[5],sep = " ")
+  }else if(param_list[5] == "No Answer"){
+    base.t <- paste(base.t,"(Ethnicity not chosen)",sep = " ")
+  }
+  
+  base.t <- paste(base.t,"Students, UBC",param_list[6],sep = " ")
+  return(base.t)
+}
+# title_builder(c("Direct-Entry","ALL","ALL","No Answer","No Answer","Vancouver"))
 
 # miscellaneous function
 addline_format <- function(x,...){ 

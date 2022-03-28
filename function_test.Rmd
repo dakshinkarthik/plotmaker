@@ -20,11 +20,116 @@ library(flextable)
 source("plotmaker.R")
 # font_import("Calibri")
 ```
+
+```{R parameter-spec, echo=FALSE}
+# Options: "ALL","Okanagan","Vancouver"
+CAMPUS <- "Okanagan"
+# Options: "ALL","DIRECT-TRANSFER","TRANSFER"
+ENTRY_TYPE <- "DIRECT-ENTRY"
+# Options: "ALL","FIRST NATIONS","METIS","INUIT","ABORIGINAL","ARAB","BLACK","CHINESE","FILIPINO","JAPANESE","KOREAN","AMERICAS","SOUTH ASIAN","SOUTHEAST ASIAN","WEST ASIAN","WHITE","OTHER","NO ANSWER"
+ETHNICITY <- "ALL"
+# Options: "ALL","FEMALE","MALE","NON-BINARY","NO ANSWER"
+GENDER <- "ALL"
+# Options: "ALL","CIS","TRANS","NO ANSWER"
+GENDER_ORIENTATION <- "ALL"
+# Options: "ALL","HOMOSEXUAL","HETEROSEXUAL","BISEXUAL","ASEXUAL","QUEER","QUESTIONING","OTHER","NO ANSWER"
+SEXUALITY <- "ALL"
+```
+
 <!-- Reads and formats -->
-```{R echo=FALSE}
+```{R data-reads, echo=FALSE}
 nubc2021joined <- read_sav("data/nubc2021_v4.sav")
 data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Okanagan"),]
 data.vr <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Vancouver"),]
+
+#CAMPUS
+if(CAMPUS == "Okanagan"){
+  data.ok <- nubc2021joined[which(nubc2021joined$campusName == "Okanagan"),]
+}else if(CAMPUS == "Vancouver"){
+  data.ok <- nubc2021joined[which(nubc2021joined$campusName == "Vancouver"),]
+}else{
+  data.ok <- nubc2021joined
+}
+#ENTRY_TYPE
+if(ENTRY_TYPE == "DIRECT-ENTRY"){
+  data.ok <- data.ok[which(data.ok$directtransfer == "DIRECT-ENTRY"),]
+}else if(ENTRY_TYPE == "TRANSFER"){
+  data.ok <- data.ok[which(data.ok$directtransfer == "TRANSFER"),]
+}
+#ETHNICITY
+if(ETHNICITY == "FIRST NATIONS"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_1 == 1),]
+}else if(ETHNICITY == "METIS"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_17 == 1),]
+}else if(ETHNICITY == "INUIT"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_18 == 1),]
+}else if(ETHNICITY == "ABORIGINAL"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_2 == 1),]
+}else if(ETHNICITY == "ARAB"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_3 == 1),]
+}else if(ETHNICITY == "BLACK"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_4 == 1),]
+}else if(ETHNICITY == "CHINESE"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_5 == 1),]
+}else if(ETHNICITY == "FILIPINO"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_6 == 1),]
+}else if(ETHNICITY == "JAPANESE"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_7 == 1),]
+}else if(ETHNICITY == "KOREAN"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_8 == 1),]
+}else if(ETHNICITY == "AMERICAS"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_9 == 1),]
+}else if(ETHNICITY == "SOUTH ASIAN"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_10 == 1),]
+}else if(ETHNICITY == "SOUTHEAST ASIAN"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_11 == 1),]
+}else if(ETHNICITY == "WEST ASIAN"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_13 == 1),]
+}else if(ETHNICITY == "WHITE"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_14 == 1),]
+}else if(ETHNICITY == "OTHER"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_15 == 1),]
+}else if(ETHNICITY == "NO ANSWER"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_16 == 1),]
+}
+#GENDER
+if(GENDER == "FEMALE"){
+  data.ok <- data.ok[which(data.ok$mc.QN56 == 1),]
+}else if(GENDER == "MALE"){
+  data.ok <- data.ok[which(data.ok$mc.QN56 == 2),]
+}else if(GENDER == "NON-BINARY"){
+  data.ok <- data.ok[which(data.ok$mc.QN56 == 3),]
+}else if(GENDER == "NO ANSWER"){
+  data.ok <- data.ok[which(data.ok$mc.QN56 == 999),]
+}
+#GENDER_ORIENTATION
+if(GENDER_ORIENTATION == "CIS"){
+  data.ok <- data.ok[which(data.ok$mc.QN57 == 1),]
+}else if(GENDER_ORIENTATION == "TRANS"){
+  data.ok <- data.ok[which(data.ok$mc.QN57 == 2),]
+}else if(GENDER_ORIENTATION == "NO ANSWER"){
+  data.ok <- data.ok[which(data.ok$mc.QN57 == 999),]
+}
+# SEXUALITY
+# Options: "ALL","HOMOSEXUAL","HETEROSEXUAL","BISEXUAL","ASEXUAL","QUEER","QUESTIONING","OTHER","NO ANSWER"
+if(SEXUALITY == "HOMOSEXUAL"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 1),]
+}else if(SEXUALITY == "HETEROSEXUAL"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 2),]
+}else if(SEXUALITY == "BISEXUAL"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 3),]
+}else if(SEXUALITY == "ASEXUAL"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 4),]
+}else if(SEXUALITY == "QUEER"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 5),]
+}else if(SEXUALITY == "QUESTIONING"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 6),]
+}else if(SEXUALITY == "OTHER"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 9),]
+}else if(SEXUALITY == "NO ANSWER"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 999),]
+}
+
 i.dat <- data.ok[which(data.ok$isi == "ISI"),]
 d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 ```
@@ -36,57 +141,7 @@ d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 <!-- ``` -->
 
 ```{R qID-chunk, echo=FALSE}
-qIDs <- c("reside",
-          "housing",
-          "housingCountry",
-          "QN28",
-          "QN100",
-          "QN104",
-          "QN105",
-          "mindset",
-          "interSupport",
-          "commSatisfy",
-          "commFreq",
-          "commAgree",
-          "QN30",
-          "QN94",
-          "acdEssential",
-          "acdEssentialcrs",
-          "QN980",
-          "QN98",
-          "QN111",
-          "commuteFreq",
-          "QN44",
-          "QN45",
-          "commuteerrand",
-          "wbFamdoc",
-          "wbMntsprt",
-          "wbNavigate",
-          "healthResource",
-          "QN65",
-          "QN34",
-          "QN37",
-          "QN40",
-          "QN41",
-          "QN35",
-          "QN36",
-          "covidFinance",
-          "covidTuition",
-          "spApply",
-          "spRestriction",
-          "QN48",
-          "QN50",
-          "QN52",
-          "QN53",
-          "QN54",
-          "QN55",
-          "QN66",
-          "QN67",
-          "QN56",
-          "QN57",
-          "QN58",
-          "QN59",
-          "daRsrc")
+qIDs <- c("QN28")
 ```
 
 ```{R chunk-generator ,echo=FALSE}

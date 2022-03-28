@@ -1,0 +1,206 @@
+---
+title: "Sample report"
+output:
+  word_document:
+    reference_docx: ref_doc.docx
+---
+
+<!-- Setup and library calls -->
+```{R setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, fig.width = 180, fig.height = 10)
+library(knitr)
+library(ggplot2)
+library(ggthemes)
+library(ggpubr)
+library(tidyverse)
+library(extrafont)
+library(pander)
+library(haven)
+library(flextable)
+source("plotmaker.R")
+# font_import("Calibri")
+```
+
+```{R parameter-spec, echo=FALSE}
+# Options: "ALL","Okanagan","Vancouver"
+CAMPUS <- "Okanagan"
+# Options: "ALL","DIRECT-TRANSFER","TRANSFER"
+ENTRY_TYPE <- "DIRECT-ENTRY"
+# Options: "ALL","FIRST NATIONS","METIS","INUIT","ABORIGINAL","ARAB","BLACK","CHINESE","FILIPINO","JAPANESE","KOREAN","AMERICAS","SOUTH ASIAN","SOUTHEAST ASIAN","WEST ASIAN","WHITE","OTHER","NO ANSWER"
+ETHNICITY <- "ALL"
+# Options: "ALL","FEMALE","MALE","NON-BINARY","NO ANSWER"
+GENDER <- "ALL"
+# Options: "ALL","CIS","TRANS","NO ANSWER"
+GENDER_ORIENTATION <- "ALL"
+# Options: "ALL","HOMOSEXUAL","HETEROSEXUAL","BISEXUAL","ASEXUAL","QUEER","QUESTIONING","OTHER","NO ANSWER"
+SEXUALITY <- "ALL"
+```
+
+<!-- Reads and formats -->
+```{R data-reads, echo=FALSE}
+nubc2021joined <- read_sav("data/nubc2021_v4.sav")
+data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Okanagan"),]
+data.vr <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Vancouver"),]
+
+#CAMPUS
+if(CAMPUS == "Okanagan"){
+  data.ok <- nubc2021joined[which(nubc2021joined$campusName == "Okanagan"),]
+}else if(CAMPUS == "Vancouver"){
+  data.ok <- nubc2021joined[which(nubc2021joined$campusName == "Vancouver"),]
+}else{
+  data.ok <- nubc2021joined
+}
+#ENTRY_TYPE
+if(ENTRY_TYPE == "DIRECT-ENTRY"){
+  data.ok <- data.ok[which(data.ok$directtransfer == "DIRECT-ENTRY"),]
+}else if(ENTRY_TYPE == "TRANSFER"){
+  data.ok <- data.ok[which(data.ok$directtransfer == "TRANSFER"),]
+}
+
+i.dat <- data.ok[which(data.ok$isi == "ISI"),]
+d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
+```
+
+<!-- ```{R echo = FALSE, fig.height = 120} -->
+<!-- # source("plotmaker.R") -->
+<!-- main.graph("QN28",i.dat) -->
+<!-- ``` -->
+
+```{R qID-chunk, echo=FALSE}
+qIDs <- c("reside",
+          "housing",
+          "housingCountry",
+          "QN28",
+          "QN100",
+          "QN104",
+          "QN105",
+          "mindset",
+          "interSupport",
+          "commSatisfy",
+          "commFreq",
+          "commAgree",
+          "QN30",
+          "QN94",
+          "acdEssential",
+          "acdEssentialcrs",
+          "QN980",
+          "QN98",
+          "QN111",
+          "commuteFreq",
+          "QN44",
+          "QN45",
+          "commuteerrand",
+          "wbFamdoc",
+          "wbMntsprt",
+          "wbNavigate",
+          "healthResource",
+          "QN65",
+          "QN34",
+          "QN37",
+          "QN40",
+          "QN41",
+          "QN35",
+          "QN36",
+          "covidFinance",
+          "covidTuition",
+          "spApply",
+          "spRestriction",
+          "QN48",
+          "QN50",
+          "QN52",
+          "QN53",
+          "QN54",
+          "QN55",
+          "QN66",
+          "QN67",
+          "QN56",
+          "QN57",
+          "QN58",
+          "QN59",
+          "daRsrc")
+```
+
+```{R chunk-generator ,echo=FALSE}
+out = NULL
+cnames <- colnames(data.ok)
+for (i in qIDs) {
+  rc_list <- cnames[grepl(paste0(i,"$"), cnames, fixed = F)]
+  
+  if(length(rc_list) == 0){
+    rc_list <- cnames[grepl(paste0(i,""), cnames, fixed = T)]
+  }
+  
+  if(length(rc_list) != 1){
+    rc_list <- c(cnames[grepl(paste0(i,"_"), cnames, fixed = T)],
+                 cnames[grepl(paste0(i,"c"), cnames, fixed = T)],
+                 cnames[grepl(paste0(i,"C"), cnames, fixed = T)],
+                 cnames[grepl(paste0(i,"s"), cnames, fixed = T)],
+                 cnames[grepl(paste0(i,"S"), cnames, fixed = T)])
+  }
+  if(length(rc_list) == 0){
+    knit_expanded <- "\n```{R echo=FALSE, fig.height = 30}\n\n print(\'One or more question ID(s) is invalid.\')\n\n```"
+    out = c(knit_expanded)
+    break
+  }
+  resp <- names(get(rc_list[1],data.ok) %>% attr('labels'))
+  if(length(rc_list) >= 7){
+    if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1 || 
+       unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
+       knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                               main.graph(\'",i,"\',data.ok)\n\n```")
+      out = c(out, knit_expanded)
+    }
+    else if(unlist(gregexpr(pattern = 'mc', rc_list[1])) != -1 &&
+        (unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
+         unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
+         unlist(gregexpr(pattern = 'concerned', resp[1])) != -1||
+         unlist(gregexpr(pattern = 'impact', resp[1])) != -1)){
+            knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 50}\n\n
+                                    main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
+            out = c(out, knit_expanded)
+    }
+    else if(length(rc_list) != 1){
+        knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                                main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
+        out = c(out, knit_expanded)
+    }
+    else{
+      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                              main.graph(\'",i,"\',data.ok)\n\n```")
+      out = c(out, knit_expanded)
+    }
+   }
+   else{
+     if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1 || 
+        unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
+          knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n
+                                  main.graph(\'",i,"\',data.ok)\n\n```")
+          out = c(out, knit_expanded)
+     }
+     else if(unlist(gregexpr(pattern = 'mc', rc_list[1])) != -1 &&
+            (unlist(gregexpr(pattern = 'agree', resp[1])) != -1|| 
+            unlist(gregexpr(pattern = 'satisfied', resp[1])) != -1||
+            unlist(gregexpr(pattern = 'concerned', resp[1])) != -1||
+            unlist(gregexpr(pattern = 'impact', resp[1])) != -1)){
+            knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 50}\n\n
+                                    main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
+            out = c(out, knit_expanded)
+     }
+     else if(length(rc_list) != 1){
+       knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 80}\n\n
+                               main.graph(\'",i,"\',d.dat)\nmain.graph(\'",i,"\',i.dat)\n\n```")
+      out = c(out, knit_expanded)
+     }
+     else{
+      knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 50}\n\n
+                              main.graph(\'",i,"\',data.ok)\n\n```")
+      out = c(out, knit_expanded)
+     }
+  }
+}
+```
+
+`r paste(knit(text = out), collapse = '\n')`
+
+
+

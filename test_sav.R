@@ -11,8 +11,8 @@ data.ok <- nubc2021joined
 
 i.dat$mc.QN58
 
-data.ok$mc.QN30 %>% attr('labels')
-get("mc.QN58",data.ok) %>% attr('label')
+data.ok$mx.QN105_2 %>% attr('labels')
+get("mc.QN57",nubc2021joined)
 subt_builder("mc.QN35",d.dat)
 data.ok$campusName 
 

@@ -167,10 +167,10 @@ rk <- function(qval, new.dat){
 
     # Geom text has a no character if < 5, else '%' is pasted to it 
     for(j in 1:length(prop[[i]])){
-      label_count_var <- label_count_var + 1
-      if(as.numeric(prop[[i]][j])<5)
-        prop[[i]][j] = ''
-      else
+      # label_count_var <- label_count_var + 1
+      # if(as.numeric(prop[[i]][j])<5)
+      #   prop[[i]][j] = ''
+      # else
         prop[[i]][j] = paste0(prop[[i]][j], "%")
     }
     # Number of Color codes for geom text is determined based on the count of prop text
@@ -196,7 +196,6 @@ rk <- function(qval, new.dat){
 
   leveler <- c()
   # Questions displayed based on decreasing rank 1 scores
-  print(sel)
   sel <- sort(sel,decreasing = T) # From earlier, this used as a metric to set 'leveler' for ggplot
   track <- c() # to keep track of row index of df.list to avoid repetition of levels
   for (i in 1:length(sel)) {
@@ -235,6 +234,7 @@ rk <- function(qval, new.dat){
   # print(df.list)
   # print(leveler)
   # print(sel)
+  # print(prop)
 }
 # rk("QN98",d.dat)
 
@@ -304,22 +304,36 @@ mx <- function(qval, new.dat){
 
     
     # Dataframe building
-    temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
+    # temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
     
     # The type of response levels of mx questions are either 6 or 7 in number
     # In case of dataset responses missing, complete() is used to fix these inconsistencies
     if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1 ||
        unlist(gregexpr(pattern = 'impact', resp[length(resp)])) != -1){
+      # default df incase of empty subset of data from parameters
+      if(nrow(table(get(qn, new.dat))) == 0){
+        temp.df <- data.frame(Var1 = factor(c(1:5,999),levels = c(1:5,999)), Freq = c(rep(0,6)), Ques = c(i))
+      }
+      else{
+        temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
+      }
       temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0, Ques = c(i)))
       tex.col.base <- rev(c("black","white","white","black","black","black"))
     }
     else{
+      # default df incase of empty subset of data from parameters
+      if(nrow(table(get(qn, new.dat))) == 0){
+        temp.df <- data.frame(Var1 = factor(c(1:6,999),levels = c(1:6,999)), Freq = c(rep(0,7)), Ques = c(i))
+      }
+      else{
+        temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
+      }
       temp.df <- complete(temp.df, Var1 = factor(c(1:6,999),levels = c(1:6,999)), fill = list(Freq = 0, Ques = c(i)))
       tex.col.base <- rev(c("black","white","white","white","black","black","black"))
     }
+
     
-    
-    if(dim(temp.df)[1] >= 5){
+    if(dim(temp.df)[1] >= 6){ # to ensure the count of levelled responses passed the minimum threshold
       df.list[[i]] <- temp.df
       
       if(nchar(ld)>ld.title.max){ # to find the question label with highest character count
@@ -331,27 +345,33 @@ mx <- function(qval, new.dat){
       # Geometry text prep
       prop[[i]] <- round(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq))
       
-      for(j in 1:length(prop[[i]])){
-        label_count_var <- label_count_var + 1
-        if(as.numeric(prop[[i]][j])<5){
-          prop[[i]][j] = ""
-        }
-        else
-          prop[[i]][j] = paste0(prop[[i]][j], "%")
-      }
-      
-      
-      # Color for geom text
-      if(label_count_var == label_count){
-        tex.col <- c(tex.col, tex.col.base)
-      }
-      else{
-        tex.col <- c(tex.col, tex.col.base[1:label_count_var])
-      }
+
       
       # Main dataframe and geom text for plotting
-      main.prop <- c(main.prop, prop[[i]]) 
-      main.df <- rbind(main.df, df.list[[i]])
+      # if all levels have a frequency of 0 then that question is omitted from the graph
+      if(length(unique(df.list[[i]]$Freq)) == 1 & unique(df.list[[i]]$Freq)[1] == 0){}
+      else{
+        for(j in 1:length(prop[[i]])){
+          label_count_var <- label_count_var + 1
+          if(as.numeric(prop[[i]][j])<5){
+            prop[[i]][j] = ""
+          }
+          else
+            prop[[i]][j] = paste0(prop[[i]][j], "%")
+        }
+        
+        
+        # Color for geom text
+        if(label_count_var == label_count){
+          tex.col <- c(tex.col, tex.col.base)
+        }
+        else{
+          tex.col <- c(tex.col, tex.col.base[1:label_count_var])
+        }
+        
+        main.prop <- c(main.prop, prop[[i]]) 
+        main.df <- rbind(main.df, df.list[[i]])
+      }
     }
     else{
       i <- i - 1
@@ -401,32 +421,26 @@ mx <- function(qval, new.dat){
     legend.pos.x <- 0.15 - ((ld.title.max)/350)
   }
 
-  
-  
-
-  
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=factor(Ques, levels = rev(unique(Ques))), y=Freq,
                                          fill = factor(Var1, levels = leveler))) +
-    geom_bar(stat = "identity", position = "fill", width = c.width) + 
+    geom_bar(stat = "identity", position = "fill", width = c.width) +
     theme_economist(base_size = 14) +
     scale_fill_manual(values = col, guide = guide_legend(reverse = TRUE, nrow = 1), labels = resp) +
     geom_text(data = main.df, aes(Ques, Freq, group = factor(Var1, levels = leveler)),
               label = main.prop,
-              position = position_fill(vjust=0.5), color = tex.col, size = geom_text_size) + 
+              position = position_fill(vjust=0.5), color = tex.col, size = geom_text_size) +
     labs(title = ti.tle,
          subtitle = subt) +
     # scale_x_discrete(breaks = unique(main.df$Ques),
     #                  labels = ld.title) +
-    ubc.theme() + 
+    ubc.theme() +
     theme(legend.position = c(legend.pos.x,0.98)) +
     coord_flip() # this function was originally built with questions on the x-axis; hence coord_flip() is used
   
   print(plot.bar)
-  # print(ti.tle)
-  # print(param_list)
 }
-# mx("QN100",d.dat)
+# mx("QN105",d.dat)
 
 # for mx tri questions with only 3 response levels
 mx.tri <- function(qval, new.dat){
@@ -642,14 +656,26 @@ tb_mx <- function(qval, new.dat){
   i <- 1
   for (qn in rc_list) {
     # dataframe building
-    temp.df <- data.frame(table(get(qn, new.dat)))
+    # temp.df <- data.frame(table(get(qn, new.dat)))
     
     if(unlist(gregexpr(pattern = 'concerned', resp[length(resp)])) != -1 ||
        unlist(gregexpr(pattern = 'impact', resp[length(resp)])) != -1){
+      if(nrow(table(get(qn, new.dat))) == 0){
+        temp.df <- data.frame(Var1 = factor(c(1:5,999),levels = c(1:5,999)), Freq = c(rep(0,6)))
+      }
+      else{
+        temp.df <- data.frame(table(get(qn, new.dat)))
+      }
       temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0))
       # tex.col.base <- rev(c("black","white","white","black","black","black"))
     }
     else{
+      if(nrow(table(get(qn, new.dat))) == 0){
+        temp.df <- data.frame(Var1 = factor(c(1:6,999),levels = c(1:6,999)), Freq = c(rep(0,7)))
+      }
+      else{
+        temp.df <- data.frame(table(get(qn, new.dat)))
+      }
       temp.df <- complete(temp.df, Var1 = factor(c(1:6,999),levels = c(1:6,999)), fill = list(Freq = 0))
       # tex.col.base <- rev(c("black","white","white","white","black","black","black"))
     }
@@ -704,6 +730,7 @@ tb_mx <- function(qval, new.dat){
         mattt[i,j] <- "NA"
     }
     ld.main <- c(ld.main, ld)
+
     # sums are stored
     c_vc <- c(c_vc, paste0(round(100*c_vc.sum/row_tot[i]),"%"))
     c_vc_sc <- c(c_vc_sc, paste0(round(100*c_vc_sc.sum/row_tot[i]),"%"))
@@ -712,7 +739,30 @@ tb_mx <- function(qval, new.dat){
 
   main.df <- rev(data.frame(mattt)) # reording columns because the response levels are in the reverse order
   main.df <- cbind(main.df[,2:dim(main.df)[2]],main.df[,1]) # reordering response level 999 to the end of the columns
-
+  # print(main.df)
+  # print(main.df[dim(main.df)[1],] == "NaN%")
+  # print(main.df[-c(9),])
+  
+  # to remove questions where frequncies of all response levels are 0
+  track <- c()
+  for (j in 1:dim(main.df)[1]) {
+    counter = 0
+    for (k in 1:dim(main.df)[2]) {
+      if(main.df[j,k] == "NaN%"){
+        counter = counter + 1
+      }
+    }
+    if(counter == dim(main.df)[2]){
+      track <- c(track,j)
+    }
+  }
+  if(!is.null(track)){
+    main.df <- main.df[-track,]
+    ld.main <- ld.main[-track]
+  }
+  # print(main.df[-track,])
+  # print(ld.main[-track])
+  
   # identifier variables to add appropriate cumulative title names in the table
   is_conc <- unlist(gregexpr(pattern = 'concerned', resp[2]))
   is_agr <- unlist(gregexpr(pattern = 'agree', resp[2]))
@@ -760,7 +810,7 @@ tb_mx <- function(qval, new.dat){
     c.width <- 0.59
     ft.size <- 5.5
   }
-  
+
   # flextable object creation and format
   ft <- flextable(main.df) %>% theme_box()
   ft <- fontsize(ft, size = ft.size, part = "all")
@@ -775,9 +825,9 @@ tb_mx <- function(qval, new.dat){
     width(width = 0.75, unit = "in", j = 1) %>%
     color(color = "#A7A19D", part = "header") %>%
     color(j = -2:dim(mattt)[2]+4, color = "#A7A19D", part = "body")
-
+  # print(main.df)
 }
-# tb_mx("QN105",i.dat)
+tb_mx("QN105",i.dat)
 
 # table function for rk question type
 tb_rk <- function(qval, new.dat){
@@ -842,10 +892,12 @@ tb_rk <- function(qval, new.dat){
       }
     }
   }
+  # print(mattt)
   # "Total" added to question labels
   ld.main <- c(ld.main,"Total")
   # matrix to df conversion
-  main.df <- data.frame(mattt)
+  main.df <- rev(data.frame(mattt))
+  # print(main.df)
   # response levels vector reversed to match the data
   resp <- c(rev(resp))
   colnames(main.df) <- resp
@@ -857,11 +909,14 @@ tb_rk <- function(qval, new.dat){
   else if(new.dat$isi[1] == "ISI"){
     main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
   }
-
-  # removing an duplicate "Total" row as a result of how the df was built
+  
+  # print(main.df)
+  # removing "Total" row to avoid using the total for Rank 1 to sort the dataframe
   main.df <- main.df[-c(dim(main.df)[1]),]
+  # print(main.df)
   # reordering rows with decreasing Rank 1 scores
   main.df <- main.df[with(main.df, order(-`Rank 1`)),]
+  # print(main.df)
 
   # adding questions column for domestic/international students
   if(new.dat$isi[1] == "Domestic"){
@@ -882,13 +937,14 @@ tb_rk <- function(qval, new.dat){
                                    `Rank 6` = nrow(new.dat),
                                    `Rank 7` = nrow(new.dat))
   }
-  
+  # print(main.df)
   # pasting % to all cells except the last row
   for(k in 1:dim(main.df)[1]-1){
     for(j in 2:dim(main.df)[2]){
       main.df[k,j] <- paste0(main.df[k,j],"%")
     }
   }
+  # print(main.df)
   
   # creating a flextable object and formatting it
   ft <- flextable(main.df) %>% theme_box()
@@ -1113,11 +1169,37 @@ tb_mc <- function(qval, new.dat){
   resp_b <- c() # vector to store valid response levels
   
   # df initialization and definition
-  main.df <- data.frame((table(get(rc_list, new.dat))))
-  i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International")) # international df
-  d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic")) # domestic df
+  # main.df <- data.frame((table(get(rc_list, new.dat))))
+  # i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International")) # international df
+  # d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic")) # domestic df
+  # 
+  # # to fix missing responses levels
+  # i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
+  # d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
   
-  # to fix missing responses levels
+  if(nrow(table(get(rc_list, new.dat)))==0){
+    main.df <- data.frame(Var1 = c(1:(length(resp)-1),999), Freq = c(rep(0,length(resp))))
+  }
+  else{
+    main.df <- data.frame((table(get(rc_list, new.dat))))
+  }
+  
+  if(nrow(table(get(rc_list, i.dat)))==0){
+    i.df <- data.frame(Var1 = c(1), Freq = c(0), Ques = c("International"))
+  }
+  else{
+    i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
+  }
+  if(nrow(table(get(rc_list, d.dat)))==0){
+    d.df <- data.frame(Var1 = c(1), Freq = c(0), Ques = c("Domestic"))
+  }
+  else{
+    d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
+  }
+  i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq)) # counts replaced with its respective percentage value
+  d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq)) # counts replaced with its respective percentage value
+  
+  # to fill in missing responses using the common df as reference
   i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
   d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
   
@@ -1290,11 +1372,26 @@ mc <- function(qval, new.dat){
   i <- 1
   
   # Dataframe building
-  main.df <- data.frame((table(get(rc_list, new.dat))))
-  
-  i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
+  if(nrow(table(get(rc_list, new.dat)))==0){
+    main.df <- data.frame(Var1 = c(1:(length(resp)-1),999), Freq = c(rep(0,length(resp))))
+  }
+  else{
+    main.df <- data.frame((table(get(rc_list, new.dat))))
+  }
+
+  if(nrow(table(get(rc_list, i.dat)))==0){
+    i.df <- data.frame(Var1 = c(1), Freq = c(0), Ques = c("International"))
+  }
+  else{
+    i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
+  }
+  if(nrow(table(get(rc_list, d.dat)))==0){
+    d.df <- data.frame(Var1 = c(1), Freq = c(0), Ques = c("Domestic"))
+  }
+  else{
+    d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
+  }
   i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq)) # counts replaced with its respective percentage value
-  d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
   d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq)) # counts replaced with its respective percentage value
   
   # to fill in missing responses using the common df as reference
@@ -1384,8 +1481,10 @@ mc <- function(qval, new.dat){
     # coord_flip()
 
   print(plot.bar)
+  # print(d.df)
+  # print(i.df)
 }
-# mc("housing",data.ok)
+# mc("housingCountry",data.ok)
 
 # for mc.yn questions
 mc.yn <- function(qval, new.dat){
@@ -1886,7 +1985,7 @@ ubc.theme <- function(){
                legend.position = c(0.15,0.98),
                legend.direction = "horizontal",
                legend.justification = "center",
-               # legend.title = element_blank(),
+               legend.title = element_blank(),
                # legend.title.align = 0.5,
                # legend.text.align = 1,
                legend.key.height = unit(2, 'cm'),

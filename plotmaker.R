@@ -759,6 +759,9 @@ tb_mx <- function(qval, new.dat){
   if(!is.null(track)){
     main.df <- main.df[-track,]
     ld.main <- ld.main[-track]
+    c_vc_sc <- c_vc_sc[-track]
+    c_vc <- c_vc[-track]
+    row_tot <- row_tot[-track]
   }
   # print(main.df[-track,])
   # print(ld.main[-track])
@@ -827,7 +830,7 @@ tb_mx <- function(qval, new.dat){
     color(j = -2:dim(mattt)[2]+4, color = "#A7A19D", part = "body")
   # print(main.df)
 }
-tb_mx("QN105",i.dat)
+# tb_mx("QN105",i.dat)
 
 # table function for rk question type
 tb_rk <- function(qval, new.dat){

@@ -246,9 +246,11 @@ mx <- function(qval, new.dat){
 
   # Reading in response levels
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  # print(resp)
   resp1 <- resp # resp1 is used later to solve dataset inconsistencies
   # resp is reordered to match the order of frequency of responses in the graphs on the reports that were sent out
   resp <- c(unique(resp)[length(unique(resp))],unique(resp)[1:length(unique(resp))-1])
+  # print(resp)
   
   # Domestic/international titles and colors
   ti.tle <- title_builder(param_list)
@@ -315,9 +317,22 @@ mx <- function(qval, new.dat){
         temp.df <- data.frame(Var1 = factor(c(1:5,999),levels = c(1:5,999)), Freq = c(rep(0,6)), Ques = c(i))
       }
       else{
-        temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
+        if(length(resp1) < 6){
+          temp.df <- data.frame(rev(table(get(qn, new.dat))), Ques = c(i))
+          # print(temp.df)
+        }
+        else{
+          temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
+        }
+        # temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
       }
-      temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0, Ques = c(i)))
+      if(length(resp1) < 6){
+        temp.df <- complete(temp.df, Var1 = factor(c(5:1,999),levels = c(5:1,999)), fill = list(Freq = 0, Ques = c(i)))
+      }
+      else{
+        temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0, Ques = c(i)))
+      }
+      # temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0, Ques = c(i)))
       tex.col.base <- rev(c("black","white","white","black","black","black"))
     }
     else{
@@ -326,9 +341,22 @@ mx <- function(qval, new.dat){
         temp.df <- data.frame(Var1 = factor(c(1:6,999),levels = c(1:6,999)), Freq = c(rep(0,7)), Ques = c(i))
       }
       else{
-        temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
+        if(length(resp1) < 6){
+          temp.df <- data.frame(rev(table(get(qn, new.dat))), Ques = c(i))
+          # print(temp.df)
+        }
+        else{
+          temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
+        }
+        # temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
       }
-      temp.df <- complete(temp.df, Var1 = factor(c(1:6,999),levels = c(1:6,999)), fill = list(Freq = 0, Ques = c(i)))
+      if(length(resp1) < 6){
+        temp.df <- complete(temp.df, Var1 = factor(c(6:1,999),levels = c(6:1,999)), fill = list(Freq = 0, Ques = c(i)))
+      }
+      else{
+        temp.df <- complete(temp.df, Var1 = factor(c(1:6,999),levels = c(1:6,999)), fill = list(Freq = 0, Ques = c(i)))
+      }
+      # temp.df <- complete(temp.df, Var1 = factor(c(1:6,999),levels = c(1:6,999)), fill = list(Freq = 0, Ques = c(i)))
       tex.col.base <- rev(c("black","white","white","white","black","black","black"))
     }
 
@@ -381,9 +409,18 @@ mx <- function(qval, new.dat){
   
   # some questions did not have "No opinion/NA"; resp1 preserves the original values of resp
   # "No opinion/Not applicable" is added if missing
+  # print(resp1)
+  # print(resp)
   if(length(unique(main.df$Var1)) != length(resp)){
     resp <- c("No opinion/Not applicable", resp1)
   }
+  
+  if(length(resp1) < 6){
+    resp <- c("No opinion/Not applicable",rev(resp1))
+  }
+  # print(resp)
+  
+  
   
   
   # Subtitle building
@@ -439,6 +476,8 @@ mx <- function(qval, new.dat){
     coord_flip() # this function was originally built with questions on the x-axis; hence coord_flip() is used
   
   print(plot.bar)
+  # print(main.df)
+  # print(resp)
 }
 # mx("QN105",d.dat)
 
@@ -639,7 +678,12 @@ tb_mx <- function(qval, new.dat){
   rc_list <- rc_list.get(qval,new.dat)
   # reading response levels
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
-  resp1 <- resp
+  resp1 <- resp # used to recognize if it is
+  if(length(resp) < 6){ # levelled responses have a mininium of 6 response levels; some levelled response questions were missing "No opinion/Not applicable"(999) response level and the numeric coding is reversed compared to other mx questions(eq QN105)
+    resp <- c(rev(resp),"No opinion/Not applicable")
+  }
+  # print(resp)
+
   resp <- c(unique(resp)[length(unique(resp))],unique(resp)[1:length(unique(resp))-1])
   
   # matrix definition
@@ -664,9 +708,21 @@ tb_mx <- function(qval, new.dat){
         temp.df <- data.frame(Var1 = factor(c(1:5,999),levels = c(1:5,999)), Freq = c(rep(0,6)))
       }
       else{
-        temp.df <- data.frame(table(get(qn, new.dat)))
+        if(length(resp1) < 6){
+          temp.df <- data.frame(rev(table(get(qn, new.dat))))
+          # print(temp.df)
+        }
+        else{
+          temp.df <- data.frame(table(get(qn, new.dat)))
+        }
       }
-      temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0))
+      if(length(resp1) < 6){
+        temp.df <- complete(temp.df, Var1 = factor(c(5:1,999),levels = c(5:1,999)), fill = list(Freq = 0))
+      }
+      else{
+        temp.df <- complete(temp.df, Var1 = factor(c(1:5,999),levels = c(1:5,999)), fill = list(Freq = 0))
+      }
+
       # tex.col.base <- rev(c("black","white","white","black","black","black"))
     }
     else{
@@ -674,9 +730,20 @@ tb_mx <- function(qval, new.dat){
         temp.df <- data.frame(Var1 = factor(c(1:6,999),levels = c(1:6,999)), Freq = c(rep(0,7)))
       }
       else{
-        temp.df <- data.frame(table(get(qn, new.dat)))
+        if(length(resp1) < 6){
+          temp.df <- data.frame(rev(table(get(qn, new.dat))))
+          # print(temp.df)
+        }
+        else{
+          temp.df <- data.frame(table(get(qn, new.dat)))
+        }
       }
-      temp.df <- complete(temp.df, Var1 = factor(c(1:6,999),levels = c(1:6,999)), fill = list(Freq = 0))
+      if(length(resp1) < 6){
+        temp.df <- complete(temp.df, Var1 = factor(c(6:1,999),levels = c(6:1,999)), fill = list(Freq = 0))
+      }
+      else{
+        temp.df <- complete(temp.df, Var1 = factor(c(1:6,999),levels = c(1:6,999)), fill = list(Freq = 0))
+      }
       # tex.col.base <- rev(c("black","white","white","white","black","black","black"))
     }
     
@@ -734,9 +801,11 @@ tb_mx <- function(qval, new.dat){
     # sums are stored
     c_vc <- c(c_vc, paste0(round(100*c_vc.sum/row_tot[i]),"%"))
     c_vc_sc <- c(c_vc_sc, paste0(round(100*c_vc_sc.sum/row_tot[i]),"%"))
+    main.df <- rbind(main.df, df.list[[i]])
     i <- i + 1
   }
-
+  # print(main.df)
+  # print(resp)
   main.df <- rev(data.frame(mattt)) # reording columns because the response levels are in the reverse order
   main.df <- cbind(main.df[,2:dim(main.df)[2]],main.df[,1]) # reordering response level 999 to the end of the columns
   # print(main.df)
@@ -763,8 +832,6 @@ tb_mx <- function(qval, new.dat){
     c_vc <- c_vc[-track]
     row_tot <- row_tot[-track]
   }
-  # print(main.df[-track,])
-  # print(ld.main[-track])
   
   # identifier variables to add appropriate cumulative title names in the table
   is_conc <- unlist(gregexpr(pattern = 'concerned', resp[2]))
@@ -1166,20 +1233,11 @@ tb_mc <- function(qval, new.dat){
   # Column names to read data
   cnames <- colnames(new.dat)
   rc_list <- rc_list.get(qval,new.dat)
-  resp <- names(get(rc_list[1], new.dat) %>% attr('labels')) # reading response levels
   rc_list <- rc_eval("mc",rc_list)
   
-  resp_b <- c() # vector to store valid response levels
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels')) # reading response levels
   
-  # df initialization and definition
-  # main.df <- data.frame((table(get(rc_list, new.dat))))
-  # i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International")) # international df
-  # d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic")) # domestic df
-  # 
-  # # to fix missing responses levels
-  # i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
-  # d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
-  
+  # Dataframe building
   if(nrow(table(get(rc_list, new.dat)))==0){
     main.df <- data.frame(Var1 = c(1:(length(resp)-1),999), Freq = c(rep(0,length(resp))))
   }
@@ -1188,33 +1246,35 @@ tb_mc <- function(qval, new.dat){
   }
   
   if(nrow(table(get(rc_list, i.dat)))==0){
-    i.df <- data.frame(Var1 = c(1), Freq = c(0), Ques = c("International"))
+    i.df <- data.frame(Var1 = c(main.df$Var1), Freq = c(rep(0,length(main.df$Var1))), Ques = c("International"))
   }
   else{
     i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
   }
-  
   if(nrow(table(get(rc_list, d.dat)))==0){
-    d.df <- data.frame(Var1 = c(1), Freq = c(0), Ques = c("Domestic"))
+    d.df <- data.frame(Var1 = c(main.df$Var1), Freq = c(rep(0,length(main.df$Var1))), Ques = c("Domestic"))
   }
   else{
     d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
   }
-  i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq)) # counts replaced with its respective percentage value
-  d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq)) # counts replaced with its respective percentage value
   
   # to fill in missing responses using the common df as reference
   i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
   d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
   
+  # print(main.df)
+  # print(d.df)
+  # print(i.df)
+  
   # stores valid numerical response levels
-  resp_b <- c()
+  resp_b <- c() # vector to store valid response levels
   for (qn in main.df$Var1) {
     resp_b <- c(resp_b, as.numeric(qn))
   }
   
   # matrix intialization; no. of rows = no. of valid response levels, no. of columns = 4 (2 % columns, 2 count columns)
   mattt <- matrix(rep(1,4*(length(resp_b)+1)), ncol = 4)
+
   
   # matrix definition
   for (j in 1:(dim(mattt)[1])) {
@@ -1225,20 +1285,53 @@ tb_mc <- function(qval, new.dat){
       mattt[j,4] <- sum(i.df$Freq)
     }
     else{ # other rows
-      mattt[j,1] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+      if(is.nan(round(100*d.df$Freq[j]/sum(d.df$Freq)))){
+        mattt[j,1] <- "0%"
+      }else{
+        mattt[j,1] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+      }
+      if(is.nan(round(100*i.df$Freq[j]/sum(i.df$Freq)))){
+        mattt[j,3] <- "0%"
+      }else{
+        mattt[j,3] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
+      }
+      # mattt[j,1] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
       mattt[j,2] <- d.df$Freq[j] 
-      mattt[j,3] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
+      # mattt[j,3] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
       mattt[j,4] <- i.df$Freq[j]
     }
   }
+  # print(main.df)
 
   # matrix to df conversion
   main.df <- data.frame(mattt)
+  # print(main.df)
   
   axis.q <- c()
   ## to select valid question labels
   if(0 %in% resp_b){ # 0 is a numerical level only for yes(1)/no(0) mc questions
-    axis.q <- resp
+    i <- 0
+    for (k in resp_b) {
+      i <- i + 1
+      if(k == 999){
+        axis.q <- c(axis.q,resp[length(resp)])
+      }
+      else{
+        if(is.na(resp[k+1])){
+          axis.q <- c(axis.q, resp[i])
+        }
+        else{
+          axis.q <- c(axis.q, resp[k+1])
+        }
+      }
+    }
+    
+    # if(999 %in% resp_b){
+    #   axis.q <- c(resp[(resp_b+1)[-c(length(resp_b))]],resp[length(resp)])
+    # }
+    # else{
+    #   axis.q <- resp[(resp_b+1)]
+    # }
   }
   else{ # for other mc questions
     i <- 0 # because some numerical levels are not always sequential, a fake counter('i') that keeps track of vector indices is used
@@ -1262,6 +1355,7 @@ tb_mc <- function(qval, new.dat){
   axis.q <- c((axis.q),"Distinct count of respondents")
   
   main.df <- cbind(UBCO = axis.q, main.df)
+  # print(main.df)
   
   ft <- flextable(main.df) %>% theme_box() %>%
     set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
@@ -1282,6 +1376,7 @@ tb_mc <- function(qval, new.dat){
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
     width(width = 3.5, unit = "in",j = "UBCO")
 }
+# tb_mc("wbMntsprt",data.ok)
 
 # table function for mc.yn question type 
 # code is identical to tb_mc() varying only in the number of columns on the table
@@ -1293,12 +1388,8 @@ tb_mc.yn <- function(qval, new.dat){
   cnames <- colnames(new.dat)
   rc_list <- rc_list.get(qval,new.dat)
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
-  resp_b <- c()
   
-  # main.df <- data.frame(rev(table(get(rc_list, new.dat))))
-  # i.df <- data.frame((table(get(rc_list, i.dat))), Ques = c("International"))
-  # d.df <- data.frame((table(get(rc_list, d.dat))), Ques = c("Domestic"))
-  # print(main.df)
+
   if(nrow(table(get(rc_list, new.dat)))==0){
     main.df <- data.frame(Var1 = c(0:(length(resp)-2),999), Freq = c(rep(0,length(resp))))
   }
@@ -1319,6 +1410,11 @@ tb_mc.yn <- function(qval, new.dat){
   else{
     d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
   }
+  
+  # to fill in missing responses using the common df as reference
+  i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
+  d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
+  
   # print(main.df)
   # print(d.df)
   # print(i.df)
@@ -1327,13 +1423,6 @@ tb_mc.yn <- function(qval, new.dat){
   resp_b <- c()
   for (qn in main.df$Var1) {
     resp_b <- c(resp_b, as.numeric(qn))
-  }
-  
-  axis.q <- c()
-  if(0 %in% resp_b){
-    axis.q <- c((resp),"Total")
-  }else{
-    axis.q <- c((resp[resp_b]),"Total")
   }
   
   mattt <- matrix(rep(1,4*(length(resp_b)+1)), ncol = 4)
@@ -1345,16 +1434,75 @@ tb_mc.yn <- function(qval, new.dat){
       mattt[j,3] <- "100%"
       mattt[j,4] <- sum(i.df$Freq)
     }
-    else{
-      mattt[j,1] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
-      mattt[j,2] <- d.df$Freq[j]
-      mattt[j,3] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
+    else{ # other rows
+      if(is.nan(round(100*d.df$Freq[j]/sum(d.df$Freq)))){
+        mattt[j,1] <- "0%"
+      }else{
+        mattt[j,1] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+      }
+      if(is.nan(round(100*i.df$Freq[j]/sum(i.df$Freq)))){
+        mattt[j,3] <- "0%"
+      }else{
+        mattt[j,3] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
+      }
+      # mattt[j,1] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+      mattt[j,2] <- d.df$Freq[j] 
+      # mattt[j,3] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
       mattt[j,4] <- i.df$Freq[j]
     }
   }
   
   main.df <- data.frame(mattt)
   # print(mattt)
+  
+  axis.q <- c()
+  ## to select valid question labels
+  if(0 %in% resp_b){ # 0 is a numerical level only for yes(1)/no(0) mc questions
+    i <- 0
+    for (k in resp_b) {
+      i <- i + 1
+      if(k == 999){
+        axis.q <- c(axis.q,resp[length(resp)])
+      }
+      else{
+        if(is.na(resp[k+1])){
+          axis.q <- c(axis.q, resp[i])
+        }
+        else{
+          axis.q <- c(axis.q, resp[k+1])
+        }
+      }
+    }
+    
+    # if(999 %in% resp_b){
+    #   axis.q <- c(resp[(resp_b+1)[-c(length(resp_b))]],resp[length(resp)])
+    # }
+    # else{
+    #   axis.q <- resp[(resp_b+1)]
+    # }
+  }
+  else{ # for other mc questions
+    i <- 0 # because some numerical levels are not always sequential, a fake counter('i') that keeps track of vector indices is used
+    for (k in resp_b) { 
+      i <- i + 1
+      if(k == 999){ # '999' is always associated with "NA/No opinion" and is positioned towards the end of the responses for all questions
+        axis.q <- c(axis.q, resp[length(resp)])
+      }
+      else{
+        # if the numerical level is not synchronous with question the vector index, there is no data to read at that index; hence 'i' is used
+        if(is.na(resp[k])){ 
+          axis.q <- c(axis.q, resp[i])
+        }
+        else{
+          axis.q <- c(axis.q, resp[k])
+        }
+      }
+    }
+  }
+  
+  # 'distinct count' added to the valid question vector
+  axis.q <- c((axis.q),"Total")
+  
   main.df <- cbind(UBCO = axis.q, main.df)
   # print(main.df)
   
@@ -1375,7 +1523,6 @@ tb_mc.yn <- function(qval, new.dat){
     valign(valign = "center", part = "all") %>%
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
     width(width = 3.5, unit = "in",j = "UBCO")
-  # print(main.df)
 }
 # main.graph("QN94",data.ok)
 
@@ -1462,11 +1609,20 @@ mc <- function(qval, new.dat){
   # axis.q.i <- c()
   # axis.q.d <- c()
   if(0 %in% resp_b){
-    if(999 %in% resp_b){
-      axis.q <- c(resp[(resp_b+1)[-c(length(resp_b))]],resp[length(resp)])
-    }
-    else{
-      axis.q <- resp[(resp_b+1)]
+    i <- 0
+    for (k in resp_b) {
+      i <- i + 1
+      if(k == 999){
+        axis.q <- c(axis.q,resp[length(resp)])
+      }
+      else{
+        if(is.na(resp[k+1])){
+          axis.q <- c(axis.q, resp[i])
+        }
+        else{
+          axis.q <- c(axis.q, resp[k+1])
+        }
+      }
     }
   }
   else{
@@ -1511,6 +1667,7 @@ mc <- function(qval, new.dat){
   # print(main.df)
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
+  subt <- region.get(subt, new.dat)
 
   # sizing format
   geom_text_size <- sizer(main.df$Var1)[2]

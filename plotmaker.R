@@ -167,10 +167,10 @@ rk <- function(qval, new.dat){
 
     # Geom text has a no character if < 5, else '%' is pasted to it 
     for(j in 1:length(prop[[i]])){
-      # label_count_var <- label_count_var + 1
-      # if(as.numeric(prop[[i]][j])<5)
-      #   prop[[i]][j] = ''
-      # else
+      label_count_var <- label_count_var + 1
+      if(as.numeric(prop[[i]][j])<5)
+        prop[[i]][j] = ''
+      else
         prop[[i]][j] = paste0(prop[[i]][j], "%")
     }
     # Number of Color codes for geom text is determined based on the count of prop text
@@ -1193,6 +1193,7 @@ tb_mc <- function(qval, new.dat){
   else{
     i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
   }
+  
   if(nrow(table(get(rc_list, d.dat)))==0){
     d.df <- data.frame(Var1 = c(1), Freq = c(0), Ques = c("Domestic"))
   }
@@ -1294,9 +1295,33 @@ tb_mc.yn <- function(qval, new.dat){
   resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
   resp_b <- c()
   
-  main.df <- data.frame(rev(table(get(rc_list, new.dat))))
-  i.df <- data.frame((table(get(rc_list, i.dat))), Ques = c("International"))
-  d.df <- data.frame((table(get(rc_list, d.dat))), Ques = c("Domestic"))
+  # main.df <- data.frame(rev(table(get(rc_list, new.dat))))
+  # i.df <- data.frame((table(get(rc_list, i.dat))), Ques = c("International"))
+  # d.df <- data.frame((table(get(rc_list, d.dat))), Ques = c("Domestic"))
+  # print(main.df)
+  if(nrow(table(get(rc_list, new.dat)))==0){
+    main.df <- data.frame(Var1 = c(0:(length(resp)-2),999), Freq = c(rep(0,length(resp))))
+  }
+  else{
+    main.df <- data.frame((table(get(rc_list, new.dat))))
+  }
+
+  if(nrow(table(get(rc_list, i.dat)))==0){
+    i.df <- data.frame(Var1 = c(0:(length(resp)-2),999), Freq = c(rep(0,length(resp))), Ques = c("International"))
+  }
+  else{
+    i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
+  }
+
+  if(nrow(table(get(rc_list, d.dat)))==0){
+    d.df <- data.frame(Var1 = c(0:(length(resp)-2),999), Freq = c(rep(0,length(resp))), Ques = c("Domestic"))
+  }
+  else{
+    d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
+  }
+  # print(main.df)
+  # print(d.df)
+  # print(i.df)
   
   # Selecting valid choices from the data subset
   resp_b <- c()
@@ -1329,7 +1354,9 @@ tb_mc.yn <- function(qval, new.dat){
   }
   
   main.df <- data.frame(mattt)
+  # print(mattt)
   main.df <- cbind(UBCO = axis.q, main.df)
+  # print(main.df)
   
   ft <- flextable(main.df) %>% theme_box() %>%
     set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
@@ -1343,14 +1370,14 @@ tb_mc.yn <- function(qval, new.dat){
     align_nottext_col(align = "center", header = TRUE)
 
   set_table_properties(ft, layout = "autofit")
-   
+
   ft %>% colformat_int(big.mark = "") %>%
     valign(valign = "center", part = "all") %>%
     border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
     width(width = 3.5, unit = "in",j = "UBCO")
   # print(main.df)
 }
-# tb_mc.yn("QN40",data.ok)
+# main.graph("QN94",data.ok)
 
 # for mc questions
 mc <- function(qval, new.dat){
@@ -1383,23 +1410,40 @@ mc <- function(qval, new.dat){
   }
 
   if(nrow(table(get(rc_list, i.dat)))==0){
-    i.df <- data.frame(Var1 = c(1), Freq = c(0), Ques = c("International"))
+    i.df <- data.frame(Var1 = c(main.df$Var1), Freq = c(rep(0,length(main.df$Var1))), Ques = c("International"))
   }
   else{
     i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
   }
   if(nrow(table(get(rc_list, d.dat)))==0){
-    d.df <- data.frame(Var1 = c(1), Freq = c(0), Ques = c("Domestic"))
+    d.df <- data.frame(Var1 = c(main.df$Var1), Freq = c(rep(0,length(main.df$Var1))), Ques = c("Domestic"))
   }
   else{
     d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
   }
-  i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq)) # counts replaced with its respective percentage value
-  d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq)) # counts replaced with its respective percentage value
+  
+  # print(main.df)
+  # print(d.df)
+  # print(i.df)
   
   # to fill in missing responses using the common df as reference
   i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
   d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
+  
+  # i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq)) # counts replaced with its respective percentage value
+  # d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq)) # counts replaced with its respective percentage value
+  
+  if(is.nan(round(100*i.df$Freq/sum(i.df$Freq)))){
+    i.df$Freq <- 0
+  }else{
+    i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq))
+  }
+  
+  if(is.nan(round(100*d.df$Freq/sum(d.df$Freq)))){
+    d.df$Freq <- 0
+  }else{
+    d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq))
+  }
   
   # prop variables set up for geom_text
   i.prop <- paste0(i.df$Freq,"%") 
@@ -1418,7 +1462,12 @@ mc <- function(qval, new.dat){
   # axis.q.i <- c()
   # axis.q.d <- c()
   if(0 %in% resp_b){
-    axis.q <- resp
+    if(999 %in% resp_b){
+      axis.q <- c(resp[(resp_b+1)[-c(length(resp_b))]],resp[length(resp)])
+    }
+    else{
+      axis.q <- resp[(resp_b+1)]
+    }
   }
   else{
     i <- 0
@@ -1437,7 +1486,7 @@ mc <- function(qval, new.dat){
       }
     }
   }
-  
+  # print(axis.q)
   
   # adding new line to selected question labels based on their character lengths
   for (j in 1:length(axis.q)) {
@@ -1459,7 +1508,7 @@ mc <- function(qval, new.dat){
 
   # domestic df and international df combined horizontally (by rows)
   main.df <- rbind(d.df,i.df)
-
+  # print(main.df)
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
 
@@ -1484,10 +1533,8 @@ mc <- function(qval, new.dat){
     # coord_flip()
 
   print(plot.bar)
-  # print(d.df)
-  # print(i.df)
 }
-# mc("housingCountry",data.ok)
+# main.graph("commuteFreq",data.ok)
 
 # for mc.yn questions
 mc.yn <- function(qval, new.dat){
@@ -1660,8 +1707,8 @@ ms <- function(qval, new.dat){ # code is similar to the tb_ms() function and sha
     scale_x_continuous(limits = c(0, 2 * max(main.df$Freq))) # setting x-axis bound limits
   
   print(plot.bar)
-  print(main.prop)
-  print(main.df$Freq)
+  # print(main.prop)
+  # print(main.df$Freq)
 }
 # ms("spRestriction",data.ok)
 

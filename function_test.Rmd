@@ -139,13 +139,62 @@ d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 
 <!-- ```{R echo = FALSE, fig.height = 120} -->
 <!-- # source("plotmaker.R") -->
-<!-- main.graph("QN98",i.dat) -->
-<!-- main.graph("QN53",data.ok) -->
+<!-- main.graph("QN111",i.dat) -->
+<!-- tb_mc("commuteFreq",data.ok) -->
 <!-- ``` -->
 
 ```{R qID-chunk, echo=FALSE}
-qIDs <- c("QN98")
-          #,"commFreq","housing","spRestriction","QN34")
+qIDs <- c("reside",
+          "housing",
+          "housingCountry",
+          "QN28",
+          "QN100",
+          "QN104",
+          "QN105",
+          "mindset",
+          "interSupport",
+          "commSatisfy",
+          "commFreq",
+          "commAgree",
+          "QN30",
+          "QN94",
+          "acdEssential",
+          "acdEssentialcrs",
+          "QN980",
+          "QN98",
+          "QN111",
+          "commuteFreq",
+          "QN44",
+          "QN45",
+          "commuteerrand",
+          "wbFamdoc",
+          "wbMntsprt",
+          "wbNavigate",
+          "healthResource",
+          "QN65",
+          "QN34",
+          "QN37",
+          "QN40",
+          "QN41",
+          "QN35",
+          "QN36",
+          "covidFinance",
+          "covidTuition",
+          "spApply",
+          "spRestriction",
+          "QN48",
+          "QN50",
+          "QN52",
+          "QN53",
+          "QN54",
+          "QN55",
+          "QN66",
+          "QN67",
+          "QN56",
+          "QN57",
+          "QN58",
+          "QN59",
+          "daRsrc")
 ```
 
 ```{R chunk-generator ,echo=FALSE}
@@ -171,7 +220,7 @@ for (i in qIDs) {
     break
   }
   resp <- names(get(rc_list[1],data.ok) %>% attr('labels'))
-  if(length(rc_list) >= 7){
+  if(length(rc_list) >= 7 || length(resp) >= 4){
     if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1 || 
        unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
        knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n

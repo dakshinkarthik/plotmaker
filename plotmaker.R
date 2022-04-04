@@ -434,7 +434,7 @@ mx <- function(qval, new.dat){
   leveler <- c(unique(main.df$Var1)[length(unique(main.df$Var1))],
                unique(main.df$Var1)[1:(length(unique(main.df$Var1))-1)])
   
-  # legend alignment based on length of question label with the largest character count
+  # legend alignment based on length of question label with the largest character count and number of questions
   legend.pos.x <- 0.15
   if(ld.title.max < 35){
     legend.pos.x <- 0.15 + ((ld.title.max)/240)
@@ -457,6 +457,14 @@ mx <- function(qval, new.dat){
   else if(ld.title.max > 100){
     legend.pos.x <- 0.15 - ((ld.title.max)/350)
   }
+  
+  legend.pos.y <- 0.98
+  if(length(rc_list) < 2){
+    legend.pos.y <- 0.95
+  }
+  else if(length(rc_list) < 4){
+    legend.pos.y <- 0.96
+  }
 
   # GGplot graphing
   plot.bar <- ggplot(data = main.df, aes(x=factor(Ques, levels = rev(unique(Ques))), y=Freq,
@@ -472,7 +480,7 @@ mx <- function(qval, new.dat){
     # scale_x_discrete(breaks = unique(main.df$Ques),
     #                  labels = ld.title) +
     ubc.theme() +
-    theme(legend.position = c(legend.pos.x,0.98)) +
+    theme(legend.position = c(legend.pos.x,legend.pos.y)) +
     coord_flip() # this function was originally built with questions on the x-axis; hence coord_flip() is used
   
   print(plot.bar)
@@ -543,7 +551,7 @@ mx.tri <- function(qval, new.dat){
     temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
     temp.df <- complete(temp.df, Var1 = factor(c(1:3),levels = c(1:3)), fill = list(Freq = 0, Ques = c(i)))
     df.list[[i]] <- temp.df
-    # df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
+    df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
     
     # Geometry text prep
     prop[[i]] <- round(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
@@ -578,8 +586,8 @@ mx.tri <- function(qval, new.dat){
           axis.text.y = element_blank(),
           legend.position = c(0.5,0.75),
           legend.spacing.y = unit(3, "in")
-          ) +
-    scale_y_continuous(limits = c(0, 2 * max(main.df$Freq)))
+          ) 
+    # scale_y_continuous(limits = c(0, 2 * max(main.df$Freq)))
   
   # Printing plot
   print(plot.bar)
@@ -2286,13 +2294,13 @@ sizer <- function(rc_list){
   
   if(length(rc_list) <= 2){
     geom_text_size <- 75
-    c.width <- 0.15
+    c.width <- 0.4
   }else if(length(rc_list) <= 3){
     geom_text_size <- 90
-    c.width <- 0.2
+    c.width <- 0.4
   }else if(length(rc_list) <= 6){ # 
     geom_text_size <- 75
-    c.width <- 0.7
+    c.width <- 0.6
   }
   else{
     geom_text_size <- 50

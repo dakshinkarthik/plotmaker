@@ -407,15 +407,13 @@ mx <- function(qval, new.dat){
   }
   
   
-  # some questions did not have "No opinion/NA"; resp1 preserves the original values of resp
+  # some questions did not have "No opinion/NA"; resp1 preserves the original values of resp and is used to make a complete response vector
   # "No opinion/Not applicable" is added if missing
-  # print(resp1)
-  # print(resp)
   if(length(unique(main.df$Var1)) != length(resp)){
     resp <- c("No opinion/Not applicable", resp1)
   }
   
-  if(length(resp1) < 6){
+  if(length(resp1) < 6){ # for leveled-responses missing the 999-level
     resp <- c("No opinion/Not applicable",rev(resp1))
   }
   # print(resp)
@@ -586,8 +584,8 @@ mx.tri <- function(qval, new.dat){
           axis.text.y = element_blank(),
           legend.position = c(0.5,0.75),
           legend.spacing.y = unit(3, "in")
-          ) 
-    # scale_y_continuous(limits = c(0, 2 * max(main.df$Freq)))
+          ) +
+    scale_y_continuous(limits = c(0, 2 * max(main.df$Freq)))
   
   # Printing plot
   print(plot.bar)
@@ -653,14 +651,37 @@ tb_mx.tri <- function(qval, new.dat){
   ft.size <- 6
   
   # Setting table headers for domestic/international data splits; also adds the row totals to the df
-  if(new.dat$isi[1] == "Domestic"){
-    main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1]) %>%
-      add_column(Total = row_tot)
+  if(param_list[6]=="Okanagan"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
   }
-  else if(new.dat$isi[1] == "ISI"){
-    main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1]) %>%
-      add_column(Total = row_tot)
+  else if(param_list[6]=="Vancouver"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBCV Domestic` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBCV International` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
   }
+  else{
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBC Domestic` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBC International` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
+  }
+
   
   # flextable object created from df
   ft <- flextable(main.df) %>% theme_box() # theme_box() adds a box with borders to the table
@@ -853,13 +874,31 @@ tb_mx <- function(qval, new.dat){
   ft.size <- 6
   
 
+  if(param_list[6]=="Okanagan"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1])
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
+    }
+  }
+  else if(param_list[6]=="Vancouver"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBCV Domestic` = ld.main, .before = resp[1])
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBCV International` = ld.main, .before = resp[1])
+    }
+  }
+  else{
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBC Domestic` = ld.main, .before = resp[1])
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBC International` = ld.main, .before = resp[1])
+    }
+  }
 
-  if(new.dat$isi[1] == "Domestic"){
-    main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1])
-  }
-  else if(new.dat$isi[1] == "ISI"){
-    main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
-  }
   
   # the identifier variables are used here to identify and set the correct cumulative column names; row total column is also added to the table
   if(is_conc != -1){
@@ -981,12 +1020,31 @@ tb_rk <- function(qval, new.dat){
   colnames(main.df) <- resp
   
   # adding question columns for domestic/international students
-  if(new.dat$isi[1] == "Domestic"){
-    main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1])
+  if(param_list[6]=="Okanagan"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1])
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
+    }
   }
-  else if(new.dat$isi[1] == "ISI"){
-    main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
+  else if(param_list[6]=="Vancouver"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBCV Domestic` = ld.main, .before = resp[1])
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBCV International` = ld.main, .before = resp[1])
+    }
   }
+  else{
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBC Domestic` = ld.main, .before = resp[1])
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBC International` = ld.main, .before = resp[1])
+    }
+  }
+
   
   # print(main.df)
   # removing "Total" row to avoid using the total for Rank 1 to sort the dataframe
@@ -997,25 +1055,68 @@ tb_rk <- function(qval, new.dat){
   # print(main.df)
 
   # adding questions column for domestic/international students
-  if(new.dat$isi[1] == "Domestic"){
-    main.df <- main.df %>% add_row(`UBCO Domestic` = "Total", `Rank 1` = nrow(new.dat),
-                                   `Rank 2` = nrow(new.dat),
-                                   `Rank 3` = nrow(new.dat),
-                                   `Rank 4` = nrow(new.dat),
-                                   `Rank 5` = nrow(new.dat),
-                                   `Rank 6` = nrow(new.dat),
-                                   `Rank 7` = nrow(new.dat))
+  if(param_list[6]=="Okanagan"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_row(`UBCO Domestic` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_row(`UBCO International` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
   }
-  else if(new.dat$isi[1] == "ISI"){
-    main.df <- main.df %>% add_row(`UBCO International` = "Total", `Rank 1` = nrow(new.dat),
-                                   `Rank 2` = nrow(new.dat),
-                                   `Rank 3` = nrow(new.dat),
-                                   `Rank 4` = nrow(new.dat),
-                                   `Rank 5` = nrow(new.dat),
-                                   `Rank 6` = nrow(new.dat),
-                                   `Rank 7` = nrow(new.dat))
+  else if(param_list[6]=="Vancouver"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_row(`UBCV Domestic` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_row(`UBCV International` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
   }
-  # print(main.df)
+  else{
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_row(`UBC Domestic` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_row(`UBC International` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
+  }
+
+
   # pasting % to all cells except the last row
   for(k in 1:dim(main.df)[1]-1){
     for(j in 2:dim(main.df)[2]){
@@ -1208,28 +1309,75 @@ tb_ms <- function(qval, new.dat){
   axis.q <- unique(main.df$Var1) # gets a single copy of all the questions from the df
 
   main.df <- data.frame(mattt) # matrix to df conversion
-  main.df <- cbind(UBCO = c(axis.q,"Distinct count of Respondents"), main.df) # adding questions column to the df along with 'Distinct count'
-
-  # flextable object creation
-  ft <- flextable(main.df) %>% theme_box() %>%
-    set_header_labels(X1="%",X2="n",X3="%",X4="n") %>% # setting header labels to their appropriate columns
-    add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>% # adding a super heading
-    merge_h(part = "header") %>% # merge horizontal column names (merges 'UBCO')
-    merge_v(part = "header") %>% # merges vertical column names (merges Domestic together and merges international together)
-    color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>% # column header colors
-    color(j = "UBCO", color = "#A7A19D", part = "header") %>% # question column header colors
-    # color(j = "Domestic", part = "header", color = "#54504C") %>%
-    fontsize(size = 6, part = "all") %>% # font size
-    align_text_col(align = "center", header = TRUE) %>%
-    align_nottext_col(align = "center", header = TRUE)
-
-  set_table_properties(ft, layout = "autofit")
-
-  ft %>% colformat_int(big.mark = "") %>%
-    valign(valign = "center", part = "all") %>%
-    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>% # border color
-    width(width = 3.5, unit = "in",j = "UBCO") # cell width
-  
+  if(param_list[6]=="Okanagan"){
+    main.df <- cbind(UBCO = c(axis.q,"Distinct count of Respondents"), main.df) # adding questions column to the df along with 'Distinct count'
+    
+    # flextable object creation
+    ft <- flextable(main.df) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>% # setting header labels to their appropriate columns
+      add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>% # adding a super heading
+      merge_h(part = "header") %>% # merge horizontal column names (merges 'UBCO')
+      merge_v(part = "header") %>% # merges vertical column names (merges Domestic together and merges international together)
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>% # column header colors
+      color(j = "UBCO", color = "#A7A19D", part = "header") %>% # question column header colors
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>% # font size
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>% # border color
+      width(width = 3.5, unit = "in",j = "UBCO") # cell width
+  }
+  else if(param_list[6]=="Vancouver"){
+    main.df <- cbind(UBCV = c(axis.q,"Distinct count of Respondents"), main.df) # adding questions column to the df along with 'Distinct count'
+    
+    # flextable object creation
+    ft <- flextable(main.df) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>% # setting header labels to their appropriate columns
+      add_header(UBCV = "UBCV", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>% # adding a super heading
+      merge_h(part = "header") %>% # merge horizontal column names (merges 'UBCO')
+      merge_v(part = "header") %>% # merges vertical column names (merges Domestic together and merges international together)
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>% # column header colors
+      color(j = "UBCV", color = "#A7A19D", part = "header") %>% # question column header colors
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>% # font size
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>% # border color
+      width(width = 3.5, unit = "in",j = "UBCV") # cell width
+  }
+  else{
+    main.df <- cbind(UBC = c(axis.q,"Distinct count of Respondents"), main.df) # adding questions column to the df along with 'Distinct count'
+    
+    # flextable object creation
+    ft <- flextable(main.df) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>% # setting header labels to their appropriate columns
+      add_header(UBC = "UBC", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>% # adding a super heading
+      merge_h(part = "header") %>% # merge horizontal column names (merges 'UBCO')
+      merge_v(part = "header") %>% # merges vertical column names (merges Domestic together and merges international together)
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>% # column header colors
+      color(j = "UBC", color = "#A7A19D", part = "header") %>% # question column header colors
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>% # font size
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>% # border color
+      width(width = 3.5, unit = "in",j = "UBC") # cell width
+  }
 }
 # tb_ms("QN59",data.ok)
 
@@ -1362,27 +1510,76 @@ tb_mc <- function(qval, new.dat){
   # 'distinct count' added to the valid question vector
   axis.q <- c((axis.q),"Distinct count of respondents")
   
-  main.df <- cbind(UBCO = axis.q, main.df)
-  # print(main.df)
-  
-  ft <- flextable(main.df) %>% theme_box() %>%
-    set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
-    add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
-    merge_h(part = "header") %>%
-    merge_v(part = "header") %>%
-    color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
-    color(j = "UBCO", color = "#A7A19D", part = "header") %>%
-    # color(j = "Domestic", part = "header", color = "#54504C") %>%
-    fontsize(size = 6, part = "all") %>%
-    align_text_col(align = "center", header = TRUE) %>%
-    align_nottext_col(align = "center", header = TRUE)
+  if(param_list[6]=="Okanagan"){
+    main.df <- cbind(UBCO = axis.q, main.df)
+    # print(main.df)
+    
+    ft <- flextable(main.df) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+      add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+      merge_h(part = "header") %>%
+      merge_v(part = "header") %>%
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+      color(j = "UBCO", color = "#A7A19D", part = "header") %>%
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 3.5, unit = "in",j = "UBCO")
+  }
+  else if(param_list[6]=="Vancouver"){
+    main.df <- cbind(UBCV = axis.q, main.df)
+    # print(main.df)
+    
+    ft <- flextable(main.df) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+      add_header(UBCV = "UBCV", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+      merge_h(part = "header") %>%
+      merge_v(part = "header") %>%
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+      color(j = "UBCV", color = "#A7A19D", part = "header") %>%
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 3.5, unit = "in",j = "UBCV")
+  }
+  else{
+    main.df <- cbind(UBC = axis.q, main.df)
+    # print(main.df)
+    
+    ft <- flextable(main.df) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+      add_header(UBC = "UBC", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+      merge_h(part = "header") %>%
+      merge_v(part = "header") %>%
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+      color(j = "UBC", color = "#A7A19D", part = "header") %>%
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 3.5, unit = "in",j = "UBC")
+  }
 
-  set_table_properties(ft, layout = "autofit")
-
-  ft %>% colformat_int(big.mark = "") %>%
-    valign(valign = "center", part = "all") %>%
-    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
-    width(width = 3.5, unit = "in",j = "UBCO")
 }
 # tb_mc("wbMntsprt",data.ok)
 
@@ -1511,26 +1708,73 @@ tb_mc.yn <- function(qval, new.dat){
   # 'distinct count' added to the valid question vector
   axis.q <- c((axis.q),"Total")
   
-  main.df <- cbind(UBCO = axis.q, main.df)
-  # print(main.df)
-  
-  ft <- flextable(main.df) %>% theme_box() %>%
-    set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
-    color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
-    add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
-    merge_h(part = "header") %>%
-    merge_v(part = "header") %>%
-    color(j = "UBCO", color = "#A7A19D", part = "header") %>%
-    fontsize(size = 6, part = "all") %>%
-    align_text_col(align = "center", header = TRUE) %>%
-    align_nottext_col(align = "center", header = TRUE)
+  if(param_list[6]=="Okanagan"){
+    main.df <- cbind(UBCO = axis.q, main.df)
+    # print(main.df)
+    
+    ft <- flextable(main.df) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+      add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+      merge_h(part = "header") %>%
+      merge_v(part = "header") %>%
+      color(j = "UBCO", color = "#A7A19D", part = "header") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 3.5, unit = "in",j = "UBCO")
+  }
+  else if(param_list[6]=="Vancouver"){
+    main.df <- cbind(UBCV = axis.q, main.df)
+    # print(main.df)
+    
+    ft <- flextable(main.df) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+      add_header(UBCV = "UBCV", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+      merge_h(part = "header") %>%
+      merge_v(part = "header") %>%
+      color(j = "UBCV", color = "#A7A19D", part = "header") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 3.5, unit = "in",j = "UBCV")
+  }
+  else{
+    main.df <- cbind(UBC = axis.q, main.df)
+    # print(main.df)
+    
+    ft <- flextable(main.df) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+      add_header(UBC = "UBC", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+      merge_h(part = "header") %>%
+      merge_v(part = "header") %>%
+      color(j = "UBC", color = "#A7A19D", part = "header") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 3.5, unit = "in",j = "UBC")
+  }
 
-  set_table_properties(ft, layout = "autofit")
-
-  ft %>% colformat_int(big.mark = "") %>%
-    valign(valign = "center", part = "all") %>%
-    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
-    width(width = 3.5, unit = "in",j = "UBCO")
 }
 # main.graph("QN94",data.ok)
 
@@ -2045,26 +2289,70 @@ tb_cs <- function(qval, new.dat){ # shares the same code from cs() for df buildi
   df.d <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(d.perq/d.dc), Ques = c("Domestic"))
   df.i <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(i.perq/i.dc), Ques = c("International"))
 
-  
-  main.df <- data.frame(UBCO = c(ld.title,"Total number of respondents"),
-                        Domestic = c(paste0(df.d$Freq,"%"),d.dc),
-                        International = c(paste0(df.i$Freq,"%"),i.dc))
-  
-  # flextable object creation
-  ft <- flextable(main.df) %>% theme_box() %>%
-    color(j = c("Domestic","International"), color = "#A7A19D", part = "all") %>%
-    color(j = "UBCO", color = "#A7A19D", part = "header") %>%
-    # color(j = "Domestic", part = "header", color = "#54504C") %>%
-    fontsize(size = 6, part = "all") %>%
-    align_text_col(align = "center", header = TRUE) %>%
-    align_nottext_col(align = "center", header = TRUE)
-  
-  set_table_properties(ft, layout = "autofit")
-  
-  ft %>% colformat_int(big.mark = "") %>%
-    valign(valign = "center", part = "all") %>%
-    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
-    width(width = 5, unit = "in",j = "UBCO")
+  if(param_list[6]=="Okanagan"){
+    main.df <- data.frame(UBCO = c(ld.title,"Total number of respondents"),
+                          Domestic = c(paste0(df.d$Freq,"%"),d.dc),
+                          International = c(paste0(df.i$Freq,"%"),i.dc))
+    
+    # flextable object creation
+    ft <- flextable(main.df) %>% theme_box() %>%
+      color(j = c("Domestic","International"), color = "#A7A19D", part = "all") %>%
+      color(j = "UBCO", color = "#A7A19D", part = "header") %>%
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 5, unit = "in",j = "UBCO")
+  }
+  else if(param_list[6]=="Vancouver"){
+    main.df <- data.frame(UBCV = c(ld.title,"Total number of respondents"),
+                          Domestic = c(paste0(df.d$Freq,"%"),d.dc),
+                          International = c(paste0(df.i$Freq,"%"),i.dc))
+    
+    # flextable object creation
+    ft <- flextable(main.df) %>% theme_box() %>%
+      color(j = c("Domestic","International"), color = "#A7A19D", part = "all") %>%
+      color(j = "UBCV", color = "#A7A19D", part = "header") %>%
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 5, unit = "in",j = "UBCV")
+  }
+  else{
+    main.df <- data.frame(UBC = c(ld.title,"Total number of respondents"),
+                          Domestic = c(paste0(df.d$Freq,"%"),d.dc),
+                          International = c(paste0(df.i$Freq,"%"),i.dc))
+    
+    # flextable object creation
+    ft <- flextable(main.df) %>% theme_box() %>%
+      color(j = c("Domestic","International"), color = "#A7A19D", part = "all") %>%
+      color(j = "UBC", color = "#A7A19D", part = "header") %>%
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 5, unit = "in",j = "UBC")
+  }
+
   
 }
 # tb_cs("QN34",data.ok)

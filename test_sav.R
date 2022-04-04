@@ -1,9 +1,7 @@
 
 
-library(haven)
-library(devtools)
-library(glue)
-library(surveytoolbox)
+
+
 
 nubc2021joined <- read_sav("./data/nubc2021com.sav")
 data.ok <- nubc2021joined

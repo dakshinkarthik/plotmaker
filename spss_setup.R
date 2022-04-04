@@ -1,11 +1,9 @@
 nubc <- read_sav("./data/nubc2021_v3.sav")
 nubc$mc.reside %>% attr('label')
 
-install.packages('haven')
+
 library(haven)
-install.packages("devtools")
-install.packages("Rtools")
-devtools::install_github("martinctc/surveytoolbox")
+
 
 nubcd <- data.frame(nubc)
 

@@ -1,6 +1,8 @@
 nubc <- read_sav("./data/nubc2021_v4.sav")
 nubc$mc.reside %>% attr('label')
 
+nubc$rk.QN98complete
+
 
 library(haven)
 
@@ -60,3 +62,4 @@ attr(nubc$mx.QN104_8, 'label') <- "How concerned are you with the following issu
 
 write_sav(nubc, "./data/nubc2021_v5.sav")
 nubc <- read_sav("./data/nubc2021_v5.sav")
+nubc$rk.QN98complete

@@ -1,4 +1,4 @@
-nubc <- read_sav("./data/nubc2021_v3.sav")
+nubc <- read_sav("./data/nubc2021_v4.sav")
 nubc$mc.reside %>% attr('label')
 
 
@@ -48,3 +48,15 @@ nubc$rk.QN98complete
 
 write_sav(nubc, "./data/nubc2021_v4.sav")
 nubc <- read_sav("./data/nubc2021com.sav")
+
+nubc$mx.QN104_3 %>% attr('label')
+
+attr(nubc$mx.QN104_1, 'label') <- "How concerned are you with the following issues in your first year at UBC? - Accessing services for my disability/on-going medical condition"
+attr(nubc$mx.QN104_2, 'label') <- "How concerned are you with the following issues in your first year at UBC? - Getting into my first-choice program"
+attr(nubc$mx.QN104_3, 'label') <- "How concerned are you with the following issues in your first year at UBC? - Being able to maintain my Grade Point Average (GPA)"
+attr(nubc$mx.QN104_4, 'label') <- "How concerned are you with the following issues in your first year at UBC? - Receiving the career and academic advice I need"
+attr(nubc$mx.QN104_7, 'label') <- "How concerned are you with the following issues in your first year at UBC? - Discovering/confirming if UBC is the right place for me"
+attr(nubc$mx.QN104_8, 'label') <- "How concerned are you with the following issues in your first year at UBC? - Travelling to Canada in time for the start of term"
+
+write_sav(nubc, "./data/nubc2021_v5.sav")
+nubc <- read_sav("./data/nubc2021_v5.sav")

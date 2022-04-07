@@ -40,7 +40,7 @@ SEXUALITY <- "Heterosexual"
 ```{R data-reads, echo=FALSE}
 param_list <- c(ENTRY_TYPE,GENDER_ORIENTATION,SEXUALITY,GENDER,ETHNICITY,CAMPUS)
 # param_list <- c("Direct-Transfer","ALL","ALL","ALL","ALL","Okanagan")
-nubc2021joined <- read_sav("data/nubc2021_v4.sav")
+nubc2021joined <- read_sav("data/nubc2021_v5.sav")
 data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Okanagan"),]
 i.dat <- data.ok[which(data.ok$isi == "ISI"),]
 d.dat <- data.ok[which(data.ok$isi == "Domestic"),]

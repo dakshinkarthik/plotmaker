@@ -137,65 +137,71 @@ i.dat <- data.ok[which(data.ok$isi == "ISI"),]
 d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 ```
 
-<!-- ```{R echo = FALSE, fig.height = 120} -->
-<!-- # source("plotmaker.R") -->
-<!-- main.graph("QN98",d.dat) -->
-<!-- tb_mc("commuteFreq",data.ok) -->
-<!-- ``` -->
+```{R echo = FALSE, fig.height = 120}
+# source("plotmaker.R")
+main.graph("QN98",d.dat)
+tb_mc("commuteFreq",data.ok)
+
+mx_graph(processed_graph_dataList[[2]])
+mx_table(processed_table_dataList[[2]])
+
+mc_graph(processed_graph_dataList[[4]])
+mc_table(processed_table_dataList[[4]])
+```
 
 ```{R qID-chunk, echo=FALSE}
-qIDs <- 
-  c("reside",
-          "housing",
-          "housingCountry",
-          "QN28",
-          "QN100",
-          "QN104",
-          "QN105",
-          "mindset",
-          "interSupport",
-          "commSatisfy",
-          "commFreq",
-          "commAgree",
-          "QN30",
-          "QN94",
-          "acdEssential",
-          "acdEssentialcrs",
-          "QN980",
-          "QN98",
-          "QN111",
-          "commuteFreq",
-          "QN44",
-          "QN45",
-          "commuteerrand",
-          "wbFamdoc",
-          "wbMntsprt",
-          "wbNavigate",
-          "healthResource",
-          "QN65",
-          "QN34",
-          "QN37",
-          "QN40",
-          "QN41",
-          "QN35",
-          "QN36",
-          "covidFinance",
-          "covidTuition",
-          "spApply",
-          "spRestriction",
-          "QN48",
-          "QN50",
-          "QN52",
-          "QN53",
-          "QN54",
-          "QN55",
-          "QN66",
-          "QN67",
-          "QN56",
-          "QN57",
-          "QN58",
-          "QN59",
-          "daRsrc")
+qIDs <- c("QN35","QN36")
+  # c("reside",
+  #         "housing",
+  #         "housingCountry",
+  #         "QN28",
+  #         "QN100",
+  #         "QN104",
+  #         "QN105",
+  #         "mindset",
+  #         "interSupport",
+  #         "commSatisfy",
+  #         "commFreq",
+  #         "commAgree",
+  #         "QN30",
+  #         "QN94",
+  #         "acdEssential",
+  #         "acdEssentialcrs",
+  #         "QN980",
+  #         "QN98",
+  #         "QN111",
+  #         "commuteFreq",
+  #         "QN44",
+  #         "QN45",
+  #         "commuteerrand",
+  #         "wbFamdoc",
+  #         "wbMntsprt",
+  #         "wbNavigate",
+  #         "healthResource",
+  #         "QN65",
+  #         "QN34",
+  #         "QN37",
+  #         "QN40",
+  #         "QN41",
+  #         "QN35",
+  #         "QN36",
+  #         "covidFinance",
+  #         "covidTuition",
+  #         "spApply",
+  #         "spRestriction",
+  #         "QN48",
+  #         "QN50",
+  #         "QN52",
+  #         "QN53",
+  #         "QN54",
+  #         "QN55",
+  #         "QN66",
+  #         "QN67",
+  #         "QN56",
+  #         "QN57",
+  #         "QN58",
+  #         "QN59",
+  #         "daRsrc")
 ```
 
 ```{R chunk-generator ,echo=FALSE}

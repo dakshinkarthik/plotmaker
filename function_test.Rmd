@@ -147,6 +147,9 @@ mx_table(processed_table_dataList[[2]])
 
 mc_graph(processed_graph_dataList[[4]])
 mc_table(processed_table_dataList[[4]])
+
+mc.yn_graph(processed_graph_dataList[[5]])
+mc.yn_table(processed_table_dataList[[5]])
 ```
 
 ```{R qID-chunk, echo=FALSE}

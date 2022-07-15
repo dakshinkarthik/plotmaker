@@ -769,6 +769,152 @@ mc_table_proc <- function(qval, new.dat){
   
 }
 
+mc.yn_graph_proc <- function(qval, new.dat){
+  mc_graph_proc(qval,new.dat) # function call to mc() because the type of graphs for mc and mc.yn questions are the same, and their responses are similarly structured in the dataset
+}
+
+mc.yn_table_proc <- function(qval, new.dat){
+  
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rc_list.get(qval,new.dat)
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  
+  
+  if(nrow(table(get(rc_list, new.dat)))==0){
+    main.df <- data.frame(Var1 = c(0:(length(resp)-2),999), Freq = c(rep(0,length(resp))))
+  }
+  else{
+    main.df <- data.frame((table(get(rc_list, new.dat))))
+  }
+  
+  if(nrow(table(get(rc_list, i.dat)))==0){
+    i.df <- data.frame(Var1 = c(0:(length(resp)-2),999), Freq = c(rep(0,length(resp))), Ques = c("International"))
+  }
+  else{
+    i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
+  }
+  
+  if(nrow(table(get(rc_list, d.dat)))==0){
+    d.df <- data.frame(Var1 = c(0:(length(resp)-2),999), Freq = c(rep(0,length(resp))), Ques = c("Domestic"))
+  }
+  else{
+    d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
+  }
+  
+  # to fill in missing responses using the common df as reference
+  i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
+  d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
+  
+  # print(main.df)
+  # print(d.df)
+  # print(i.df)
+  
+  # Selecting valid choices from the data subset
+  resp_b <- c()
+  for (qn in main.df$Var1) {
+    resp_b <- c(resp_b, as.numeric(qn))
+  }
+  
+  mattt <- matrix(rep(1,4*(length(resp_b)+1)), ncol = 4)
+  
+  for (j in 1:dim(mattt)[1]) {
+    if(j == dim(mattt)[1]){
+      mattt[j,1] <- "100%"
+      mattt[j,2] <- sum(d.df$Freq)
+      mattt[j,3] <- "100%"
+      mattt[j,4] <- sum(i.df$Freq)
+    }
+    else{ # other rows
+      if(is.nan(round(100*d.df$Freq[j]/sum(d.df$Freq)))){
+        mattt[j,1] <- "0%"
+      }else{
+        mattt[j,1] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+      }
+      if(is.nan(round(100*i.df$Freq[j]/sum(i.df$Freq)))){
+        mattt[j,3] <- "0%"
+      }else{
+        mattt[j,3] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
+      }
+      # mattt[j,1] <- paste0(round(100*d.df$Freq[j]/sum(d.df$Freq)),"%")
+      mattt[j,2] <- d.df$Freq[j] 
+      # mattt[j,3] <- paste0(round(100*i.df$Freq[j]/sum(i.df$Freq)),"%")
+      mattt[j,4] <- i.df$Freq[j]
+    }
+  }
+  
+  main.df <- data.frame(mattt)
+  # print(mattt)
+  
+  axis.q <- c()
+  ## to select valid question labels
+  if(0 %in% resp_b){ # 0 is a numerical level only for yes(1)/no(0) mc questions
+    i <- 0
+    for (k in resp_b) {
+      i <- i + 1
+      if(k == 999){
+        axis.q <- c(axis.q,resp[length(resp)])
+      }
+      else{
+        if(is.na(resp[k+1])){
+          axis.q <- c(axis.q, resp[i])
+        }
+        else{
+          axis.q <- c(axis.q, resp[k+1])
+        }
+      }
+    }
+    
+    # if(999 %in% resp_b){
+    #   axis.q <- c(resp[(resp_b+1)[-c(length(resp_b))]],resp[length(resp)])
+    # }
+    # else{
+    #   axis.q <- resp[(resp_b+1)]
+    # }
+  }
+  else{ # for other mc questions
+    i <- 0 # because some numerical levels are not always sequential, a fake counter('i') that keeps track of vector indices is used
+    for (k in resp_b) { 
+      i <- i + 1
+      if(k == 999){ # '999' is always associated with "NA/No opinion" and is positioned towards the end of the responses for all questions
+        axis.q <- c(axis.q, resp[length(resp)])
+      }
+      else{
+        # if the numerical level is not synchronous with question the vector index, there is no data to read at that index; hence 'i' is used
+        if(is.na(resp[k])){ 
+          axis.q <- c(axis.q, resp[i])
+        }
+        else{
+          axis.q <- c(axis.q, resp[k])
+        }
+      }
+    }
+  }
+  
+  # 'distinct count' added to the valid question vector
+  axis.q <- c((axis.q),"Total")
+  
+  if(param_list[6]=="Okanagan"){
+    main.df <- cbind(UBCO = axis.q, main.df)
+    # print(main.df)
+  }
+  else if(param_list[6]=="Vancouver"){
+    main.df <- cbind(UBCV = axis.q, main.df)
+    # print(main.df)
+  }
+  else{
+    main.df <- cbind(UBC = axis.q, main.df)
+    # print(main.df)
+  }
+  
+  q_data_list <- list(qval, main.df, param_list)
+  
+  return(q_data_list)
+  
+}
+
 
 processed_graph_dataList <- list()
 processed_table_dataList <- list()
@@ -777,14 +923,16 @@ processed_graph_dataList[[1]] <- mx_graph_proc("QN105", d.dat)
 processed_graph_dataList[[2]] <- mx_graph_proc("QN104", d.dat)
 processed_graph_dataList[[3]] <- mx_graph_proc("QN100", d.dat)
 processed_graph_dataList[[4]] <- mc_graph_proc("QN44", data.ok)
+processed_graph_dataList[[5]] <- mc.yn_graph_proc("QN94", data.ok)
 
 processed_table_dataList[[1]] <- mx_table_proc("QN105", d.dat)
 processed_table_dataList[[2]] <- mx_table_proc("QN104", d.dat)
 processed_table_dataList[[3]] <- mx_table_proc("QN100", d.dat)
 processed_table_dataList[[4]] <- mc_table_proc("QN44", data.ok)
+processed_table_dataList[[5]] <- mc.yn_table_proc("QN94", data.ok)
 
 str(processed_dataList)
-processed_table_dataList[[4]]
+processed_graph_dataList[[5]]
 
-save(processed_dataList, file = "processedData.RData")
+save(processed_graph_dataList, processed_table_dataList, file = "processedData.RData")
 load("processedData.RData")

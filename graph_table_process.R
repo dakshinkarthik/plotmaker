@@ -143,3 +143,80 @@ mc_table <- function(processed_dataList){
   }
   
 }
+
+mc.yn_graph <- function(processed_dataList){
+  
+  mc_graph(processed_dataList)
+  
+}
+
+mc.yn_table <- function(processed_dataList){
+  
+  #       1       2         3
+  # list(qval, main.df, param_list)
+  
+  if(processed_dataList[[3]][6]=="Okanagan"){
+    
+    ft <- flextable(processed_dataList[[2]]) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+      add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+      merge_h(part = "header") %>%
+      merge_v(part = "header") %>%
+      color(j = "UBCO", color = "#A7A19D", part = "header") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 3.5, unit = "in",j = "UBCO")
+    
+  }
+  else if(processed_dataList[[3]][6]=="Vancouver"){
+    
+    ft <- flextable(processed_dataList[[2]]) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+      add_header(UBCV = "UBCV", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+      merge_h(part = "header") %>%
+      merge_v(part = "header") %>%
+      color(j = "UBCV", color = "#A7A19D", part = "header") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 3.5, unit = "in",j = "UBCV")
+    
+  }
+  else{
+    
+    ft <- flextable(processed_dataList[[2]]) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>%
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>%
+      add_header(UBC = "UBC", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>%
+      merge_h(part = "header") %>%
+      merge_v(part = "header") %>%
+      color(j = "UBC", color = "#A7A19D", part = "header") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 3.5, unit = "in",j = "UBC")
+    
+  }
+  
+}

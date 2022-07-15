@@ -915,6 +915,832 @@ mc.yn_table_proc <- function(qval, new.dat){
   
 }
 
+rk_graph_proc <- function(qval, new.dat){
+  
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rc_list.get(qval, new.dat)  
+  # input dataset is subsetted based on sum/complete field value
+  # 28 is a parameter here because there is only one rk question in the dataset that requires 28 as a validating factor
+  # Future code can be changed to accommodate a dynamic parameter value
+  new.dat <- rc_complete(rc_list, new.dat, 28) 
+  rc_list <- rc_eval("rk",rc_list) # Checks if all the sub questions selected belong to the qID
+  
+  ti.tle <- title_builder(param_list)
+  # The following if-statements check for domestic/international data and assigns the correct title and color scheme for the graph
+  if(new.dat$isi[1] == "Domestic"){
+    col <- c("#316C1A", "#4C9C2C", "#61AF41", "#76A464", "#92C180", "#ADD99C", "#BFE7B0")
+    ti.tle <- paste("Domestic",ti.tle,sep = " ")
+  }
+  else if(new.dat$isi[1] == "ISI"){
+    col <- c("#A1600A", "#C37918", "#D38622", "#FF940A", "#FFA55D", "#FFB377", "#FFD5A0")
+    ti.tle <- paste("International",ti.tle,sep = " ")
+  }
+  else{
+    col <- c("#002145", "#0055B7", "#00A7E1", "#26C7FF", "#5CD5FF", "#85E0FF", "#A2E7FF")
+    ti.tle <- ti.tle
+  }
+  
+  # 'Rank' is pasted with the numerical response levels to be on the legend 
+  resp <- paste("Rank", rev(names(get(rc_list[1], new.dat) %>% attr('labels'))), sep = " ")
+  
+  # Variable initialization
+  df.list <- list() # Each sub question and its responses are stored in a list of dataframes
+  prop <- list() # Each sub question's frequency of response are stored as a list of props
+  main.prop <- NULL # The list of props is added together to make one vector of props for all the sub-questions
+  main.df<- data.frame() # The list of dataframes is concatenated into one main dataframe
+  col <- rev(col) # Order of the color vectors reversed for aesthetic purposes in ggplot
+  # Base color codes for the props(for geom_text)
+  tex.col.base <- rev(c("white","white","white","black","black","black","black")) 
+  # mx questions have differing number of response levels.
+  tex.col <- c() # To store the correct number of color codes for prop labels
+  label_count <- length(tex.col) # To keep track of number of response levels
+  ld.title <- c() # Stores question labels for displaying on axis
+  sel <- c()
+  i <- 0
+  
+  # Axis question building and formatting
+  for (qn in rc_list) {
+    label_count_var <- 0
+    i <- i + 1
+    # mx question labels have ' - ' in them. This serves as a separator to extract sub-question labels.
+    if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(qn, new.dat) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
+                   nchar(get(qn, new.dat) %>% attr('label')))
+    }
+    else{ # in case ' - ' is missing
+      ld <- get(qn, new.dat) %>% attr('label')
+    }
+    
+    if(nchar(ld)>63){ # adds new line to labels based on its length
+      ld <- paste0(substr(ld,1,sapply(gregexpr(pattern = " ", substr(ld,1,63)),max)), "\n ",
+                   substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,63)),max)+1,nchar(ld)))
+    }
+    
+    ld.title <- c(ld.title, ld)
+    
+    # Dataframe building for each sub question
+    temp.df <- data.frame(rev(table(get(qn, new.dat))), Ques = c(i))
+    temp.df <- complete(temp.df, Var1 = factor(c(7:1),levels = c(7:1)), fill = list(Freq = 0, Ques = c(i)))
+    df.list[[i]] <- temp.df
+    df.list[[i]]$Ques <- ld # Question labels added into the dataframe directly
+    
+    # Stores the first rank of the sub questions for formatting the ggplot later
+    sel <- c(sel,df.list[[i]]$Freq[length(df.list[[i]]$Freq)])
+    
+    # Geometry text prep
+    prop[[i]] <- round(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq))
+    
+    # Geom text has a no character if < 5, else '%' is pasted to it 
+    for(j in 1:length(prop[[i]])){
+      label_count_var <- label_count_var + 1
+      if(as.numeric(prop[[i]][j])<5)
+        prop[[i]][j] = ''
+      else
+        prop[[i]][j] = paste0(prop[[i]][j], "%")
+    }
+    # Number of Color codes for geom text is determined based on the count of prop text
+    if(label_count_var == label_count){
+      tex.col <- c(tex.col, tex.col.base)
+    }
+    else{
+      tex.col <- c(tex.col, tex.col.base[1:label_count_var])
+    }
+    
+    # Main dataframe and geom text for plotting made by combining data from the list
+    main.prop <- c(main.prop, prop[[i]])
+    main.df <- rbind(main.df, df.list[[i]])
+    
+  }
+  
+  # Subtitle building
+  subt <- subt_builder(rc_list, new.dat)
+  
+  # Subtitle positioning and geom text size
+  geom_text_size <- sizer(rc_list)[2] # sizer computes and returns size for geom_text and column width
+  c.width <- sizer(rc_list)[1]
+  
+  leveler <- c()
+  # Questions displayed based on decreasing rank 1 scores
+  sel <- sort(sel,decreasing = T) # From earlier, this used as a metric to set 'leveler' for ggplot
+  track <- c() # to keep track of row index of df.list to avoid repetition of levels
+  for (i in 1:length(sel)) {
+    for (j in 1:length(df.list)) {
+      # leveler is made up of question labels based on the order of first ranks in sel 
+      if(sel[i] == df.list[[j]]$Freq[length(df.list[[j]]$Freq)] & !(j %in% track)){
+        track <- c(track,j)
+        leveler <- c(leveler,df.list[[j]]$Ques[1])
+        break
+      }
+    }
+  }
+  
+  q_data_list <- list(qval, main.df, leveler, c.width, col, resp, main.prop, tex.col, geom_text_size, ti.tle, subt)
+  
+  return(q_data_list)
+}
+
+rk_table_proc <- function(qval, new.dat){
+  
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rc_list.get(qval, new.dat)  
+  new.dat <- rc_complete(rc_list, new.dat, 28)
+  rc_list <- rc_eval("rk",rc_list)
+  
+  # Reading response numeric levels and pasting "Rank" to it
+  resp <- paste("Rank", rev(names(get(rc_list[1], new.dat) %>% attr('labels'))), sep = " ")
+  # matrix initialization (no. of rows = rc_list+1, no. of columns = resp); one extra row to accommodate column totals
+  mattt <- matrix(rep(1,(length(resp)+0)*(length(rc_list)+1)), ncol = length(resp)+0)
+  
+  # Variable initialization
+  df.list <- list()
+  prop <- list()
+  main.prop <- NULL
+  main.df<- data.frame()
+  ld.main <- c()
+  
+  
+  i <- 1 # loop counter
+  for(i in 1:dim(mattt)[1]){
+    if(i != dim(mattt)[1]){ # sums and question label retrieval done only for question rows
+      # df building
+      # df.list[[i]] <- data.frame(table(get(rc_list[i], new.dat)), Ques = c(i))
+      temp.df <- data.frame(rev(table(get(rc_list[i], new.dat))), Ques = c(i))
+      temp.df <- complete(temp.df, Var1 = factor(c(7:1),levels = c(7:1)), fill = list(Freq = 0, Ques = c(i)))
+      df.list[[i]] <- temp.df
+      
+      #Row labels and fornatting
+      ld <- NULL
+      if(unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label'))) != -1){
+        ld <- substr(get(rc_list[i], data.ok) %>% attr('label'),
+                     unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label')))+3,
+                     nchar(get(rc_list[i], new.dat) %>% attr('label')))
+      }
+      else{
+        ld <- get(qn, new.dat) %>% attr('label')
+      }
+      
+      # adding question label to df
+      df.list[[i]]$Ques <- ld
+      
+      # row total to compute percentage
+      row_tot <- sum(df.list[[i]]$Freq)
+      for(j in 1:dim(mattt)[2]){
+        if(!is.na(df.list[[i]]$Freq[j])){ # to catch NAs in the responses
+          mattt[i,j] <- round(100*df.list[[i]]$Freq[j]/row_tot) 
+        }
+        else{
+          mattt[i,j] <- "NA"
+        }
+      }
+      # Question labels stored for the questions column
+      ld.main <- c(ld.main, ld)
+    }
+    else{
+      for(j in 1:dim(mattt)[2]){ # final row gets only student total
+        mattt[i,j] <- nrow(new.dat)
+      }
+    }
+  }
+  # print(mattt)
+  # "Total" added to question labels
+  ld.main <- c(ld.main,"Total")
+  # matrix to df conversion
+  main.df <- rev(data.frame(mattt))
+  # print(main.df)
+  # response levels vector reversed to match the data
+  resp <- c(rev(resp))
+  colnames(main.df) <- resp
+  
+  # adding question columns for domestic/international students
+  if(param_list[6]=="Okanagan"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1])
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1])
+    }
+  }
+  else if(param_list[6]=="Vancouver"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBCV Domestic` = ld.main, .before = resp[1])
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBCV International` = ld.main, .before = resp[1])
+    }
+  }
+  else{
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBC Domestic` = ld.main, .before = resp[1])
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBC International` = ld.main, .before = resp[1])
+    }
+  }
+  
+  
+  # print(main.df)
+  # removing "Total" row to avoid using the total for Rank 1 to sort the dataframe
+  main.df <- main.df[-c(dim(main.df)[1]),]
+  # print(main.df)
+  # reordering rows with decreasing Rank 1 scores
+  main.df <- main.df[with(main.df, order(-`Rank 1`)),]
+  # print(main.df)
+  
+  # adding questions column for domestic/international students
+  if(param_list[6]=="Okanagan"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_row(`UBCO Domestic` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_row(`UBCO International` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
+  }
+  else if(param_list[6]=="Vancouver"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_row(`UBCV Domestic` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_row(`UBCV International` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
+  }
+  else{
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_row(`UBC Domestic` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_row(`UBC International` = "Total", `Rank 1` = nrow(new.dat),
+                                     `Rank 2` = nrow(new.dat),
+                                     `Rank 3` = nrow(new.dat),
+                                     `Rank 4` = nrow(new.dat),
+                                     `Rank 5` = nrow(new.dat),
+                                     `Rank 6` = nrow(new.dat),
+                                     `Rank 7` = nrow(new.dat))
+    }
+  }
+  
+  
+  # pasting % to all cells except the last row
+  for(k in 1:dim(main.df)[1]-1){
+    for(j in 2:dim(main.df)[2]){
+      main.df[k,j] <- paste0(main.df[k,j],"%")
+    }
+  }
+  
+  q_data_list <- list(qval, main.df, mattt)
+  
+  
+  return(q_data_list)
+}
+
+ms_graph_proc <- function(qval, new.dat){
+  
+  # splitting data by domestic/international
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rc_list.get(qval,new.dat)
+  rc_list <- rc_eval("ms",rc_list)
+  
+  # computing distinct count
+  i.dc <- 0
+  d.dc <- 0
+  for (stu in i.dat$ExternalReference) { # international distinct count
+    for (qn in rc_list) {
+      if(!is.na(get(qn, i.dat)[i.dat$ExternalReference == stu])){
+        if((get(qn, i.dat)[i.dat$ExternalReference == stu] + 0) == 1){
+          i.dc <- i.dc + 1
+          break
+        }
+      }
+    }
+  }
+  
+  for (stu in d.dat$ExternalReference) { # domestic distinct count
+    for(qn in rc_list){
+      if(!is.na(get(qn, d.dat)[d.dat$ExternalReference == stu])){
+        if((get(qn, d.dat)[d.dat$ExternalReference == stu] + 0) == 1){
+          d.dc <- d.dc + 1
+          break
+        }
+      }
+    }
+  }
+  
+  # Variable initialization
+  df.list <- list()
+  i.df.list <- list()
+  d.df.list <- list()
+  main.df <- NULL
+  prop <- list()
+  i.prop <- list()
+  d.prop <- list()
+  main.prop <- c()
+  main.df<- data.frame()
+  tex.col <- c()
+  label_count <- length(tex.col)
+  ld.title <- c()
+  axis.q <- c()
+  axis.c <- NULL
+  
+  i <- 1
+  j <- 1
+  for (qn in rc_list) {
+    # Dataframe building ---- dfs are built exactly the same way as it was done in tb_ms()
+    ## Domestic fraction
+    axis.c <- names(get(qn, new.dat) %>% attr('labels'))
+    axis.c <- region.get(axis.c,new.dat)
+    if(nrow(table(get(qn, d.dat))) == 0){
+      tcv <- matrix(0)
+      rownames(tcv) <- c(i)
+      tcv <- as.table(tcv)
+      colnames(tcv) <- c("")
+      tdf <- data.frame(tcv)
+      tdf <- data.frame(Var1 = tdf$Var1, Freq = tdf$Freq, Ques = c("Domestic"))
+      d.df.list[[i]] <- tdf
+      d.df.list[[i]]$Var1 <- c(axis.c)
+      main.df <- rbind(main.df,d.df.list[[i]])
+    }
+    else{
+      tdf <- data.frame(table(get(qn, d.dat)), Ques = c("Domestic"))
+      d.df.list[[i]] <- tdf
+      if(dim(d.df.list[[i]])[1] != 1){
+        d.df.list[[i]][2,]$Freq <- round((100*d.df.list[[i]][2,]$Freq/d.dc))
+        d.df.list[[i]]$Var1 <- c(axis.c)
+        main.df <- rbind(main.df,d.df.list[[i]][2,])
+      }
+      else{
+        if(d.df.list[[i]]$Var1 == 0){
+          d.df.list[[i]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("Domestic"))
+          main.df <- rbind(main.df,d.df.list[[i]])
+        }
+        else{
+          d.df.list[[i]]$Freq <- round((100*d.df.list[[i]]$Freq/d.dc))
+          d.df.list[[i]]$Var1 <- c(axis.c)
+          main.df <- rbind(main.df,d.df.list[[i]])
+        }
+      }
+    }
+    ## International fraction
+    if(nrow(table(get(qn, i.dat))) == 0){
+      tcv <- matrix(0)
+      rownames(tcv) <- c(j)
+      tcv <- as.table(tcv)
+      colnames(tcv) <- c("")
+      tdf <- data.frame(tcv)
+      tdf <- data.frame(Var1 = tdf$Var1, Freq = tdf$Freq, Ques = c("International"))
+      i.df.list[[j]] <- tdf
+      i.df.list[[j]]$Var1 <- c(axis.c)
+      main.df <- rbind(main.df,i.df.list[[j]])
+    }
+    else{
+      tdf <- data.frame(table(get(qn, i.dat)), Ques = c("International"))
+      i.df.list[[j]] <- tdf
+      if(dim(i.df.list[[j]])[1] != 1){
+        i.df.list[[j]][2,]$Freq <- round((100*i.df.list[[j]][2,]$Freq/i.dc))
+        i.df.list[[j]]$Var1 <- c(axis.c)
+        main.df <- rbind(main.df,i.df.list[[j]][2,])
+      }
+      else{
+        if(i.df.list[[j]]$Var1 == 0){
+          i.df.list[[j]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("International"))
+          main.df <- rbind(main.df,i.df.list[[j]])
+        }
+        else{
+          i.df.list[[j]]$Freq <- round((100*i.df.list[[j]]$Freq/i.dc))
+          i.df.list[[j]]$Var1 <- c(axis.c)
+          main.df <- rbind(main.df,i.df.list[[j]])
+        }
+      }
+    }
+    
+    i <- i + 1
+    j <- j + 1
+  }
+  
+  # to remove response levels where both domestic and international are 0 (empty)
+  k <- 1
+  nnull <- c()
+  for (qn in 1:dim(main.df)[1]) {
+    if(k < dim(main.df)[1]){
+      if(main.df$Freq[k] == 0 & main.df$Freq[k+1] == 0){ # data in the df is ordered domestic,international,domestic,... by question
+        nnull <- c(nnull,k,k+1)
+      }
+    }
+    k <- k + 2
+  }
+  
+  if(!is.null(nnull)){
+    main.df <- main.df[-nnull,]
+  }
+  
+  # pasting '%' to the prop data
+  for (frq in 1:length(main.df$Freq)){
+    main.prop <-  c(main.prop,paste0(main.df$Freq[frq],"%"))
+  }
+  
+  
+  # Subtitle building
+  subt <- subt_builder(rc_list, new.dat)
+  
+  q_data_list <- list(qval, main.df, main.prop, param_list, subt)
+  
+  return(q_data_list)
+  
+}
+
+ms_table_proc <- function(qval, new.dat){
+  
+  # splitting data by domestic/international
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rc_list.get(qval,new.dat)
+  rc_list <- rc_eval("ms",rc_list)
+  
+  # Variable initialization
+  df.list <- list()
+  i.df.list <- list()
+  d.df.list <- list()
+  main.df <- NULL
+  prop <- list()
+  i.prop <- list()
+  d.prop <- list()
+  main.prop <- c()
+  main.df<- data.frame()
+  tex.col <- c()
+  label_count <- length(tex.col)
+  ld.title <- c()
+  axis.q <- c()
+  axis.c <- NULL
+  
+  
+  # variables to store distinct count of domestic and international students
+  i.dc <- 0
+  d.dc <- 0
+  for (stu in i.dat$ExternalReference) { # distinct count calculation for international students
+    for (qn in rc_list) {
+      if(!is.na(get(qn, i.dat)[i.dat$ExternalReference == stu])){
+        if((get(qn, i.dat)[i.dat$ExternalReference == stu] + 0) == 1){ # 0 is added to the data read from the dataset to coerce a conversion to numerical type
+          i.dc <- i.dc + 1
+          break
+        }
+      }
+    }
+  }
+  
+  for (stu in d.dat$ExternalReference) { # distinct count calculation for domestic students
+    for(qn in rc_list){
+      if(!is.na(get(qn, d.dat)[d.dat$ExternalReference == stu])){
+        if((get(qn, d.dat)[d.dat$ExternalReference == stu] + 0) == 1){ # 0 is added to the data read from the dataset to coerce a conversion to numerical type
+          d.dc <- d.dc + 1
+          break
+        }
+      }
+    }
+  }
+  
+  # Loop counters for domestic and international
+  i <- 1 # domestic loop counter
+  j <- 1 # international loop counter
+  
+  for (qn in rc_list) {
+    # Dataframe building ****NOTE****: The code for df building here was created before I learnt the existence of the complete() function. This code should be modifiable to use complete() and reduce code.
+    ## Domestic fraction
+    axis.c <- names(get(qn, new.dat) %>% attr('labels')) # getting question label
+    axis.q <- c(axis.q,axis.c) # storing question label
+    if(nrow(table(get(qn, d.dat))) == 0){ # checks for missing responses for a singular question
+      tcv <- matrix(0) # dummy matrix
+      rownames(tcv) <- c(i) # dummy column name
+      tcv <- as.table(tcv) # converted to a table
+      colnames(tcv) <- c("") # column name removed; column name could be removed from a matrix only through converting it to a table
+      tdf <- data.frame(tcv) # conversion to df
+      tdf <- data.frame(Var1 = tdf$Var1, Freq = tdf$Freq, Ques = c("Domestic")) # manually adding 0 to missing response frequencies and formatting the df to meet requirements
+      d.df.list[[i]] <- tdf # added to domestic df list
+      d.df.list[[i]]$Var1 <- c(axis.c) # question label added to df
+      main.df <- rbind(main.df,d.df.list[[i]])
+    }
+    else{ # normal response case
+      tdf <- data.frame(table(get(qn, d.dat)), Ques = c("Domestic")) # df creation
+      d.df.list[[i]] <- tdf # added to domestic df list 
+      if(dim(d.df.list[[i]])[1] != 1){ # If there is > 1 response level, we take only the second level('1' - Yes)
+        d.df.list[[i]]$Var1 <- c(axis.c)
+        main.df <- rbind(main.df,d.df.list[[i]][2,])
+      }
+      else{
+        if(d.df.list[[i]]$Var1 == 0){ # if there is only 1 level and if it is 0 ('No'), a new df is created and with the same question label and the frequency is set to 0, assuming it be '1'(Yes)
+          d.df.list[[i]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("Domestic"))
+          main.df <- rbind(main.df,d.df.list[[i]])
+        }
+        else{ 
+          d.df.list[[i]]$Var1 <- c(axis.c)
+          main.df <- rbind(main.df,d.df.list[[i]])
+        }
+      }
+    }
+    ## International fraction
+    # Similar df building reasoning for international fraction
+    if(nrow(table(get(qn, i.dat))) == 0){ # checks for missing responses for a singular question
+      tcv <- matrix(0) 
+      rownames(tcv) <- c(j)
+      tcv <- as.table(tcv)
+      colnames(tcv) <- c("")
+      tdf <- data.frame(tcv)
+      tdf <- data.frame(Var1 = tdf$Var1, Freq = tdf$Freq, Ques = c("International"))
+      i.df.list[[j]] <- tdf
+      i.df.list[[j]]$Var1 <- c(axis.c)
+      main.df <- rbind(main.df,i.df.list[[j]])
+    }
+    else{
+      tdf <- data.frame(table(get(qn, i.dat)), Ques = c("International"))
+      i.df.list[[j]] <- tdf
+      if(dim(i.df.list[[j]])[1] != 1){
+        i.df.list[[j]]$Var1 <- c(axis.c)
+        main.df <- rbind(main.df,i.df.list[[j]][2,])
+      }
+      else{
+        if(i.df.list[[j]]$Var1 == 0){
+          i.df.list[[j]] <- data.frame(Var1 = c(axis.c), Freq = c(0), Ques = c("International"))
+          main.df <- rbind(main.df,i.df.list[[j]])
+        }
+        else{
+          i.df.list[[j]]$Var1 <- c(axis.c)
+          main.df <- rbind(main.df,i.df.list[[j]])
+        }
+      }
+    }
+    
+    i <- i + 1
+    j <- j + 1
+  }
+  
+  l <- 1 # loop counter
+  nnull <- c() # vector to store indices of rows with Freq = 0
+  for (qn in 1:dim(main.df)[1]) {
+    if(l < dim(main.df)[1]){
+      if(main.df$Freq[l] == 0 & main.df$Freq[l+1] == 0){
+        nnull <- c(nnull,l,l+1)
+      }
+    }
+    l <- l + 2
+  }
+  
+  if(!is.null(nnull)){
+    main.df <- main.df[-nnull,]
+  }
+  
+  # matrix with all 1s; no. of columns = 4 because the columns consist only of 2 percentage fields and 2 count fields.
+  # no. of rows is divided by 2 two because the df contains both domestic and international data.
+  mattt <- matrix(rep(1,((dim(main.df)[1]/2)+1)*4), ncol = 4) 
+  
+  k <- 1 # loop counter; 'k' is incremented by 2 to accommodate both domestic and international data from the df
+  for (m in 1:dim(mattt)[1]) {
+    if(k < dim(main.df)[1]){ # all rows except the last
+      mattt[m,1] <- paste0(round(100*main.df$Freq[k]/d.dc),"%") # Domestic data
+      mattt[m,2] <- main.df$Freq[k] # Domestic data
+      mattt[m,3] <- paste0(round(100*main.df$Freq[k+1]/i.dc),"%") # international data
+      mattt[m,4] <- main.df$Freq[k+1] # international data
+    }
+    else{ # only the for the last row
+      mattt[m,1] <- "100%"
+      mattt[m,2] <- d.dc
+      mattt[m,3] <- "100%"
+      mattt[m,4] <- i.dc
+    }
+    k <- k + 2 # data in the df is ordered as domestic,international,domestic...; hence k = k + 2
+  }
+  
+  axis.q <- unique(main.df$Var1) # gets a single copy of all the questions from the df
+  
+  main.df <- data.frame(mattt) # matrix to df conversion
+  if(param_list[6]=="Okanagan"){
+    main.df <- cbind(UBCO = c(axis.q,"Distinct count of Respondents"), main.df) # adding questions column to the df along with 'Distinct count'
+  }
+  else if(param_list[6]=="Vancouver"){
+    main.df <- cbind(UBCV = c(axis.q,"Distinct count of Respondents"), main.df) # adding questions column to the df along with 'Distinct count'
+  }
+  else{
+    main.df <- cbind(UBC = c(axis.q,"Distinct count of Respondents"), main.df) # adding questions column to the df along with 'Distinct count'
+  }
+  
+  q_data_list <- list(qval, main.df, param_list)
+  
+  return(q_data_list)
+  
+}
+
+cs_graph_proc <- function(qval, new.dat){
+  
+  # splitting data by domestic/international
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rc_list.get(qval,new.dat)
+  sum.field <- get_sum(rc_list) # gets the current question's sum field
+  rc_list <- rc_eval("cs",rc_list)
+  
+  ld.title <- c()
+  
+  # distinct count computed exactly like it was for ms() and tb_ms(), except that 'sum.field' is used as a basis to check if a student's scores add up to 100
+  i.dc <- 0
+  d.dc <- 0
+  for (stu in i.dat$ExternalReference) {
+    if(!is.na(get(sum.field, i.dat)[i.dat$ExternalReference == stu])){
+      if(get(sum.field, i.dat)[i.dat$ExternalReference == stu] == 100){
+        i.dc <- i.dc + 1
+      }
+    }
+  }
+  
+  for (stu in d.dat$ExternalReference) {
+    if(!is.na(get(sum.field, d.dat)[d.dat$ExternalReference == stu])){
+      if(get(sum.field, d.dat)[d.dat$ExternalReference == stu] == 100){
+        d.dc <- d.dc + 1
+      }
+    }
+  }
+  
+  
+  i.perq <- c()
+  d.perq <- c()
+  for (i in 1:length(rc_list)) {
+    resl.d <- 0
+    resl.i <- 0
+    # df building
+    df.d <- data.frame(table(get(rc_list[i], d.dat)))
+    df.i <- data.frame(table(get(rc_list[i], i.dat)))
+    # total for each response level for each sub-question/option is computed by multiplying the score value with the frequency of its responses 
+    for (j in 1:length(df.d$Freq)) { # domestic sum calculation
+      df_v <- as.integer(levels(df.d$Var1)[as.integer(df.d$Var1)])[j] # each score level drawn by indexing the numerical level column in the df
+      df_f <- df.d$Freq[j] # corresponding frequency 
+      resl.d <- resl.d + (df_v*df_f) # sum is stored
+    }
+    for (j in 1:length(df.i$Freq)) { # international sum calculation
+      df_v <- as.integer(levels(df.i$Var1)[as.integer(df.i$Var1)])[j] # each score level drawn by indexing the numerical level column in the df
+      df_f <- df.i$Freq[j] # corresponding frequency 
+      resl.i <- resl.i + (df_v*df_f) # sum is stored
+    }
+    # sum computed in every iteration is stored in 2 separate vectors
+    d.perq <- c(d.perq,resl.d)
+    i.perq <- c(i.perq,resl.i)
+    
+    
+    # question label extraction
+    if(unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(rc_list[i], new.dat) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label')))+3,
+                   nchar(get(rc_list[i], new.dat) %>% attr('label')))
+    }
+    else{
+      ld <- names(get(rc_list[i], new.dat) %>% attr('label'))
+    }
+    
+    ld.title <- c(ld.title, ld)
+    
+  }
+  # df is remade to accommodate question labels and the percent scores computed from the sum and distinct count
+  df.d <- data.frame(Var1 = ld.title, Freq = round(d.perq/d.dc), Ques = c("Domestic"))
+  df.i <- data.frame(Var1 = ld.title, Freq = round(i.perq/i.dc), Ques = c("International"))
+  main.df <- rbind(df.d,df.i)
+  
+  # Subtitle building
+  subt <- subt_builder(rc_list, new.dat)
+  
+  q_data_list <- list(qval, main.df, param_list, subt)
+  
+  return(q_data_list)
+  
+}
+
+cs_table_proc <- function(qval, new.dat){
+  
+  # splitting data by domestic/international
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rc_list.get(qval,new.dat)
+  sum.field <- get_sum(rc_list)
+  rc_list <- rc_eval("cs",rc_list)
+  # variable intialization
+  ld.title <- c()
+  
+  # distinct count computation
+  i.dc <- 0
+  d.dc <- 0
+  for (stu in i.dat$ExternalReference) {
+    if(!is.na(get(sum.field, i.dat)[i.dat$ExternalReference == stu])){
+      if(get(sum.field, i.dat)[i.dat$ExternalReference == stu] == 100){
+        i.dc <- i.dc + 1
+      }
+    }
+  }
+  
+  for (stu in d.dat$ExternalReference) {
+    if(!is.na(get(sum.field, d.dat)[d.dat$ExternalReference == stu])){
+      if(get(sum.field, d.dat)[d.dat$ExternalReference == stu] == 100){
+        d.dc <- d.dc + 1
+      }
+    }
+  }
+  
+  #df building
+  i.perq <- c()
+  d.perq <- c()
+  for (i in 1:length(rc_list)) {
+    resl.d <- 0
+    resl.i <- 0
+    df.d <- data.frame(table(get(rc_list[i], d.dat)))
+    df.i <- data.frame(table(get(rc_list[i], i.dat)))
+    # sum computation
+    for (j in 1:length(df.d$Freq)) {
+      df_v <- as.integer(levels(df.d$Var1)[as.integer(df.d$Var1)])[j]
+      df_f <- df.d$Freq[j]
+      resl.d <- resl.d + (df_v*df_f)
+    }
+    for (j in 1:length(df.i$Freq)) {
+      df_v <- as.integer(levels(df.i$Var1)[as.integer(df.i$Var1)])[j]
+      df_f <- df.i$Freq[j]
+      resl.i <- resl.i + (df_v*df_f)
+    }
+    
+    d.perq <- c(d.perq,resl.d)
+    i.perq <- c(i.perq,resl.i)
+    
+    
+    if(unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(rc_list[i], new.dat) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(rc_list[i], new.dat) %>% attr('label')))+3,
+                   nchar(get(rc_list[i], new.dat) %>% attr('label')))
+    }
+    else{
+      ld <- names(get(rc_list[i], new.dat) %>% attr('label'))
+    }
+    
+    ld.title <- c(ld.title, ld)
+    
+  }
+  # df is remade to accommodate question labels and the percent scores computed from the sum and distinct count
+  df.d <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(d.perq/d.dc), Ques = c("Domestic"))
+  df.i <- data.frame(Var1 = factor(ld.title,levels = ld.title), Freq = round(i.perq/i.dc), Ques = c("International"))
+  
+  if(param_list[6]=="Okanagan"){
+    main.df <- data.frame(UBCO = c(ld.title,"Total number of respondents"),
+                          Domestic = c(paste0(df.d$Freq,"%"),d.dc),
+                          International = c(paste0(df.i$Freq,"%"),i.dc))
+  }
+  else if(param_list[6]=="Vancouver"){
+    main.df <- data.frame(UBCV = c(ld.title,"Total number of respondents"),
+                          Domestic = c(paste0(df.d$Freq,"%"),d.dc),
+                          International = c(paste0(df.i$Freq,"%"),i.dc))
+  }
+  else{
+    main.df <- data.frame(UBC = c(ld.title,"Total number of respondents"),
+                          Domestic = c(paste0(df.d$Freq,"%"),d.dc),
+                          International = c(paste0(df.i$Freq,"%"),i.dc))
+  }
+  
+  q_data_list <- list(qval, main.df, param_list)
+  
+  return(q_data_list)
+  
+}
+
 
 processed_graph_dataList <- list()
 processed_table_dataList <- list()
@@ -924,15 +1750,26 @@ processed_graph_dataList[[2]] <- mx_graph_proc("QN104", d.dat)
 processed_graph_dataList[[3]] <- mx_graph_proc("QN100", d.dat)
 processed_graph_dataList[[4]] <- mc_graph_proc("QN44", data.ok)
 processed_graph_dataList[[5]] <- mc.yn_graph_proc("QN94", data.ok)
+processed_graph_dataList[[6]] <- rk_graph_proc("QN98", i.dat)
+processed_graph_dataList[[7]] <- ms_graph_proc("spRestriction", data.ok)
+processed_graph_dataList[[8]] <- cs_graph_proc("QN34", data.ok)
 
 processed_table_dataList[[1]] <- mx_table_proc("QN105", d.dat)
 processed_table_dataList[[2]] <- mx_table_proc("QN104", d.dat)
 processed_table_dataList[[3]] <- mx_table_proc("QN100", d.dat)
 processed_table_dataList[[4]] <- mc_table_proc("QN44", data.ok)
 processed_table_dataList[[5]] <- mc.yn_table_proc("QN94", data.ok)
+processed_table_dataList[[6]] <- rk_table_proc("QN98", i.dat)
+processed_table_dataList[[7]] <- ms_table_proc("spRestriction", data.ok) 
+processed_table_dataList[[8]] <- cs_table_proc("QN34", data.ok)
+
+processed_table_dataList[[6]][3]
 
 str(processed_dataList)
-processed_graph_dataList[[5]]
+processed_graph_dataList[[6]]
+rk_graph(processed_graph_dataList[[6]])
+rk_table(processed_table_dataList[[6]])
 
 save(processed_graph_dataList, processed_table_dataList, file = "processedData.RData")
 load("processedData.RData")
+rm(processed_table_dataList)

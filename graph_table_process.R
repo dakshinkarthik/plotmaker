@@ -220,3 +220,176 @@ mc.yn_table <- function(processed_dataList){
   }
   
 }
+
+rk_graph <- function(processed_dataList){
+  
+  #       1       2         3       4       5   6       7           8             9       10      11
+  # list(qval, main.df, leveler, c.width, col, resp, main.prop, tex.col, geom_text_size, ti.tle, subt)
+  
+  plot.bar <- ggplot(data = processed_dataList[[2]], aes(x=Freq, y=factor(Ques,levels = rev(processed_dataList[[3]])),
+                                         fill = Var1)) +
+    # leveler is used to set levels for the factor on y-axis
+    geom_bar(stat = "identity", position = "fill", width = processed_dataList[[4]]) +
+    theme_economist(base_size = 14) +
+    # resp is passed to legend labels
+    scale_fill_manual(values = processed_dataList[[5]], guide = guide_legend(reverse = TRUE, nrow = 1), labels = processed_dataList[[6]]) +
+    # main.prop is passed to geom_text label. Aesthetic needs to match the main aesthetic
+    geom_text(data = processed_dataList[[2]], aes(Freq, Ques, group = Var1), label = processed_dataList[[7]],
+              position = position_fill(vjust=0.5), color = processed_dataList[[8]], size = processed_dataList[[9]]) +
+    labs(title = processed_dataList[[10]],
+         subtitle = processed_dataList[[11]]) +
+    # Initially, y-axis labels were manually set;
+    # but after adding question labels to the dataframe it did not seem neccessary
+    # scale_y_discrete(breaks = unique(main.df$Ques),
+    #                  labels = ld.title) +
+    scale_x_continuous(labels = scales::percent) + # Sets the scale to percentage
+    ubc.theme() + # custom formatting function for the report
+    theme(axis.text.x = element_text(size = 180)) # specific elements of the theme formatted here
+  
+  print(plot.bar)
+  
+}
+
+rk_table <- function(processed_dataList){
+  
+  
+  #       1       2       3
+  # list(qval, main.df, mattt)
+  
+  # creating a flextable object and formatting it
+  ft <- flextable(processed_dataList[[2]]) %>% theme_box()
+  ft <- fontsize(ft, size = 5.5, part = "all")
+  set_table_properties(ft, layout = "autofit")
+  ft <- align_text_col(ft, align = "center", header = TRUE) %>%
+    align_nottext_col(align = "center", header = TRUE)
+  ft %>% colformat_int(big.mark = "") %>%
+    valign(valign = "center", part = "all") %>%
+    border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+    # width(width = 0.81, unit = "in") %>%
+    width(width = 0.5, unit = "in") %>%
+    width(j = 1, width = 2.98, unit = "in") %>%
+    color(j = 2:dim(processed_dataList[[3]])[2]+1, color = "#A7A19D", part = "header") %>%
+    color(j = 2:dim(processed_dataList[[3]])[2]+1, color = "#A7A19D", part = "all")
+  
+}
+
+ms_graph <- function(processed_dataList){
+  
+  #       1       2         3         4         5
+  # list(qval, main.df, main.prop, param_list, subt)
+  
+  plot.bar <- ggplot(data = processed_dataList[[2]], aes(x=Freq, y=factor(Var1,levels = rev(unique(Var1))),
+                                         fill = factor(Ques,levels = rev(unique(Ques))))) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
+    theme_economist(base_size = 14) +
+    scale_fill_manual(values = c("#FFC279","#579C2C"),
+                      guide = guide_legend(reverse = TRUE,nrow = 2)) +
+    geom_text(data = processed_dataList[[2]], label = processed_dataList[[3]],
+              position = position_dodge(width = 0.8), size = 60, hjust = -0.1) +
+    labs(title = title_builder(processed_dataList[[4]]),
+         subtitle = processed_dataList[[5]]) +
+    ubc.theme() +
+    theme(legend.position = c(0.85,0.5)) +
+    scale_x_continuous(limits = c(0, 2 * max(processed_dataList[[2]]$Freq))) # setting x-axis bound limits
+  
+  print(plot.bar)
+  
+}
+
+ms_table <- function(processed_dataList){
+  
+  #       1       2         3
+  # list(qval, main.df, param_list)
+  if(processed_dataList[[3]][6]=="Okanagan"){
+    
+    # flextable object creation
+    ft <- flextable(processed_dataList[[2]]) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>% # setting header labels to their appropriate columns
+      add_header(UBCO = "UBCO", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>% # adding a super heading
+      merge_h(part = "header") %>% # merge horizontal column names (merges 'UBCO')
+      merge_v(part = "header") %>% # merges vertical column names (merges Domestic together and merges international together)
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>% # column header colors
+      color(j = "UBCO", color = "#A7A19D", part = "header") %>% # question column header colors
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>% # font size
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>% # border color
+      width(width = 3.5, unit = "in",j = "UBCO") # cell width
+  }
+  else if(processed_dataList[[3]][6]=="Vancouver"){
+    
+    # flextable object creation
+    ft <- flextable(processed_dataList[[2]]) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>% # setting header labels to their appropriate columns
+      add_header(UBCV = "UBCV", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>% # adding a super heading
+      merge_h(part = "header") %>% # merge horizontal column names (merges 'UBCO')
+      merge_v(part = "header") %>% # merges vertical column names (merges Domestic together and merges international together)
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>% # column header colors
+      color(j = "UBCV", color = "#A7A19D", part = "header") %>% # question column header colors
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>% # font size
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>% # border color
+      width(width = 3.5, unit = "in",j = "UBCV") # cell width
+  }
+  else{
+    
+    # flextable object creation
+    ft <- flextable(processed_dataList[[2]]) %>% theme_box() %>%
+      set_header_labels(X1="%",X2="n",X3="%",X4="n") %>% # setting header labels to their appropriate columns
+      add_header(UBC = "UBC", X1 = "Domestic", X2 = "Domestic", X3 = "International", X4 = "International") %>% # adding a super heading
+      merge_h(part = "header") %>% # merge horizontal column names (merges 'UBCO')
+      merge_v(part = "header") %>% # merges vertical column names (merges Domestic together and merges international together)
+      color(j = c("X1","X2","X3","X4"), color = "#A7A19D", part = "all") %>% # column header colors
+      color(j = "UBC", color = "#A7A19D", part = "header") %>% # question column header colors
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>% # font size
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>% # border color
+      width(width = 3.5, unit = "in",j = "UBC") # cell width
+  }
+}
+
+cs_graph <- function(processed_dataList){
+  
+  #       1       2         3         4
+  # list(qval, main.df, param_list, subt)
+  
+  
+  plot.bar <- ggplot(data = processed_dataList[[2]], aes(x=Freq, y=factor(Var1,levels = rev(unique(Var1))),
+                                         fill = factor(Ques,levels = rev(unique(Ques))))) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
+    theme_economist(base_size = 14) +
+    scale_fill_manual(values = c("#FFC279","#579C2C"),
+                      guide = guide_legend(reverse = TRUE,nrow = 2)) +
+    geom_text(data = processed_dataList[[2]], label = paste0(processed_dataList[[2]]$Freq,"%"),
+              position = position_dodge(width = 0.8), size = 60, hjust = -0.1) +
+    labs(title = title_builder(processed_dataList[[3]]),
+         subtitle = processed_dataList[[4]]) +
+    ubc.theme() +
+    theme(legend.position = c(0.85,0.5)) +
+    scale_x_continuous(limits = c(0, 2 * max(processed_dataList[[2]]$Freq)))
+  
+  print(plot.bar)
+  
+}
+
+cs_table <- function(){}

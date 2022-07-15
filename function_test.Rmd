@@ -150,6 +150,15 @@ mc_table(processed_table_dataList[[4]])
 
 mc.yn_graph(processed_graph_dataList[[5]])
 mc.yn_table(processed_table_dataList[[5]])
+
+rk_graph(processed_graph_dataList[[6]])
+rk_table(processed_table_dataList[[6]])
+
+ms_graph(processed_graph_dataList[[7]])
+ms_table(processed_table_dataList[[7]])
+
+cs_graph(processed_graph_dataList[[8]])
+cs_table(processed_table_dataList[[8]])
 ```
 
 ```{R qID-chunk, echo=FALSE}

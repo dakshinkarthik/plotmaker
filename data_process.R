@@ -228,7 +228,7 @@ mx_graph_proc <- function(qval, new.dat){
   
   
   # print(plot.bar)
-  q_data_list <- list(qval, main.df, resp, leveler, c.width, col, main.prop, tex.col, geom_text_size, ti.tle, subt, legend.pos.x, legend.pos.y)
+  q_data_list <- list("mx", qval, main.df, resp, leveler, c.width, col, main.prop, tex.col, geom_text_size, ti.tle, subt, legend.pos.x, legend.pos.y)
   
   return(q_data_list)
 }
@@ -463,7 +463,7 @@ mx_table_proc <- function(qval, new.dat){
   
   # list(qval, main.df, resp, leveler, c.width, col, main.prop, tex.col, geom_text_size, ti.tle, subt, legend.pos.x, legend.pos.y)
   
-  q_data_list <- list(qval, main.df, ft.size, c.width, mattt)
+  q_data_list <- list("mx", qval, main.df, ft.size, c.width, mattt)
   
   return(q_data_list)
   
@@ -616,7 +616,7 @@ mc_graph_proc <- function(qval, new.dat){
   geom_text_size <- sizer(main.df$Var1)[2]
   c.width <- sizer(main.df$Var1)[1]
   
-  q_data_list <- list(qval, main.df, c.width, main.prop, geom_text_size, param_list, subt)
+  q_data_list <- list("mc", qval, main.df, c.width, main.prop, geom_text_size, param_list, subt)
   
   return(q_data_list)
   
@@ -763,7 +763,7 @@ mc_table_proc <- function(qval, new.dat){
     main.df <- cbind(UBC = axis.q, main.df)
   }
   
-  q_data_list <- list(qval, main.df, param_list)
+  q_data_list <- list("mc", qval, main.df, param_list)
   
   return(q_data_list)
   
@@ -909,7 +909,7 @@ mc.yn_table_proc <- function(qval, new.dat){
     # print(main.df)
   }
   
-  q_data_list <- list(qval, main.df, param_list)
+  q_data_list <- list("mc.yn", qval, main.df, param_list)
   
   return(q_data_list)
   
@@ -1036,7 +1036,7 @@ rk_graph_proc <- function(qval, new.dat){
     }
   }
   
-  q_data_list <- list(qval, main.df, leveler, c.width, col, resp, main.prop, tex.col, geom_text_size, ti.tle, subt)
+  q_data_list <- list("rk", qval, main.df, leveler, c.width, col, resp, main.prop, tex.col, geom_text_size, ti.tle, subt)
   
   return(q_data_list)
 }
@@ -1219,7 +1219,7 @@ rk_table_proc <- function(qval, new.dat){
     }
   }
   
-  q_data_list <- list(qval, main.df, mattt)
+  q_data_list <- list("rk", qval, main.df, mattt)
   
   
   return(q_data_list)
@@ -1376,7 +1376,7 @@ ms_graph_proc <- function(qval, new.dat){
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
   
-  q_data_list <- list(qval, main.df, main.prop, param_list, subt)
+  q_data_list <- list("ms", qval, main.df, main.prop, param_list, subt)
   
   return(q_data_list)
   
@@ -1557,7 +1557,7 @@ ms_table_proc <- function(qval, new.dat){
     main.df <- cbind(UBC = c(axis.q,"Distinct count of Respondents"), main.df) # adding questions column to the df along with 'Distinct count'
   }
   
-  q_data_list <- list(qval, main.df, param_list)
+  q_data_list <- list("ms", qval, main.df, param_list)
   
   return(q_data_list)
   
@@ -1641,7 +1641,7 @@ cs_graph_proc <- function(qval, new.dat){
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
   
-  q_data_list <- list(qval, main.df, param_list, subt)
+  q_data_list <- list("cs", qval, main.df, param_list, subt)
   
   return(q_data_list)
   
@@ -1735,7 +1735,7 @@ cs_table_proc <- function(qval, new.dat){
                           International = c(paste0(df.i$Freq,"%"),i.dc))
   }
   
-  q_data_list <- list(qval, main.df, param_list)
+  q_data_list <- list("cs", qval, main.df, param_list)
   
   return(q_data_list)
   
@@ -1821,43 +1821,139 @@ mx.tri_graph_proc <- function(qval, new.dat){
   # Subtitle building
   subt <- subt_builder(rc_list, new.dat)
   
-  q_data_list <- list(qval, main.df, col, resp, main.prop, ti.tle, subt, ld.title)
+  q_data_list <- list("mx.tri", qval, main.df, col, resp, main.prop, ti.tle, subt, ld.title)
+  
+  return(q_data_list)
+  
+}
+
+mx.tri_table_proc <- function(qval, new.dat){
+  
+  # column names for data reads
+  cnames <- colnames(new.dat)
+  rc_list <- cnames[grepl(qval, cnames, fixed = TRUE)]
+  
+  # Reading in response levels
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  # Matrix is used for easier structuring of data in the table
+  # No. of columns = resp, No. of rows = no. of questions
+  mattt <- matrix(rep(1,(length(resp)+0)*length(rc_list)), ncol = length(resp)+0)
+  
+  # Variable initialization
+  df.list <- list()
+  main.df<- data.frame()
+  ld.main <- c()
+  row_tot <- c()
+  
+  i <- 1
+  for (qn in rc_list) {
+    # dataframe building
+    temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
+    temp.df <- complete(temp.df, Var1 = factor(c(1:3),levels = c(1:3)), fill = list(Freq = 0, Ques = c(i)))
+    df.list[[i]] <- temp.df
+    
+    #Row labels
+    if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(qn, new.dat) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
+                   nchar(get(qn, new.dat) %>% attr('label')))
+    }
+    else{
+      ld <- get(qn, new.dat) %>% attr('label')
+    }
+    
+    # Row total to compute and store percentage
+    row_tot <- c(row_tot, sum(df.list[[i]]$Freq))
+    
+    for (j in 1:length(resp)+0) {
+      if (!is.na(df.list[[i]]$Freq[j])) {
+        mattt[i,j] <- paste0(round(100*df.list[[i]]$Freq[j]/row_tot[i]),"%")
+      }
+      else
+        mattt[i,j] <- "NA"
+    }
+    
+    ld.main <- c(ld.main, ld)
+    i <- i + 1
+  }
+  
+  # matrix converted to dataframe
+  main.df <- data.frame(mattt)
+  
+  resp <- (resp)
+  colnames(main.df) <- c(resp) # column names assigned to columns 
+  c.width <- 1.3
+  ft.size <- 6
+  
+  # Setting table headers for domestic/international data splits; also adds the row totals to the df
+  if(param_list[6]=="Okanagan"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBCO Domestic` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBCO International` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
+  }
+  else if(param_list[6]=="Vancouver"){
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBCV Domestic` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBCV International` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
+  }
+  else{
+    if(new.dat$isi[1] == "Domestic"){
+      main.df <- main.df %>% add_column(`UBC Domestic` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
+    else if(new.dat$isi[1] == "ISI"){
+      main.df <- main.df %>% add_column(`UBC International` = ld.main, .before = resp[1]) %>%
+        add_column(Total = row_tot)
+    }
+  }
+  
+  q_data_list <- list("mx.tri", qval, main.df, ft.size, c.width, mattt)
   
   return(q_data_list)
   
 }
 
 
-processed_graph_dataList <- list()
-processed_table_dataList <- list()
+# processed_graph_dataList <- list()
+# processed_table_dataList <- list()
+# 
+# processed_graph_dataList[[1]] <- mx_graph_proc("QN105", d.dat)
+# processed_graph_dataList[[2]] <- mx_graph_proc("QN104", d.dat)
+# processed_graph_dataList[[3]] <- mx_graph_proc("QN100", d.dat)
+# processed_graph_dataList[[4]] <- mc_graph_proc("QN44", data.ok)
+# processed_graph_dataList[[5]] <- mc.yn_graph_proc("QN94", data.ok)
+# processed_graph_dataList[[6]] <- rk_graph_proc("QN98", i.dat)
+# processed_graph_dataList[[7]] <- ms_graph_proc("spRestriction", data.ok)
+# processed_graph_dataList[[8]] <- cs_graph_proc("QN34", data.ok)
+# processed_graph_dataList[[9]] <- mx.tri_graph_proc("commFreq", i.dat)
+# 
+# processed_table_dataList[[1]] <- mx_table_proc("QN105", d.dat)
+# processed_table_dataList[[2]] <- mx_table_proc("QN104", d.dat)
+# processed_table_dataList[[3]] <- mx_table_proc("QN100", d.dat)
+# processed_table_dataList[[4]] <- mc_table_proc("QN44", data.ok)
+# processed_table_dataList[[5]] <- mc.yn_table_proc("QN94", data.ok)
+# processed_table_dataList[[6]] <- rk_table_proc("QN98", i.dat)
+# processed_table_dataList[[7]] <- ms_table_proc("spRestriction", data.ok) 
+# processed_table_dataList[[8]] <- cs_table_proc("QN34", data.ok)
+# processed_table_dataList[[9]] <- mx.tri_table_proc("commFreq", i.dat)
 
-processed_graph_dataList[[1]] <- mx_graph_proc("QN105", d.dat)
-processed_graph_dataList[[2]] <- mx_graph_proc("QN104", d.dat)
-processed_graph_dataList[[3]] <- mx_graph_proc("QN100", d.dat)
-processed_graph_dataList[[4]] <- mc_graph_proc("QN44", data.ok)
-processed_graph_dataList[[5]] <- mc.yn_graph_proc("QN94", data.ok)
-processed_graph_dataList[[6]] <- rk_graph_proc("QN98", i.dat)
-processed_graph_dataList[[7]] <- ms_graph_proc("spRestriction", data.ok)
-processed_graph_dataList[[8]] <- cs_graph_proc("QN34", data.ok)
-processed_graph_dataList[[9]] <- mx.tri_graph_proc("commFreq", i.dat)
-
-processed_table_dataList[[1]] <- mx_table_proc("QN105", d.dat)
-processed_table_dataList[[2]] <- mx_table_proc("QN104", d.dat)
-processed_table_dataList[[3]] <- mx_table_proc("QN100", d.dat)
-processed_table_dataList[[4]] <- mc_table_proc("QN44", data.ok)
-processed_table_dataList[[5]] <- mc.yn_table_proc("QN94", data.ok)
-processed_table_dataList[[6]] <- rk_table_proc("QN98", i.dat)
-processed_table_dataList[[7]] <- ms_table_proc("spRestriction", data.ok) 
-processed_table_dataList[[8]] <- cs_table_proc("QN34", data.ok)
-processed_table_dataList[[9]] <- mx.tri_table_proc("commFreq", i.dat)
-
-processed_table_dataList[[6]][3]
-
-str(processed_dataList)
-processed_graph_dataList[[6]]
-rk_graph(processed_graph_dataList[[6]])
-rk_table(processed_table_dataList[[6]])
-
-save(processed_graph_dataList, processed_table_dataList, file = "processedData.RData")
-load("processedData.RData")
-rm(processed_table_dataList)
+# processed_table_dataList[[6]][3]
+# 
+# str(processed_dataList)
+# processed_graph_dataList[[6]]
+# rk_graph(processed_graph_dataList[[6]])
+# rk_table(processed_table_dataList[[6]])
+# 
+# save(processed_graph_dataList, processed_table_dataList, file = "processedData.RData")
+# load("processedData.RData")
+# rm(processed_table_dataList)

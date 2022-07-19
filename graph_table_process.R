@@ -392,4 +392,91 @@ cs_graph <- function(processed_dataList){
   
 }
 
-cs_table <- function(){}
+cs_table <- function(processed_dataList){
+  
+  #       1       2           3
+  # list(qval, main.df, param_list)
+  if(processed_dataList[[3]][6]=="Okanagan"){
+    
+    # flextable object creation
+    ft <- flextable(processed_dataList[[2]]) %>% theme_box() %>%
+      color(j = c("Domestic","International"), color = "#A7A19D", part = "all") %>%
+      color(j = "UBCO", color = "#A7A19D", part = "header") %>%
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 5, unit = "in",j = "UBCO")
+  }
+  else if(processed_dataList[[3]][6]=="Vancouver"){
+    
+    # flextable object creation
+    ft <- flextable(processed_dataList[[2]]) %>% theme_box() %>%
+      color(j = c("Domestic","International"), color = "#A7A19D", part = "all") %>%
+      color(j = "UBCV", color = "#A7A19D", part = "header") %>%
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 5, unit = "in",j = "UBCV")
+  }
+  else{
+    
+    # flextable object creation
+    ft <- flextable(processed_dataList[[2]]) %>% theme_box() %>%
+      color(j = c("Domestic","International"), color = "#A7A19D", part = "all") %>%
+      color(j = "UBC", color = "#A7A19D", part = "header") %>%
+      # color(j = "Domestic", part = "header", color = "#54504C") %>%
+      fontsize(size = 6, part = "all") %>%
+      align_text_col(align = "center", header = TRUE) %>%
+      align_nottext_col(align = "center", header = TRUE)
+    
+    set_table_properties(ft, layout = "autofit")
+    
+    ft %>% colformat_int(big.mark = "") %>%
+      valign(valign = "center", part = "all") %>%
+      border(border = fp_border_default(color = "#A7A19D"), part = "all") %>%
+      width(width = 5, unit = "in",j = "UBC")
+  }
+  
+}
+
+mx.tri_graph <- function(processed_dataList){
+  
+  #       1       2       3   4       5         6       7       8
+  # list(qval, main.df, col, resp, main.prop, ti.tle, subt, ld.title)
+  plot.bar <- ggplot(data = processed_dataList[[2]], aes(x=Ques, y=Freq, fill = Var1)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.9) +
+    theme_economist(base_size = 14) +
+    scale_fill_manual(values = processed_dataList[[3]], guide = guide_legend(reverse = FALSE, nrow = 3), labels = processed_dataList[[4]]) +
+    geom_text(data = processed_dataList[[2]], label = processed_dataList[[5]],
+              position = position_dodge(width = 0.9), size = 60, vjust = -1) +
+    labs(title = processed_dataList[[6]],
+         subtitle = processed_dataList[[7]]) +
+    scale_x_discrete(breaks = unique(processed_dataList[[2]]$Ques),
+                     labels = processed_dataList[[8]]) +
+    ubc.theme() +
+    # This function needs special formatting because it is different from the normal mx graph
+    theme(axis.text.x = element_text(family = "serif", size = 180),
+          axis.text.y = element_blank(),
+          legend.position = c(0.5,0.75),
+          legend.spacing.y = unit(3, "in")
+    ) +
+    scale_y_continuous(limits = c(0, 2 * max(processed_dataList[[2]]$Freq)))
+  
+  # Printing plot
+  print(plot.bar)
+  
+}

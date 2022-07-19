@@ -1741,6 +1741,92 @@ cs_table_proc <- function(qval, new.dat){
   
 }
 
+mx.tri_graph_proc <- function(qval, new.dat){
+  
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rc_list.get(qval,new.dat)
+  rc_list <- rc_eval("mx",rc_list)
+  
+  # getting response levels
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  
+  # Domestic/international titles and colors
+  ti.tle <- title_builder(param_list)
+  if(new.dat$isi[1] == "Domestic"){
+    col <- c("#3C5A2A","#498325","#89C265")
+    ti.tle <- ti.tle <- paste("Domestic",ti.tle,sep = " ")
+  }
+  else if(new.dat$isi[1] == "ISI"){
+    col <- c("#894E09","#BC7521","#FAB484")
+    ti.tle <- ti.tle <- paste("International",ti.tle,sep = " ")
+  }
+  else{
+    col <- c("#3C5A2A","#498325","#89C265")
+    ti.tle <- ti.tle
+  }
+  
+  # Variable initialization
+  df.list <- list()
+  prop <- list()
+  main.prop <- NULL
+  main.df<- data.frame()
+  ld.title <- c()
+  i <- 0
+  
+  # Axis question building and formatting
+  for (qn in rc_list) {
+    label_count_var <- 0
+    i <- i + 1
+    if(unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label'))) != -1){
+      ld <- substr(get(qn, data.ok) %>% attr('label'),
+                   unlist(gregexpr(pattern =' - ', get(qn, new.dat) %>% attr('label')))+3,
+                   nchar(get(qn, new.dat) %>% attr('label')))
+    }
+    else{
+      ld <- names(get(qn, new.dat) %>% attr('label'))
+    }
+    if(nchar(ld)>40){
+      ld <- paste0(substr(ld,1,sapply(gregexpr(pattern = " ", substr(ld,1,20)),max)), "\n ",
+                   substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,20)),max)+1,
+                          sapply(gregexpr(pattern = " ", substr(ld,1,40)),max)), "\n ",
+                   substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,40)),max)+1,nchar(ld)))
+    }else if(nchar(ld)>20){
+      ld <- paste0(substr(ld,1,sapply(gregexpr(pattern = " ", substr(ld,1,20)),max)), "\n ",
+                   substr(ld,sapply(gregexpr(pattern = " ", substr(ld,1,20)),max)+1,nchar(ld)))
+    }
+    
+    
+    ld.title <- c(ld.title, ld)
+    
+    # Dataframe building
+    temp.df <- data.frame(table(get(qn, new.dat)), Ques = c(i))
+    temp.df <- complete(temp.df, Var1 = factor(c(1:3),levels = c(1:3)), fill = list(Freq = 0, Ques = c(i)))
+    df.list[[i]] <- temp.df
+    df.list[[i]]$Ques <- as.factor(df.list[[i]]$Ques)
+    
+    # Geometry text prep
+    prop[[i]] <- round(as.double(100*df.list[[i]]$Freq/sum(df.list[[i]]$Freq)))
+    
+    for(j in 1:length(prop[[i]])){
+      label_count_var <- label_count_var + 1
+      prop[[i]][j] = paste0(prop[[i]][j], "%")
+    }
+    
+    # Main dataframe and geom text for plotting
+    main.prop <- c(main.prop, prop[[i]])
+    main.df <- rbind(main.df, df.list[[i]])
+  }
+  
+  # Subtitle building
+  subt <- subt_builder(rc_list, new.dat)
+  
+  q_data_list <- list(qval, main.df, col, resp, main.prop, ti.tle, subt, ld.title)
+  
+  return(q_data_list)
+  
+}
+
 
 processed_graph_dataList <- list()
 processed_table_dataList <- list()
@@ -1753,6 +1839,7 @@ processed_graph_dataList[[5]] <- mc.yn_graph_proc("QN94", data.ok)
 processed_graph_dataList[[6]] <- rk_graph_proc("QN98", i.dat)
 processed_graph_dataList[[7]] <- ms_graph_proc("spRestriction", data.ok)
 processed_graph_dataList[[8]] <- cs_graph_proc("QN34", data.ok)
+processed_graph_dataList[[9]] <- mx.tri_graph_proc("commFreq", i.dat)
 
 processed_table_dataList[[1]] <- mx_table_proc("QN105", d.dat)
 processed_table_dataList[[2]] <- mx_table_proc("QN104", d.dat)
@@ -1762,6 +1849,7 @@ processed_table_dataList[[5]] <- mc.yn_table_proc("QN94", data.ok)
 processed_table_dataList[[6]] <- rk_table_proc("QN98", i.dat)
 processed_table_dataList[[7]] <- ms_table_proc("spRestriction", data.ok) 
 processed_table_dataList[[8]] <- cs_table_proc("QN34", data.ok)
+processed_table_dataList[[9]] <- mx.tri_table_proc("commFreq", i.dat)
 
 processed_table_dataList[[6]][3]
 

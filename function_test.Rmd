@@ -159,6 +159,8 @@ ms_table(processed_table_dataList[[7]])
 
 cs_graph(processed_graph_dataList[[8]])
 cs_table(processed_table_dataList[[8]])
+
+mx.tri_graph(processed_graph_dataList[[9]])
 ```
 
 ```{R qID-chunk, echo=FALSE}

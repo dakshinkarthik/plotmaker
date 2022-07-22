@@ -54,7 +54,7 @@ q_list <- c("reside",
          "QN59",
          "daRsrc")
  
- qType.selector <- function(qval, new.dat){
+ qType.selector <- function(qval, new.dat, d.dat, i.dat){
    
    # Column names to read data
    cnames <- colnames(new.dat) # Gets column names(question IDs) from the dataset
@@ -71,8 +71,10 @@ q_list <- c("reside",
         unlist(gregexpr(pattern = 'impact', resp[1])) != -1){
        # print("1")
        # Each qID from the markdown file gets a single call to an appropriate graph function and a table function
-       mx_graph_proc(qval,new.dat) 
-       mx_table_proc(qval,new.dat)
+       # mx_graph_proc(qval,new.dat) 
+       # mx_table_proc(qval,new.dat)
+       return(list(mx_graph_proc(qval,d.dat),mx_table_proc(qval,d.dat),
+                   mx_graph_proc(qval,i.dat),mx_table_proc(qval,i.dat)))
      }
      else{
        chk <- 0 # Local check variable for 'Yes/No' response levels
@@ -87,13 +89,15 @@ q_list <- c("reside",
        # if chk == 1 then it has 'Yes/No' in the response levels
        if(chk == 1){
          # print("2")
-         mc.yn_graph_proc(qval, new.dat)
-         mc.yn_table_proc(qval, new.dat)
+         # mc.yn_graph_proc(qval, new.dat)
+         # mc.yn_table_proc(qval, new.dat)
+         return(list(mc.yn_graph_proc(qval, new.dat),mc.yn_table_proc(qval, new.dat)))
        }
        else{
          # print("3")
-         mc_graph_proc(qval, new.dat)
-         mc_table_proc(qval, new.dat)
+         # mc_graph_proc(qval, new.dat)
+         # mc_table_proc(qval, new.dat)
+         return(list(mc_graph_proc(qval, new.dat),mc_table_proc(qval, new.dat)))
        }
      }
    }
@@ -111,34 +115,45 @@ q_list <- c("reside",
          # print("4")
          # This function call and table call is for mx questions with only 3 response levels that are different 
          # from the usual mx response levels
-         mx.tri_graph_proc(qval,new.dat)
-         mx.tri_table_proc(qval,new.dat)
+         # mx.tri_graph_proc(qval,new.dat)
+         # mx.tri_table_proc(qval,new.dat)
+         return(list(mx.tri_graph_proc(qval,d.dat),mx.tri_table_proc(qval,d.dat),
+                     mx.tri_graph_proc(qval,i.dat),mx.tri_table_proc(qval,i.dat)))
        }else{
          # print("5")
-         mx_graph_proc(qval,new.dat)
-         mx_table_proc(qval,new.dat)
+         # mx_graph_proc(qval,new.dat)
+         # mx_table_proc(qval,new.dat)
+         return(list(mx_graph_proc(qval,d.dat),mx_table_proc(qval,d.dat),
+                     mx_graph_proc(qval,i.dat),mx_table_proc(qval,i.dat)))
        }
      }
      # Checks for rk question type
      else if(unlist(gregexpr(pattern = 'rk', rc_list[1])) != -1){
        # print("6")
-       rk_graph_proc(qval,new.dat)
-       rk_table_proc(qval,new.dat)
+       # rk_graph_proc(qval,new.dat)
+       # rk_table_proc(qval,new.dat)
+       return(list(rk_graph_proc(qval,d.dat),rk_table_proc(qval,d.dat),
+                   rk_graph_proc(qval,i.dat),rk_table_proc(qval,i.dat)))
      }
      # Checks for ms question type
      else if(unlist(gregexpr(pattern = 'ms', rc_list[1])) != -1){
        # print("7")
-       ms_graph_proc(qval,new.dat)
-       ms_table_proc(qval,new.dat)
+       # ms_graph_proc(qval,new.dat)
+       # ms_table_proc(qval,new.dat)
+       return(list(ms_graph_proc(qval,new.dat),ms_table_proc(qval,new.dat)))
      }
      # Checks for cs question types
      else if(unlist(gregexpr(pattern = 'cs', rc_list[1])) != -1){
        # print("8")
-       cs_graph_proc(qval,new.dat)
-       cs_table_proc(qval,new.dat)
+       # cs_graph_proc(qval,new.dat)
+       # cs_table_proc(qval,new.dat)
+       return(list(cs_graph_proc(qval,new.dat),cs_table_proc(qval,new.dat)))
      }
    }
  }
+ 
+ qType.selector("spRestriction", data.ok, d.dat, i.dat)
+ 
  
  data.process <- function(qList, new.dat){
    
@@ -149,3 +164,11 @@ q_list <- c("reside",
    }
    
  }
+ 
+ sample_func <- function(a,b){
+   return(list(a+b,a-b))
+ }
+
+ sample_func(1,2)[[2]]
+
+ 

@@ -770,7 +770,156 @@ mc_table_proc <- function(qval, new.dat){
 }
 
 mc.yn_graph_proc <- function(qval, new.dat){
-  mc_graph_proc(qval,new.dat) # function call to mc() because the type of graphs for mc and mc.yn questions are the same, and their responses are similarly structured in the dataset
+  
+  # splitting data by domestic/international
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
+  # Column names to read data
+  cnames <- colnames(new.dat)
+  rc_list <- rc_list.get(qval, new.dat)
+  rc_list <- rc_eval("mc",rc_list)
+  
+  # response levels
+  resp <- names(get(rc_list[1], new.dat) %>% attr('labels'))
+  
+  # Variable initialization
+  df.list <- list()
+  main.df <- NULL
+  main.prop <- c()
+  tex.col <- c()
+  label_count <- length(tex.col)
+  ld.title <- c()
+  i <- 1
+  
+  # Dataframe building
+  if(nrow(table(get(rc_list, new.dat)))==0){
+    main.df <- data.frame(Var1 = c(1:(length(resp)-1),999), Freq = c(rep(0,length(resp))))
+  }
+  else{
+    main.df <- data.frame((table(get(rc_list, new.dat))))
+  }
+  
+  if(nrow(table(get(rc_list, i.dat)))==0){
+    i.df <- data.frame(Var1 = c(main.df$Var1), Freq = c(rep(0,length(main.df$Var1))), Ques = c("International"))
+  }
+  else{
+    i.df <- data.frame(table(get(rc_list, i.dat)), Ques = c("International"))
+  }
+  if(nrow(table(get(rc_list, d.dat)))==0){
+    d.df <- data.frame(Var1 = c(main.df$Var1), Freq = c(rep(0,length(main.df$Var1))), Ques = c("Domestic"))
+  }
+  else{
+    d.df <- data.frame(table(get(rc_list, d.dat)), Ques = c("Domestic"))
+  }
+  
+  # print(main.df)
+  # print(d.df)
+  # print(i.df)
+  
+  # to fill in missing responses using the common df as reference
+  i.df <- complete(i.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("International")))
+  d.df <- complete(d.df, Var1 = main.df$Var1, fill = list(Freq = 0, Ques = c("Domestic")))
+  
+  # i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq)) # counts replaced with its respective percentage value
+  # d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq)) # counts replaced with its respective percentage value
+  
+  if(is.nan(round(100*i.df$Freq/sum(i.df$Freq)))){
+    i.df$Freq <- 0
+  }else{
+    i.df$Freq <- round(100*i.df$Freq/sum(i.df$Freq))
+  }
+  
+  if(is.nan(round(100*d.df$Freq/sum(d.df$Freq)))){
+    d.df$Freq <- 0
+  }else{
+    d.df$Freq <- round(100*d.df$Freq/sum(d.df$Freq))
+  }
+  
+  # prop variables set up for geom_text
+  i.prop <- paste0(i.df$Freq,"%") 
+  d.prop <- paste0(d.df$Freq,"%")
+  main.prop <- c(d.prop,i.prop)
+  
+  
+  # Selecting valid choices from the data subset as numerical levels
+  resp_b <- c()
+  for (qn in main.df$Var1) {
+    resp_b <- c(resp_b, as.numeric(qn))
+  }
+  
+  # selecting valid question labels; same reasoning from the tb_mc() function
+  axis.q <- c()
+  # axis.q.i <- c()
+  # axis.q.d <- c()
+  if(0 %in% resp_b){
+    i <- 0
+    for (k in resp_b) {
+      i <- i + 1
+      if(k == 999){
+        axis.q <- c(axis.q,resp[length(resp)])
+      }
+      else{
+        if(is.na(resp[k+1])){
+          axis.q <- c(axis.q, resp[i])
+        }
+        else{
+          axis.q <- c(axis.q, resp[k+1])
+        }
+      }
+    }
+  }
+  else{
+    i <- 0
+    for (k in resp_b) {
+      i <- i + 1
+      if(k == 999){
+        axis.q <- c(axis.q, resp[length(resp)])
+      }
+      else{
+        if(is.na(resp[k])){
+          axis.q <- c(axis.q, resp[i])
+        }
+        else{
+          axis.q <- c(axis.q, resp[k])
+        }
+      }
+    }
+  }
+  # print(axis.q)
+  
+  # adding new line to selected question labels based on their character lengths
+  for (j in 1:length(axis.q)) {
+    axis.q[j] <- region.get(axis.q[j],new.dat) # modifies question labels to display the correct region (removes brackets and field names and replaces it with the 'Okanagan' or 'Vancouver')
+    if(nchar(axis.q[j])>40){
+      axis.q[j] <- paste0(substr(axis.q[j],1,sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)), "\n ",
+                          substr(axis.q[j],sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)+1,
+                                 sapply(gregexpr(pattern = " ", substr(axis.q[j],1,40)),max)), "\n ",
+                          substr(axis.q[j],sapply(gregexpr(pattern = " ", substr(axis.q[j],1,40)),max)+1,nchar(axis.q[j])))
+    }else if(nchar(axis.q[j])>20){
+      axis.q[j] <- paste0(substr(axis.q[j],1,sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)), "\n ",
+                          substr(axis.q[j],sapply(gregexpr(pattern = " ", substr(axis.q[j],1,20)),max)+1,nchar(axis.q[j])))
+    }
+  }
+  
+  # integrating the selected question labels into the dfs
+  d.df$Var1 <- axis.q
+  i.df$Var1 <- axis.q
+  
+  # domestic df and international df combined horizontally (by rows)
+  main.df <- rbind(d.df,i.df)
+  # print(main.df)
+  # Subtitle building
+  subt <- subt_builder(rc_list, new.dat)
+  subt <- region.get(subt, new.dat)
+  
+  # sizing format
+  geom_text_size <- sizer(main.df$Var1)[2]
+  c.width <- sizer(main.df$Var1)[1]
+  
+  q_data_list <- list("mc.yn", qval, main.df, c.width, main.prop, geom_text_size, param_list, subt)
+  
+  return(q_data_list)
+  
 }
 
 mc.yn_table_proc <- function(qval, new.dat){

@@ -1,3 +1,130 @@
+source("plotmaker.R")
+source("data_process.R")
+# **************************************************************************************
+# ```````````````````````````````PARAMETERS`````````````````````````````````````````````
+# ``````````````````````````````````````````````````````````````````````````````````````
+# **************************************************************************************
+
+# Options: "ALL","Okanagan","Vancouver"
+CAMPUS <- "Okanagan"
+# Options: "ALL","Direct-Transfer","Transfer"
+ENTRY_TYPE <- "Direct-Entry"
+# Options: "ALL","First Nations","Metis","Inuit","Aboriginal","Arab","Black","Chinese","Filipino","Japanese","Korean","Americas","South Asian","Southeast Asian","West Asian","White","Other","No Answer"
+ETHNICITY <- "ALL"
+# Options: "ALL","Female","Male","Non-Binary","No Answer"
+GENDER <- "ALL"
+# Options: "ALL","Cis","Trans","No Answer"
+GENDER_ORIENTATION <- "ALL"
+# Options: "ALL","Homosexual","Heterosexual","Bisexual","Asexual","Queer","Questioning","Other","No Answer"
+SEXUALITY <- "ALL"
+
+# ***************************************************************************************
+# ```````````````````````````````DATA READS AND FILTERIMG````````````````````````````````
+# ```````````````````````````````````````````````````````````````````````````````````````
+# ***************************************************************************************
+
+param_list <- c(ENTRY_TYPE,GENDER_ORIENTATION,SEXUALITY,GENDER,ETHNICITY,CAMPUS)
+# param_list <- c("Direct-Transfer","ALL","ALL","ALL","ALL","Okanagan")
+nubc2021joined <- read_sav("data/nubc2021_v5.sav")
+data.ok <- nubc2021joined[which(nubc2021joined$directtransfer == "DIRECT-ENTRY" & nubc2021joined$campusName == "Okanagan"),]
+i.dat <- data.ok[which(data.ok$isi == "ISI"),]
+d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
+
+#CAMPUS
+if(CAMPUS == "Okanagan"){
+  data.ok <- nubc2021joined[which(nubc2021joined$campusName == "Okanagan"),]
+}else if(CAMPUS == "Vancouver"){
+  data.ok <- nubc2021joined[which(nubc2021joined$campusName == "Vancouver"),]
+}else{
+  data.ok <- nubc2021joined
+}
+#ENTRY_TYPE
+if(ENTRY_TYPE == "Direct-Entry"){
+  data.ok <- data.ok[which(data.ok$directtransfer == "DIRECT-ENTRY"),]
+}else if(ENTRY_TYPE == "Transfer"){
+  data.ok <- data.ok[which(data.ok$directtransfer == "TRANSFER"),]
+}
+#ETHNICITY
+if(ETHNICITY == "First Nations"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_1 == 1),]
+}else if(ETHNICITY == "Metis"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_17 == 1),]
+}else if(ETHNICITY == "Inuit"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_18 == 1),]
+}else if(ETHNICITY == "Aboriginal"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_2 == 1),]
+}else if(ETHNICITY == "Arab"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_3 == 1),]
+}else if(ETHNICITY == "Black"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_4 == 1),]
+}else if(ETHNICITY == "Chinese"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_5 == 1),]
+}else if(ETHNICITY == "Filipino"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_6 == 1),]
+}else if(ETHNICITY == "Japanese"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_7 == 1),]
+}else if(ETHNICITY == "Korean"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_8 == 1),]
+}else if(ETHNICITY == "Americas"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_9 == 1),]
+}else if(ETHNICITY == "South Asian"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_10 == 1),]
+}else if(ETHNICITY == "Southeast Asian"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_11 == 1),]
+}else if(ETHNICITY == "West Asian"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_13 == 1),]
+}else if(ETHNICITY == "White"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_14 == 1),]
+}else if(ETHNICITY == "Other"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_15 == 1),]
+}else if(ETHNICITY == "No Answer"){
+  data.ok <- data.ok[which(data.ok$ms.QN48_16 == 1),]
+}
+#GENDER
+if(GENDER == "Female"){
+  data.ok <- data.ok[which(data.ok$mc.QN56 == 1),]
+}else if(GENDER == "Male"){
+  data.ok <- data.ok[which(data.ok$mc.QN56 == 2),]
+}else if(GENDER == "Non-Binary"){
+  data.ok <- data.ok[which(data.ok$mc.QN56 == 3),]
+}else if(GENDER == "No Answer"){
+  data.ok <- data.ok[which(data.ok$mc.QN56 == 999),]
+}
+#GENDER_ORIENTATION
+if(GENDER_ORIENTATION == "Cis"){
+  data.ok <- data.ok[which(data.ok$mc.QN57 == 1),]
+}else if(GENDER_ORIENTATION == "Trans"){
+  data.ok <- data.ok[which(data.ok$mc.QN57 == 2),]
+}else if(GENDER_ORIENTATION == "No Answer"){
+  data.ok <- data.ok[which(data.ok$mc.QN57 == 999),]
+}
+# SEXUALITY
+# Options: "ALL","HETEROSEXUAL","HOMOSEXUAL","BISEXUAL","ASEXUAL","QUEER","QUESTIONING","OTHER","NO ANSWER"
+if(SEXUALITY == "Heterosexual"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 1),]
+}else if(SEXUALITY == "Homosexual"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 2),]
+}else if(SEXUALITY == "Bisexual"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 3),]
+}else if(SEXUALITY == "Asexual"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 4),]
+}else if(SEXUALITY == "Queer"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 5),]
+}else if(SEXUALITY == "Questioning"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 6),]
+}else if(SEXUALITY == "Other"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 9),]
+}else if(SEXUALITY == "No Answer"){
+  data.ok <- data.ok[which(data.ok$mc.QN58 == 999),]
+}
+
+i.dat <- data.ok[which(data.ok$isi == "ISI"),]
+d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
+
+# ***************************************************************************************************
+# ````````````````````````````````DATA PROCESSING````````````````````````````````````````````````````
+# ```````````````````````````````````````````````````````````````````````````````````````````````````
+# ***************************************************************************************************
 
 processed_graph_dataList <- list()
 processed_table_dataList <- list()
@@ -152,23 +279,50 @@ q_list <- c("reside",
    }
  }
  
- qType.selector("spRestriction", data.ok, d.dat, i.dat)
  
  
  data.process <- function(qList, new.dat){
    
+   c1 <- 1
+   c2 <- 1
+   
    cnames <- colnames(data.ok)
    
+   processed_graph_dataList <- list()
+   processed_table_dataList <- list()
+   
    for (i in qList) {
-     
+     current_list <- qType.selector(i, data.ok, d.dat, i.dat)
+
+     if(length(current_list) == 2){
+       processed_graph_dataList[[c1]] <- current_list[[1]]
+       processed_table_dataList[[c2]] <- current_list[[2]]
+       c1 <- c1 + 1
+       c2 <- c2 + 1
+     }
+     else{
+       processed_graph_dataList[[c1]] <- current_list[[1]]
+       processed_table_dataList[[c2]] <- current_list[[2]]
+       c1 <- c1 + 1
+       c2 <- c2 + 1
+       processed_graph_dataList[[c1]] <- current_list[[3]]
+       processed_table_dataList[[c2]] <- current_list[[4]]
+       c1 <- c1 + 1
+       c2 <- c2 + 1
+     }
    }
+   
+   return(list(processed_graph_dataList, processed_table_dataList))
    
  }
  
- sample_func <- function(a,b){
-   return(list(a+b,a-b))
- }
-
- sample_func(1,2)[[2]]
-
+ processedData <- NULL
+ processedData <- data.process(q_list, data.ok)
+ 
+ processed_graph_dataList <- processedData[[1]]
+ processed_table_dataList <- processedData[[2]]
+ 
+ save(processed_graph_dataList, processed_table_dataList, file = "processedData.RData")
+ 
+ # load("processedData.R")
  

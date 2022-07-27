@@ -1,5 +1,14 @@
 source("plotmaker.R")
 source("data_process.R")
+library(knitr)
+library(ggplot2)
+library(ggthemes)
+library(ggpubr)
+library(tidyverse)
+library(extrafont)
+library(pander)
+library(haven)
+library(flextable)
 # **************************************************************************************
 # ```````````````````````````````PARAMETERS`````````````````````````````````````````````
 # ``````````````````````````````````````````````````````````````````````````````````````

@@ -139,84 +139,83 @@ d.dat <- data.ok[which(data.ok$isi == "Domestic"),]
 
 ```{R echo = FALSE, fig.height = 120}
 # source("plotmaker.R")
-main.graph("QN98",d.dat)
-tb_mc("commuteFreq",data.ok)
-
-mx_graph(processed_graph_dataList[[2]])
-mx_table(processed_table_dataList[[2]])
-
-mc_graph(processed_graph_dataList[[4]])
-mc_table(processed_table_dataList[[4]])
-
-mc.yn_graph(processed_graph_dataList[[5]])
-mc.yn_table(processed_table_dataList[[5]])
-
-rk_graph(processed_graph_dataList[[6]])
-rk_table(processed_table_dataList[[6]])
-
-ms_graph(processed_graph_dataList[[7]])
-ms_table(processed_table_dataList[[7]])
-
-cs_graph(processed_graph_dataList[[8]])
-cs_table(processed_table_dataList[[8]])
-
-mx.tri_graph(processed_graph_dataList[[9]])
-mx.tri_table(processed_table_dataList[[9]])
+# main.graph("QN98",d.dat)
+# tb_mc("commuteFreq",data.ok)
+# 
+# mx_graph(processed_graph_dataList[[2]])
+# mx_table(processed_table_dataList[[2]])
+# 
+# mc_graph(processed_graph_dataList[[4]])
+# mc_table(processed_table_dataList[[4]])
+# 
+# mc.yn_graph(processed_graph_dataList[[5]])
+# mc.yn_table(processed_table_dataList[[5]])
+# 
+# rk_graph(processed_graph_dataList[[6]])
+# rk_table(processed_table_dataList[[6]])
+# 
+# ms_graph(processed_graph_dataList[[7]])
+# ms_table(processed_table_dataList[[7]])
+# 
+# cs_graph(processed_graph_dataList[[8]])
+# cs_table(processed_table_dataList[[8]])
+# 
+# mx.tri_graph(processed_graph_dataList[[9]])
+# mx.tri_table(processed_table_dataList[[9]])
 ```
 
 ```{R qID-chunk, echo=FALSE}
-qIDs <- c("QN35","QN36")
-  # c("reside",
-  #         "housing",
-  #         "housingCountry",
-  #         "QN28",
-  #         "QN100",
-  #         "QN104",
-  #         "QN105",
-  #         "mindset",
-  #         "interSupport",
-  #         "commSatisfy",
-  #         "commFreq",
-  #         "commAgree",
-  #         "QN30",
-  #         "QN94",
-  #         "acdEssential",
-  #         "acdEssentialcrs",
-  #         "QN980",
-  #         "QN98",
-  #         "QN111",
-  #         "commuteFreq",
-  #         "QN44",
-  #         "QN45",
-  #         "commuteerrand",
-  #         "wbFamdoc",
-  #         "wbMntsprt",
-  #         "wbNavigate",
-  #         "healthResource",
-  #         "QN65",
-  #         "QN34",
-  #         "QN37",
-  #         "QN40",
-  #         "QN41",
-  #         "QN35",
-  #         "QN36",
-  #         "covidFinance",
-  #         "covidTuition",
-  #         "spApply",
-  #         "spRestriction",
-  #         "QN48",
-  #         "QN50",
-  #         "QN52",
-  #         "QN53",
-  #         "QN54",
-  #         "QN55",
-  #         "QN66",
-  #         "QN67",
-  #         "QN56",
-  #         "QN57",
-  #         "QN58",
-  #         "QN59",
-  #         "daRsrc")
+qIDs <- c("reside",
+          "housing",
+          "housingCountry",
+          "QN28",
+          "QN100",
+          "QN104",
+          "QN105",
+          "mindset",
+          "interSupport",
+          "commSatisfy",
+          "commFreq",
+          "commAgree",
+          "QN30",
+          "QN94",
+          "acdEssential",
+          "acdEssentialcrs",
+          "QN980",
+          "QN98",
+          "QN111",
+          "commuteFreq",
+          "QN44",
+          "QN45",
+          "commuteerrand",
+          "wbFamdoc",
+          "wbMntsprt",
+          "wbNavigate",
+          "healthResource",
+          "QN65",
+          "QN34",
+          "QN37",
+          "QN40",
+          "QN41",
+          "QN35",
+          "QN36",
+          "covidFinance",
+          "covidTuition",
+          "spApply",
+          "spRestriction",
+          "QN48",
+          "QN50",
+          "QN52",
+          "QN53",
+          "QN54",
+          "QN55",
+          "QN66",
+          "QN67",
+          "QN56",
+          "QN57",
+          "QN58",
+          "QN59",
+          "daRsrc")
 ```
 
 ```{R chunk-generator ,echo=FALSE}
@@ -299,7 +298,11 @@ for (i in qIDs) {
 }
 ```
 
+`r start.time = Sys.time()`
+
 `r paste(knit(text = out), collapse = '\n')`
+
+`r print(Sys.time() - start.time)`
 
 
 

@@ -1,3 +1,5 @@
+source("plotmaker.R")
+
 mx_graph <- function(processed_dataList){
   
   # for (i in 1:length(processed_dataList)) {

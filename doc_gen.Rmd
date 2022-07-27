@@ -86,9 +86,9 @@ for (qData in 1:length(processed_graph_dataList)) {
 }
 ```
 
-
+`r start.time = Sys.time()`
 
 `r paste(knit(text = out), collapse = '\n')`
 
-
+`r print(Sys.time() - start.time)`
 

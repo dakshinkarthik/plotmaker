@@ -1,5 +1,5 @@
 ---
-title: "Test report"
+title: "Sample report"
 output:
   word_document:
     reference_docx: ref_doc.docx
@@ -17,7 +17,7 @@ library(extrafont)
 library(pander)
 library(haven)
 library(flextable)
-# source("processor.R")
+source("plotmaker.R")
 source("graph_table_process.R")
 # font_import("Calibri")
 ```
@@ -27,26 +27,61 @@ source("graph_table_process.R")
 load("processedData.RData")
 out = NULL
 
-ct
-for (qData in processed_graph_dataList) {
-  if(qData[[1]] == "mx"){
-    mx_graph(qData)
-    mx_table(qData)
+
+for (qData in 1:length(processed_graph_dataList)) {
+  if(processed_graph_dataList[[qData]][[1]] == "mx"){
+    # mx_graph(qData)
+    # mx_table(qData)
+    knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                                mx_graph(processed_graph_dataList[[",qData,"]])\nmx_table(processed_table_dataList[[",qData,"]])\n\n```")
+    out = c(out, knit_expanded)
   }
-  else if(qData[[1]] == "mc"){
-    mc_graph(qData)
-    mc_table(qData)
+  else if(processed_graph_dataList[[qData]][[1]] == "mc"){
+    # mc_graph(qData)
+    # mc_table(qData)
+    knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                                mc_graph(processed_graph_dataList[[",qData,"]])\nmc_table(processed_table_dataList[[",qData,"]])\n\n```")
+    out = c(out, knit_expanded)
   }
-  else if(qData[[1]] == "ms"){
-    ms_graph(qData)
-    ms_table(qData)
+  else if(processed_graph_dataList[[qData]][[1]] == "ms"){
+    # ms_graph(qData)
+    # ms_table(qData)
+    knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                                ms_graph(processed_graph_dataList[[",qData,"]])\nms_table(processed_table_dataList[[",qData,"]])\n\n```")
+    out = c(out, knit_expanded)
   }
-  else if(qData[[1]] == "mx.tri"){
-    mx.tri_graph(qData)
-    mx.tri_table(qData)
+  else if(processed_graph_dataList[[qData]][[1]] == "mx.tri"){
+    # mx.tri_graph(qData)
+    # mx.tri_table(qData)
+    knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                                mx.tri_graph(processed_graph_dataList[[",qData,"]])\nmx.tri_table(processed_table_dataList[[",qData,"]])\n\n```")
+    out = c(out, knit_expanded)
   }
-  else if(qData[[1]] == "mc.yn"){
-    
+  else if(processed_graph_dataList[[qData]][[1]] == "mc.yn"){
+    # mc.yn_graph(qData)
+    # mc.yn_table(qData)
+    knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                                mc.yn_graph(processed_graph_dataList[[",qData,"]])\nmc.yn_table(processed_table_dataList[[",qData,"]])\n\n```")
+    out = c(out, knit_expanded)
+  }
+  else if(processed_graph_dataList[[qData]][[1]] == "rk"){
+    # rk_graph(qData)
+    # rk_table(qData)
+    knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                                rk_graph(processed_graph_dataList[[",qData,"]])\nrk_table(processed_table_dataList[[",qData,"]])\n\n```")
+    out = c(out, knit_expanded)
+  }
+  else if(processed_graph_dataList[[qData]][[1]] == "cs"){
+    # cs_graph(qData)
+    # cs_graph(qData)
+    knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 120}\n\n
+                                cs_graph(processed_graph_dataList[[",qData,"]])\ncs_table(processed_table_dataList[[",qData,"]])\n\n```")
+    out = c(out, knit_expanded)
+  }
+  else{
+    knit_expanded <- paste0("\n```{R echo=FALSE, fig.height = 30}\n\n print(\'One or more question ID(s) at ",qData," is invalid.\')\n\n```")
+    out = c(knit_expanded)
+    break
   }
 }
 ```

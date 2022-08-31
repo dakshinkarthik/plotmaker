@@ -73,7 +73,7 @@ mc_graph <- function(processed_dataList){
   
   print(plot.bar)
   
-}
+} # CHANGES TO PARAMETER NEEDED
 
 mc_table <- function(processed_dataList){
   
@@ -144,13 +144,13 @@ mc_table <- function(processed_dataList){
       width(width = 3.5, unit = "in",j = "UBC")
   }
   
-}
+} # CHANGES TO PARAMETER NEEDED
 
 mc.yn_graph <- function(processed_dataList){
   
   mc_graph(processed_dataList)
   
-}
+} # CHANGES TO PARAMETER NEEDED
 
 mc.yn_table <- function(processed_dataList){
   
@@ -221,7 +221,7 @@ mc.yn_table <- function(processed_dataList){
     
   }
   
-}
+} # CHANGES TO PARAMETER NEEDED
 
 rk_graph <- function(processed_dataList){
   
@@ -296,7 +296,7 @@ ms_graph <- function(processed_dataList){
   
   print(plot.bar)
   
-}
+} # CHANGES TO PARAMETER NEEDED
 
 ms_table <- function(processed_dataList){
   
@@ -368,7 +368,7 @@ ms_table <- function(processed_dataList){
       border(border = fp_border_default(color = "#A7A19D"), part = "all") %>% # border color
       width(width = 3.5, unit = "in",j = "UBC") # cell width
   }
-}
+} # CHANGES TO PARAMETER NEEDED
 
 cs_graph <- function(processed_dataList){
   
@@ -392,7 +392,7 @@ cs_graph <- function(processed_dataList){
   
   print(plot.bar)
   
-}
+} # CHANGES TO PARAMETER NEEDED
 
 cs_table <- function(processed_dataList){
   
@@ -453,7 +453,7 @@ cs_table <- function(processed_dataList){
       width(width = 5, unit = "in",j = "UBC")
   }
   
-}
+} # CHANGES TO PARAMETER NEEDED
 
 mx.tri_graph <- function(processed_dataList){
   

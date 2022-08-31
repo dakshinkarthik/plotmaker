@@ -472,7 +472,7 @@ mx_table_proc <- function(qval, new.dat){
 mc_graph_proc <- function(qval, new.dat){
   
   # splitting data by domestic/international
-  i.dat <- new.dat[which(new.dat$isi == "ISI"),]
+  i.dat <- new.dat[which(new.dat$isi == "ISI"),] #ISI_STATUS
   d.dat <- new.dat[which(new.dat$isi == "Domestic"),]
   # Column names to read data
   cnames <- colnames(new.dat)
@@ -620,7 +620,7 @@ mc_graph_proc <- function(qval, new.dat){
   
   return(q_data_list)
   
-}
+} # CHANGES HERE
 
 mc_table_proc <- function(qval, new.dat){
   
@@ -767,7 +767,7 @@ mc_table_proc <- function(qval, new.dat){
   
   return(q_data_list)
   
-}
+} # CHANGES HERE
 
 mc.yn_graph_proc <- function(qval, new.dat){
   
@@ -920,7 +920,7 @@ mc.yn_graph_proc <- function(qval, new.dat){
   
   return(q_data_list)
   
-}
+}  # CHANGES HERE# CHANGES HERE
 
 mc.yn_table_proc <- function(qval, new.dat){
   
@@ -1062,7 +1062,7 @@ mc.yn_table_proc <- function(qval, new.dat){
   
   return(q_data_list)
   
-}
+} # CHANGES HERE
 
 rk_graph_proc <- function(qval, new.dat){
   
@@ -1529,7 +1529,7 @@ ms_graph_proc <- function(qval, new.dat){
   
   return(q_data_list)
   
-}
+} # CHANGES HERE
 
 ms_table_proc <- function(qval, new.dat){
   
@@ -1710,7 +1710,7 @@ ms_table_proc <- function(qval, new.dat){
   
   return(q_data_list)
   
-}
+} # CHANGES HERE
 
 cs_graph_proc <- function(qval, new.dat){
   

@@ -85,6 +85,11 @@ main.graph <- function(qval, new.dat){
       cs(qval,new.dat)
       tb_cs(qval,new.dat)
     }
+    # Checks for m2x question types
+    else if(unlist(gregexpr(pattern = 'm2x', rc_list[1])) != -1){
+      # print("8")
+      
+    }
   }
 }
 
@@ -2522,6 +2527,10 @@ rc_eval <- function(eval.st,rc_list){
               unlist(gregexpr(pattern = "sum", rc_list[j])) != -1){
         bl <- c(bl,FALSE)
       }
+      else if(unlist(gregexpr(pattern = "TEXT", rc_list[j])) != -1 ||
+              unlist(gregexpr(pattern = "text", rc_list[j])) != -1){
+        bl <- c(bl,FALSE)
+      }
       else{
         bl <- c(bl,TRUE)
       }
@@ -2629,6 +2638,15 @@ region.get <- function(ld,new.dat){
       return(paste(substr(ld,1,f.pos-2),"Vancouver",sep = ""))
     }
   }
+  # else if((unlist(gregexpr(pattern = 'Field-campus', ld)) != -1)){
+  #   f.pos <- unlist(gregexpr(pattern = 'Field-campus', ld))
+  #   if(new.dat$campusName[1] == "Okanagan"){
+  #     return(paste(substr(ld,1,f.pos-2),"Okanagan",sep = ""))
+  #   }
+  #   else if(new.dat$campusName[1] == "Vancouver"){
+  #     return(paste(substr(ld,1,f.pos-2),"Vancouver",sep = ""))
+  #   }
+  # }
   else if((unlist(gregexpr(pattern = 'campusRegion', ld)) != -1)){
     f.pos <- unlist(gregexpr(pattern = 'campusRegion', ld))
     if(new.dat$campusName[1] == "Okanagan"){
